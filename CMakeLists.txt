@@ -35,7 +35,6 @@ QuickExecutable(PCAConstruct ${SRCS} ${HDRS} PCAConstruct.cxx)
 QuickExecutable(PCARecognize ${SRCS} ${HDRS} PCARecognize.cxx)
 QuickExecutable(ExtractDaisyToLibSVMPackage ${SRCS} ${HDRS} ExtractDaisyToLibSVMPackage.cxx)
 QuickExecutable(ExtractDaisyToTXT ${SRCS} ${HDRS} ExtractDaisyToTXT.cxx)
-QuickExecutable(PedestrianMatching ${SRCS} ${HDRS} PedestrianMatching.cxx)
 QuickExecutable(ReacquisitionByTracking ${SRCS} ${HDRS} ReacquisitionByTracking.cxx)
 
 OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?")

@@ -40,7 +40,7 @@ class DescriptorExtractor
       \param image Input image
       \param[out] descriptors The computed descriptors. Each line is one descriptor.
                               To access the descriptor at location (y,x). Get the descriptor
-                              at row y*image.cols + x
+                              at row (y*image.cols + x)
     */
     virtual void compute_dense(const cv::Mat& image,
                          cv::Mat& descriptors);
@@ -71,7 +71,8 @@ class DescriptorMatcher
 
 class Distance
 {
-	virtual float operator()(const cv::MatND& descriptor1, const cv::MatND& descriptor2) = 0;
+    virtual float operator()(const cv::Mat & descriptor1, const cv::Mat & descriptor2) = 0;
+    virtual float operator()(const cv::MatND& descriptor1, const cv::MatND& descriptor2);
 };
 
 #endif

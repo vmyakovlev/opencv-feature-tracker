@@ -37,7 +37,7 @@ QuickExecutable(ExtractDaisyToLibSVMPackage ${SRCS} ${HDRS} ExtractDaisyToLibSVM
 QuickExecutable(ExtractDaisyToTXT ${SRCS} ${HDRS} ExtractDaisyToTXT.cxx)
 QuickExecutable(ReacquisitionByTracking ${SRCS} ${HDRS} ReacquisitionByTracking.cxx)
 
-OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?")
+OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?" ON)
 IF(COMPILE_TESTS)
 	#### Test executable with GTest
 	FIND_PACKAGE(GTest)

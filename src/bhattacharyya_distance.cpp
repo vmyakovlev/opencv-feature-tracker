@@ -1,4 +1,4 @@
-#include "bhattacharyya_distance.h"
+#include "distance.h"
 
 // http://www.inf.ed.ac.uk/teaching/courses/av/MATLAB/COLOUR/bhattacharyya.m
 float BhattacharyyaDistance::operator()(const cv::Mat& descriptor1, const cv::Mat & descriptor2 )

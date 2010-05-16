@@ -55,4 +55,7 @@ void vector_one_to_another<cv::Point2f,cv::KeyPoint>(const vector<cv::Point2f> i
 
 cv::Mat loadtxt(std::string filename);
 bool WriteTXT(const std::string& filename, const cv::Mat& mat);
+void LoadGalleryPCAs(std::vector<cv::PCA> * gallery_PCAs, const char * pca_folder, int num_gallery_subjects);
+cv::Mat FindInterestPoints(const cv::Mat & gray_im, const char * query_point_filename, int max_num_corners = 10);
 #endif
+

@@ -23,6 +23,14 @@ class FeatureDetector
                         const cv::Mat& mask = cv::Mat() ) = 0 ;
 };
 
+/** \class DescriptorExtractor
+
+  A virtual interface for descriptor extractors. Current implementation is gear
+  toward point-based descriptor extractors. For region-based descriptor extractors,
+  there is no concept of keypoints.
+
+  \todo Consider splitting into PointDescriptorExtractor and RegionDescriptorExtractor
+*/
 class DescriptorExtractor
 {
     /** \brief Compute sparse descriptor
@@ -40,7 +48,7 @@ class DescriptorExtractor
       \param image Input image
       \param[out] descriptors The computed descriptors. Each line is one descriptor.
                               To access the descriptor at location (y,x). Get the descriptor
-                              at row (y*image.cols + x)
+                              at row y*image.cols + x
     */
     virtual void compute_dense(const cv::Mat& image,
                          cv::Mat& descriptors);
@@ -51,6 +59,8 @@ typedef std::vector< std::pair<int, int> > IndexPairs;
 
 /** \class DescriptorMatcher
     \brief Abstract base class for matching
+
+    \todo Templatize for different Distance(s)
 */
 class DescriptorMatcher
 {
@@ -67,12 +77,6 @@ class DescriptorMatcher
                        IndexPairs& matching_indexes,
                        std::vector<float> & matching_strength,
                        const cv::Mat& mask = cv::Mat() ) = 0;
-};
-
-class Distance
-{
-    virtual float operator()(const cv::Mat & descriptor1, const cv::Mat & descriptor2) = 0;
-    virtual float operator()(const cv::MatND& descriptor1, const cv::MatND& descriptor2);
 };
 
 #endif

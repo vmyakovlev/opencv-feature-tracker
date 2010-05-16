@@ -17,14 +17,11 @@ using namespace cv;
 
 /** \brief Given a matrix, output into outstream into space-separated format for MATLAB/Python
     \param[in] descriptors descriptor matrix where each row is one instance
-    \param[in] class_string e.g. (+1 or -1)
     \param[in] ofs output file stream
 
 */
-void MatRowToTXTRow(const Mat & descriptors, const string class_string, ofstream * ofs){
+void MatRowToTXTRow(const Mat & descriptors, ofstream * ofs){
     for (int i=0; i<descriptors.rows; i++){
-        *ofs << class_string << " ";
-
         const float * ptr = descriptors.ptr<float>(i);
         for (int j=0; j<descriptors.cols; j++){
             *ofs << *ptr << " ";
@@ -35,7 +32,9 @@ void MatRowToTXTRow(const Mat & descriptors, const string class_string, ofstream
     }
 }
 
-/** \file ExtractDaisyToLibSVMPackage.cxx Get the DAISY descriptors into SVM package so they can be fed into SVM for training
+/** \file ExtractDAISYToTXT.cxx Get the DAISY descriptors into a text file for use in other programs
+
+  The output format is ASCII of a Nx200 matrix where N = image.width * image.height
 */
 int main(int argc, char ** argv){
     if (argc<4){
@@ -65,7 +64,7 @@ int main(int argc, char ** argv){
     DaisyDescriptorExtractor daisy_extractor;
     daisy_extractor.compute(gray_im, query_points, descriptors);
 
-    MatRowToTXTRow(descriptors, "+1", &ofs);
+    MatRowToTXTRow(descriptors, &ofs);
 
     // Done
     ofs.close();

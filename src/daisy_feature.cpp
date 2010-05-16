@@ -8,6 +8,7 @@ DaisyDescriptorExtractor::DaisyDescriptorExtractor(double rad, int radq, int his
     histq_ = histq;
 
     desc_ = new daisy();
+    desc_->set_parameters(rad_, radq_, thq_, histq_);
 }
 
 DaisyDescriptorExtractor::~DaisyDescriptorExtractor(){
@@ -117,15 +118,21 @@ void DaisyDescriptorExtractor::compute(const cv::Mat& image,
     CV_Assert(descriptors.cols == desc_->descriptor_size());
     CV_Assert(descriptors.rows == query_points.rows);
     CV_Assert(descriptors.type() == CV_32F);
+    CV_Assert(query_points.type() == CV_32F || query_points.type() == CV_32S)
 
     // get indexing
-    Mat row_indexes_float = query_points.col(0) + query_points.col(1) * image.cols;
-    Mat row_indexes;
-    row_indexes_float.convertTo(row_indexes, CV_32S);
+    Mat row_indexes = query_points.col(0) + query_points.col(1) * image.cols;
 
     // get only the features we are interested in
     for (int j=0; j<row_indexes.rows; j++){
-        int source_row_index = row_indexes.at<int>(j,0);
+        int source_row_index;
+        if (query_points.type() == CV_32F){
+            source_row_index = (int) row_indexes.at<float>(j,0);
+        } else if (query_points.type() == CV_32S){
+            source_row_index = (int) row_indexes.at<int>(j,0);
+        } else {
+            CV_Error(CV_StsUnsupportedFormat, "query_points matrix can only be either CV_32F or CV_32S");
+        }
 
         // NOTE: we need to offset the row because of how we are storing descriptors
         //       We are simply vertical-stack all descriptors together.
@@ -133,4 +140,8 @@ void DaisyDescriptorExtractor::compute(const cv::Mat& image,
 
         dense_descriptors_im.row(source_row_index).copyTo(target_row);
     }
+}
+
+int DaisyDescriptorExtractor::feature_length() const{
+    return desc_->descriptor_size();
 }

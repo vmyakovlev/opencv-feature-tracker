@@ -1,4 +1,4 @@
-Project(OpenCVFeatureTracker)
+Project(opencv-feature-tracker)
 
 add_subdirectory(thirdparty)
 
@@ -19,7 +19,7 @@ MACRO(QuickExecutable proj_name)
 add_executable(${proj_name} ${ARGN})
 target_link_libraries(${proj_name}
     ${OpenCV_LIBS}
-    daisy
+      daisy
 )
 ENDMACRO(QuickExecutable)
 
@@ -31,13 +31,18 @@ QuickExecutable(MSER ${SRCS} ${HDRS} MSER.cxx)
 QuickExecutable(SURF ${SRCS} ${HDRS} SURF.cxx)
 QuickExecutable(DaisyDescriptor ${SRCS} ${HDRS} DAISY.cxx)
 QuickExecutable(InteractiveMatching ${SRCS} ${HDRS} InteractiveMatching.cxx)
+QuickExecutable(NCH ${SRCS} ${HDRS} NCH.cxx)
+QuickExecutable(test_nch_svm ${SRCS} ${HDRS} test_nch_svm.cpp)
 QuickExecutable(PCAConstruct ${SRCS} ${HDRS} PCAConstruct.cxx)
 QuickExecutable(PCARecognize ${SRCS} ${HDRS} PCARecognize.cxx)
+QuickExecutable(PCARecognizeInterestPoints ${SRCS} ${HDRS} PCARecognizeInterestPoints.cxx)
 QuickExecutable(ExtractDaisyToLibSVMPackage ${SRCS} ${HDRS} ExtractDaisyToLibSVMPackage.cxx)
 QuickExecutable(ExtractDaisyToTXT ${SRCS} ${HDRS} ExtractDaisyToTXT.cxx)
 QuickExecutable(ReacquisitionByTracking ${SRCS} ${HDRS} ReacquisitionByTracking.cxx)
+QuickExecutable(TrackMatchingDistance ${SRCS} ${HDRS} TrackMatchingDistance.cxx)
+QuickExecutable(MRFMatching ${SRCS} ${HDRS} MRFMatching.cxx)
 
-OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?" ON)
+OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?")
 IF(COMPILE_TESTS)
 	#### Test executable with GTest
 	FIND_PACKAGE(GTest)
@@ -45,6 +50,7 @@ IF(COMPILE_TESTS)
 	include_directories(
 		${GTEST_INCLUDE_DIR}
 		${PROJECT_SOURCE_DIR}/tests
+		${PROJECT_SOURCE_DIR}
 		)
 	set(TEST_DATA_FOLDER ${PROJECT_SOURCE_DIR}/tests/data)
 	configure_file(${PROJECT_SOURCE_DIR}/tests/test_configuration.h.in ${PROJECT_SOURCE_DIR}/tests/test_configuration.h) 

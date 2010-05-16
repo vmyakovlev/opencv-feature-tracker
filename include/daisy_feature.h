@@ -21,6 +21,7 @@ public:
                  cv::Mat& descriptors);
     void compute_dense(const cv::Mat& image,
                          cv::Mat& descriptors);
+    int feature_length() const;
 private:
     int verbose_level_; //!< How verbose is our daisy computation output
 

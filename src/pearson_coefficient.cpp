@@ -1,7 +1,7 @@
-#include "pearson_coefficient.h"
+#include "distance.h"
 
 // http://www.stat.wmich.edu/s216/book/node122.html
-float PearsonCoefficient::operator()(const cv::Mat& descriptor1, const cv::Mat & descriptor2 )
+float PearsonCoefficientDistance::operator()(const cv::Mat& descriptor1, const cv::Mat & descriptor2 )
 {
 	CV_Assert(descriptor1.type() == CV_32F);
 	CV_Assert(descriptor2.type() == CV_32F);
@@ -28,7 +28,7 @@ float PearsonCoefficient::operator()(const cv::Mat& descriptor1, const cv::Mat &
 	return res;
 }
 
-float PearsonCoefficient::operator()( const cv::MatND& descriptor1, const cv::MatND& descriptor2 )
+float PearsonCoefficientDistance::operator()( const cv::MatND& descriptor1, const cv::MatND& descriptor2 )
 {
 	CV_Assert(descriptor1.type() == CV_32F);
 	CV_Assert(descriptor2.type() == CV_32F);

@@ -19,7 +19,7 @@ void NCHDescriptorExtractor::compute( const cv::Mat& image, const std::vector<cv
 {
 	cout << "FATAL ERROR: Class NCHFeatureExtractor does not have method compute() implemented." << endl
 		 << "Method compute_dense() should be called instead." << endl;
-	exit(-1);
+    CV_Error(CV_StsNotImplemented, "This descriptor does not support compute()");
 }
 
 void NCHDescriptorExtractor::compute_dense( const cv::Mat& image, cv::MatND& descriptor )
@@ -73,66 +73,10 @@ void NCHDescriptorExtractor::compute_dense( const cv::Mat& image, cv::MatND& des
 	
 	CV_Assert(fabs(sum(descriptor)[0] - 1) < FLT_EPSILON);
 
-#if 0
-	int num_of_channels = image.channels();
-	Mat* channels = new Mat[num_of_channels];
-	if (num_of_channels > 1)
-		split(image, channels);
-	else channels[0] = image;
+    /* NOTE: Check Revision 339 for some code that was under #if 0
+       @MF: if the code is useful but not current used, please put its purpose here
+    */
 
-	for (int i = 0; i < num_of_channels; ++i)
-		channels[i] = channels[i].reshape(0, 1);
-	
-	descriptor.create(1, 256*num_of_channels, CV_32F);
-	descriptor = Scalar(0);
-
-	int num_of_pixels = image.rows * image.cols;
-	int num_of_valid_pixels = 0;
-	
-	for (int i = 0; i < num_of_pixels; ++i) {
-		float val = channels[0].at<float>(0, i);
-		
-		// no need to examine other channels
-		if (val == -1) continue;
-		else num_of_valid_pixels++;
-		
-		for (int j = 0; j < num_of_channels; ++j) {
-			val = channels[j].at<float>(0, i);
-			descriptor.at<float>(0, j*256+static_cast<int>(val))++;
-		}
-	}
-
-	// normalize
-	descriptor = descriptor / num_of_valid_pixels;
-	
-	float sum = 0.0f;
-	for (int i = 0; i < 3*256; ++i) {
-		sum += descriptor.at<float>(0,i);
-	}
-
-	descriptor = descriptor.reshape(num_of_channels);
-	Mat* descriptor_channels = new Mat[num_of_channels];
-	split(descriptor, descriptor_channels);
-
-	for (int i = 0; i < num_of_channels; ++i) {
-		float sum = 0.0f;
-		for (int j = 0; j < 256; ++j)
-			sum += descriptor_channels[i].at<float>(0,j);
-		descriptor_channels[i] = descriptor_channels[i] / sum;
-	}
-
-	//cout << "After normalization" << endl;
-	//for (int i = 0; i < num_of_channels; ++i) {
-	//	float sum = 0.0f;
-	//	for (int j = 0; j < 256; ++j)
-	//		sum += descriptor_channels[i].at<float>(0,j);
-	//	cout << sum << endl;
-	//}
-	merge(descriptor_channels, num_of_channels, descriptor);
-
-	delete [] descriptor_channels;
-	delete [] channels;
-#endif
 }
 
 void NCHDescriptorExtractor::compute_dense( const std::vector<cv::Mat>& images, std::vector<cv::MatND>& descriptors )

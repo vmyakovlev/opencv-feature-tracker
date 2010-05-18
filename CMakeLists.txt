@@ -41,6 +41,7 @@ QuickExecutable(ExtractDaisyToTXT ${SRCS} ${HDRS} ExtractDaisyToTXT.cxx)
 QuickExecutable(ReacquisitionByTracking ${SRCS} ${HDRS} ReacquisitionByTracking.cxx)
 QuickExecutable(TrackMatchingDistance ${SRCS} ${HDRS} TrackMatchingDistance.cxx)
 QuickExecutable(MRFMatching ${SRCS} ${HDRS} MRFMatching.cxx)
+QuickExecutable(SaunierSayed ${SRCS} ${HDRS} SaunierSayed.cxx)
 
 OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?")
 IF(COMPILE_TESTS)

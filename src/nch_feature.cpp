@@ -15,7 +15,7 @@ NCHDescriptorExtractor::NCHDescriptorExtractor( int bins )
 
 NCHDescriptorExtractor::~NCHDescriptorExtractor() {}
 
-void NCHDescriptorExtractor::compute( const cv::Mat& image, const std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors )
+void NCHDescriptorExtractor::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors )
 {
 	cout << "FATAL ERROR: Class NCHFeatureExtractor does not have method compute() implemented." << endl
 		 << "Method compute_dense() should be called instead." << endl;

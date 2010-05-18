@@ -14,10 +14,10 @@ public:
     DaisyDescriptorExtractor(double rad=16, int radq=3, int histq=8, int thq=8);
     ~DaisyDescriptorExtractor();
     void compute(const cv::Mat& image,
-                 const std::vector<cv::KeyPoint>& keypoints,
+                 std::vector<cv::KeyPoint>& keypoints,
                  cv::Mat& descriptors);
     void compute(const cv::Mat& image,
-                 const cv::Mat& query_points,
+                 cv::Mat& query_points,
                  cv::Mat& descriptors);
     void compute_dense(const cv::Mat& image,
                          cv::Mat& descriptors);

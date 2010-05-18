@@ -64,7 +64,7 @@ void DaisyDescriptorExtractor::compute_dense(const cv::Mat& image,
   \note No interpolation is performed
 */
 void DaisyDescriptorExtractor::compute(const cv::Mat& image,
-                                  const std::vector<cv::KeyPoint>& keypoints,
+                                  std::vector<cv::KeyPoint>& keypoints,
                                   cv::Mat& descriptors){
     // Compute dense descriptor
     Mat dense_descriptor;
@@ -101,7 +101,7 @@ void DaisyDescriptorExtractor::compute(const cv::Mat& image,
   \param[out] descriptors descriptors to write out (e.g. Nx200 if default constructor of DaisyDescriptorExtractor is used)
   */
 void DaisyDescriptorExtractor::compute(const cv::Mat& image,
-                                     const cv::Mat& query_points,
+                                     cv::Mat& query_points,
                                      cv::Mat& descriptors){
     // check that input image is only single channel
     CV_Assert(image.channels() == 1)

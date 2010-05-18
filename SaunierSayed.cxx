@@ -14,6 +14,7 @@ int main (int argc, char ** argv){
     // PARAMETERS
     const string input_video_filename = string(argv[1]);
 
+
     //**************************************************************
     // GRAB SOME INFORMATION ABOUT THE VIDEO
 

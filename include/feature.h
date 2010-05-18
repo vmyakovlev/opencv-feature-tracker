@@ -36,11 +36,11 @@ class DescriptorExtractor
     /** \brief Compute sparse descriptor
 
       \param image Input image
-      \param keypoints The interest points to compute descriptors for
+      \param keypoints The interest points where to compute the descriptors
       \param[out] descriptors Output descriptors
     */
     virtual void compute(const cv::Mat& image,
-                         const std::vector<cv::KeyPoint>& keypoints,
+                         std::vector<cv::KeyPoint>& keypoints,
                          cv::Mat& descriptors) = 0;
 
     /** \brief Compute dense descriptor
@@ -54,29 +54,60 @@ class DescriptorExtractor
                          cv::Mat& descriptors);
 };
 
-//! Represent matches as pairs of keypoint/descriptors indexes
-typedef std::vector< std::pair<int, int> > IndexPairs;
-
 /** \class DescriptorMatcher
     \brief Abstract base class for matching
 
-    \todo Templatize for different Distance(s)
+    Make sure your implementation templatize for different Distance(s)
 */
 class DescriptorMatcher
 {
-    /** \brief Compute a match between two descriptor vectors
+    /** \brief Index input keypoints (applicable to stuff like ANN)
 
-    \param matching_indexes the matching indexes
-    \param matching_strength how strong is the corresponding match
-    \param mask is an MxN matrix encoding which pair-wise distances should be computed,
-                  so we can use James' SSE approach for masking out irrelevant pairs.
-    \see IndexPairs
+      Your implementation will likely need to save the input keypoints
+      and descriptors since it will likely be used again in matching.
+
+      \param db_keypoints Input database keypoints
+      \param db_descriptors Input database descriptors
+      */
+    virtual void index(const std::vector<cv::KeyPoint>& db_keypoints,
+                       const cv::Mat& db_descriptors) = 0;
+
+    /** \brief Find the matches in our database for the input keypoints
+
+    \param query_keypoints Keypoints to pay attention to
+    \param query_descriptors Corresponding descriptors for the keypoints
+    \param matches Indices of the matches in the database keypoints
+    \param distance Distance of each match
     */
-    virtual void match(const cv::Mat& descriptors_1,
-                       const cv::Mat& descriptors_2,
-                       IndexPairs& matching_indexes,
-                       std::vector<float> & matching_strength,
-                       const cv::Mat& mask = cv::Mat() ) = 0;
+    virtual void match(const std::vector<cv::KeyPoint>& query_keypoints,
+                       const cv::Mat& query_descriptors,
+                       std::vector<int>& matches,
+                       std::vector<float>& distance) const = 0;
+
 };
+
+typedef std::vector<cv::KeyPoint> KeyPointCollection;
+/** \class DescriptorMatchGeneric
+
+  A generic descriptor matcher that incorporates both extraction and matching.
+  */
+class DescriptorMatchGeneric
+{
+public:
+
+    //! Adds keypoints from several images to the training set (descriptors are supposed to be calculated here)
+    virtual void add(KeyPointCollection& keypoints);
+
+    //! Adds keypoints from a single image to the training set (descriptors are supposed to be calculated here)
+    virtual void add(const Mat& image, vector<KeyPoint>& points) = 0;
+
+    //! Classifies test keypoints
+    virtual void classify(const Mat& image, vector<KeyPoint>& points);
+
+    //! Matches test keypoints to the training set
+    virtual void match(const Mat& image, vector<KeyPoint>& points, vector<int>& indices) = 0;
+};
+
+
 
 #endif

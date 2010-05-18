@@ -16,7 +16,7 @@ class BlobDescriptorExtractor : public DescriptorExtractor
 public:
     Mat blob_mean_color(const Mat & image, const KeyPoint & keypoint);
     void compute(const cv::Mat& image,
-                 const std::vector<cv::KeyPoint>& keypoints,
+                 std::vector<cv::KeyPoint>& keypoints,
                  cv::Mat& descriptors);
 private:
 

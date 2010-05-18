@@ -13,7 +13,7 @@ public:
 	NCHDescriptorExtractor(int bins);
 	~NCHDescriptorExtractor();
 	void compute(const cv::Mat& image,
-				 const std::vector<cv::KeyPoint>& keypoints,
+                                 std::vector<cv::KeyPoint>& keypoints,
 				 cv::Mat& descriptors);
 	void compute_dense(const cv::Mat& image,
 						cv::MatND& descriptor);

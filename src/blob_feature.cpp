@@ -14,7 +14,7 @@ static unsigned int DESCRIPTOR_NUM_DIMENSION = 6;
 
   */
 void BlobDescriptorExtractor::compute(const cv::Mat& image,
-                 const std::vector<cv::KeyPoint>& keypoints,
+                 std::vector<cv::KeyPoint>& keypoints,
                  cv::Mat& descriptors)
 {
     CV_Assert(image.channels() == 3)

@@ -5,15 +5,29 @@
 using namespace std;
 using namespace cv;
 
+#include "misc.h"
+
 int main (int argc, char ** argv){
-    if (argc < 2){
-        cout << "Usage: %prog [options] input_video.avi\n";
+    if (argc < 3){
+        cout << "Usage: %prog [options] input_video.avi homography_points.txt\n";
         exit(-1);
     }
     //**************************************************************
     // PARAMETERS
     const string input_video_filename = string(argv[1]);
+    const string homography_points_filename = string(argv[2]);
 
+    //**************************************************************
+    // Get the homography which brings coordinates in the image ground plane to world ground plane
+
+    // Load points from file
+    Mat homography_points = loadtxt(homography_points_filename);
+    Mat image_points = homography_points.rowRange(0,3);
+    Mat world_points = homography_points.rowRange(4,7);
+
+    Mat homography_matrix = findHomography(image_points, world_points);
+    std::cout << "Homography matrix: " << std::endl;
+    print_matrix<float>(homography_matrix);
 
     //**************************************************************
     // GRAB SOME INFORMATION ABOUT THE VIDEO

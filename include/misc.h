@@ -2,6 +2,9 @@
 #define __MISC_H_
 #include <vector>
 #include <cv.h>
+#include <iostream>
+using std::cout;
+using std::endl;
 using std::vector;
 
 /** \brief Create an array of array from a vector of vector
@@ -57,5 +60,21 @@ cv::Mat loadtxt(std::string filename);
 bool WriteTXT(const std::string& filename, const cv::Mat& mat);
 void LoadGalleryPCAs(std::vector<cv::PCA> * gallery_PCAs, const char * pca_folder, int num_gallery_subjects);
 cv::Mat FindInterestPoints(const cv::Mat & gray_im, const char * query_point_filename, int max_num_corners = 10);
+
+/** \brief Print the content of the matrix
+
+  \tparam The type of matrix elements
+*/
+template<typename T> void print_matrix(const cv::Mat & mat){
+    for (int i=0; i<mat.rows; i++){
+        const T* mat_ptr = mat.ptr<T>(i);
+        std::cout << ">>> ";
+        for (int j=0; i<mat.cols; j++){
+            std::cout << mat_ptr[j] << " ";
+        }
+
+        std::cout << std::endl;
+    }
+}
 #endif
 

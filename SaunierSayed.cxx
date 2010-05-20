@@ -6,6 +6,7 @@ using namespace std;
 using namespace cv;
 
 #include "misc.h"
+#include "feature_detector.h"
 
 int main (int argc, char ** argv){
     if (argc < 3){
@@ -22,12 +23,17 @@ int main (int argc, char ** argv){
 
     // Load points from file
     Mat homography_points = loadtxt(homography_points_filename);
-    Mat image_points = homography_points.rowRange(0,3);
-    Mat world_points = homography_points.rowRange(4,7);
+    Mat image_points = homography_points.rowRange(0,4);
+    Mat world_points = homography_points.rowRange(4,8);
 
     Mat homography_matrix = findHomography(image_points, world_points);
     std::cout << "Homography matrix: " << std::endl;
     print_matrix<float>(homography_matrix);
+
+    //**************************************************************
+    // PREPARE TOOLS FOR EXTRACTING FEATURES
+    ShiTomashiFeatureDetector feature_detector;
+    vector<KeyPoint> key_points;
 
     //**************************************************************
     // GRAB SOME INFORMATION ABOUT THE VIDEO
@@ -58,8 +64,21 @@ int main (int argc, char ** argv){
 
     //**************************************************************
     // GO THROUGH THE ENTIRE VIDEO AND BUILD THE SPATIAL TEMPORAL GRAPH
+    Mat gray_frame; // the frame in grayscale
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
+        cvtColor(a_frame,gray_frame, CV_RGB2GRAY);
+
+        // Initialize FeatureDetector
+        feature_detector.detect(gray_frame, key_points);
+
+        // Draw these keypoints
+        for (int i=0; i<key_points.size(); ++i){
+            circle(a_frame, key_points[i].pt, 1, CV_RGB(255,0,0));
+        }
+
+
+        // Show the frame (with optional annotations)
         imshow(window1, a_frame);
 
         // Handle the events by waiting for a key

@@ -18,6 +18,7 @@ using namespace cv;
 */
 class FeatureDetector
 {
+public:
     virtual void detect(const cv::Mat& image,
                         std::vector<cv::KeyPoint>& keypoints,
                         const cv::Mat& mask = cv::Mat() ) = 0 ;

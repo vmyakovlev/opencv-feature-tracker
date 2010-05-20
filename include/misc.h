@@ -68,8 +68,8 @@ cv::Mat FindInterestPoints(const cv::Mat & gray_im, const char * query_point_fil
 template<typename T> void print_matrix(const cv::Mat & mat){
     for (int i=0; i<mat.rows; i++){
         const T* mat_ptr = mat.ptr<T>(i);
-        std::cout << ">>> ";
-        for (int j=0; i<mat.cols; j++){
+        std::cout << ">   ";
+        for (int j=0; j<mat.cols; j++){
             std::cout << mat_ptr[j] << " ";
         }
 

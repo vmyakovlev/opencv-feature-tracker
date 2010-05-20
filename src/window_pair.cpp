@@ -45,10 +45,10 @@ void WindowPair::DrawArrow(cv::Point im1_from, cv::Point im2_to, const cv::Scala
     cv::line(im_, im1_from, im2_offset + im2_to, color, thickness, lineType, shift);
 }
 
-void WindowPair::Show(int delay){
+int WindowPair::Show(int delay){
     cv::namedWindow(window_name_,CV_WINDOW_AUTOSIZE);
     cv::imshow(window_name_,im_);
-    cv::waitKey(delay);
+    return cv::waitKey(delay);
 }
 
 /** \brief Save output window pair image to filename

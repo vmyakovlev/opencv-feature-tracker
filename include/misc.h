@@ -55,6 +55,8 @@ void vector_one_to_another(const vector<T > in, vector<T2> & out){
 
 template<>
 void vector_one_to_another<cv::Point2f,cv::KeyPoint>(const vector<cv::Point2f> in, vector<cv::KeyPoint> & out);
+template<>
+void vector_one_to_another<cv::KeyPoint,cv::Point2f>(const vector<cv::KeyPoint> in, vector<cv::Point2f> & out);
 
 cv::Mat loadtxt(std::string filename);
 bool WriteTXT(const std::string& filename, const cv::Mat& mat);

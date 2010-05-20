@@ -7,6 +7,8 @@ using namespace cv;
 
 #include "misc.h"
 #include "feature_detector.h"
+#include "descriptor_match.h"
+#include "window_pair.h"
 
 int main (int argc, char ** argv){
     if (argc < 3){
@@ -33,6 +35,8 @@ int main (int argc, char ** argv){
     //**************************************************************
     // PREPARE TOOLS FOR EXTRACTING FEATURES
     ShiTomashiFeatureDetector feature_detector;
+    KLTTracker feature_matcher;
+
     vector<KeyPoint> key_points;
 
     //**************************************************************
@@ -58,33 +62,50 @@ int main (int argc, char ** argv){
     //**************************************************************
     // SOME WINDOWS FOR VISUALIZATION
     const string window1("Frame");
-    namedWindow(window1);
+    //namedWindow(window1);
 
     int keypressed_code;
 
     //**************************************************************
     // GO THROUGH THE ENTIRE VIDEO AND BUILD THE SPATIAL TEMPORAL GRAPH
-    Mat gray_frame; // the frame in grayscale
+    Mat prev_frame; // the previous frame in grayscale
+    Mat next_frame;
+    vector<Point2f> new_points;
+    vector<int> old_points_indices;
+
+    // Initialize our previous frame
+    video_capture.grab();
+    video_capture.retrieve(a_frame);
+    cvtColor(a_frame,prev_frame, CV_RGB2GRAY);
+    feature_detector.detect(prev_frame, key_points);
+    feature_matcher.add(prev_frame, key_points);
+
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
-        cvtColor(a_frame,gray_frame, CV_RGB2GRAY);
+        cvtColor(a_frame,next_frame, CV_RGB2GRAY);
 
-        // Initialize FeatureDetector
-        feature_detector.detect(gray_frame, key_points);
+        // Since we are using KLT, we will use KLTTracker directly without
+        // switching to using DescriptorExtractor
 
+        // Find these points in the next frame
+        feature_matcher.search(next_frame, new_points, old_points_indices);
+
+        // Show the frames (with optional annotations)
+        WindowPair window_pair(prev_frame,next_frame,window1);
         // Draw these keypoints
-        for (int i=0; i<key_points.size(); ++i){
-            circle(a_frame, key_points[i].pt, 1, CV_RGB(255,0,0));
+        for (int i=0; i<old_points_indices.size(); ++i){
+            window_pair.DrawArrow(key_points[old_points_indices[i]].pt, new_points[i], CV_RGB(255,0,0));
         }
 
-
-        // Show the frame (with optional annotations)
-        imshow(window1, a_frame);
-
         // Handle the events by waiting for a key
-        keypressed_code = waitKey(0);
+        keypressed_code = window_pair.Show();
         if (keypressed_code == 27) // ESC key
             break;
+
+        // Go to the next frame
+        next_frame.copyTo(prev_frame);
+        feature_detector.detect(prev_frame, key_points);
+        feature_matcher.add(prev_frame, key_points);
     }
 
     cout << "Done\n";

@@ -24,6 +24,17 @@ void vector_one_to_another<cv::Point2f,cv::KeyPoint>(const vector<cv::Point2f> i
     }
 }
 
+// Template specialization to get the points from KeyPoint
+template<>
+void vector_one_to_another<cv::KeyPoint,cv::Point2f>(const vector<cv::KeyPoint> in, vector<cv::Point2f> & out){
+    out.clear();
+    out.resize(in.size());
+
+    for (int i=0; i<in.size(); i++){
+        out[i] = in[i].pt;
+    }
+}
+
 /** \brief Read a space/tab -separated file.
 
   The first line will provide the number of columns we are going to read

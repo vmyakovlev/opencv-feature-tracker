@@ -4,6 +4,8 @@
 
 #include <cv.h>
 using cv::Mat;
+using cv::KeyPoint;
+using cv::Point2f;
 
 TEST(TestMisc, Dataset1){
     Mat loaded_mat = loadtxt(data_folder_path + "/query_points1.txt");
@@ -24,6 +26,37 @@ TEST(TestMisc, BadFileName){
         Mat loaded_mat = loadtxt("DOESNOTEXISTS.BLAHBLAH"),
         cv::Exception
         );
+}
+
+TEST(TestMisc, ConvertKeyPointToPoint2fAndBack){
+    std::vector<KeyPoint> keypoints;
+    keypoints.push_back( KeyPoint(Point2f(1,2),1) );
+    keypoints.push_back( KeyPoint(Point2f(2,3),1) );
+    keypoints.push_back( KeyPoint(Point2f(3,4),1) );
+    keypoints.push_back( KeyPoint(Point2f(4,5),1) );
+
+    std::vector<Point2f> points;
+    vector_one_to_another(keypoints, points);
+
+    ASSERT_EQ(1, points[0].x);
+    ASSERT_EQ(2, points[0].y);
+    ASSERT_EQ(2, points[1].x);
+    ASSERT_EQ(3, points[1].y);
+    ASSERT_EQ(3, points[2].x);
+    ASSERT_EQ(4, points[2].y);
+    ASSERT_EQ(4, points[3].x);
+    ASSERT_EQ(5, points[3].y);
+
+    points.pop_back();
+    vector_one_to_another(points, keypoints);
+
+    ASSERT_EQ(3, keypoints.size());
+    ASSERT_EQ(1, keypoints[0].pt.x);
+    ASSERT_EQ(2, keypoints[0].pt.y);
+    ASSERT_EQ(2, keypoints[1].pt.x);
+    ASSERT_EQ(3, keypoints[1].pt.y);
+    ASSERT_EQ(3, keypoints[2].pt.x);
+    ASSERT_EQ(4, keypoints[2].pt.y);
 }
 
 TEST(TestOpenCV, SimpleColumnMultiplyAdd){

@@ -87,7 +87,7 @@ class DescriptorMatcher
 
 };
 
-typedef std::vector<cv::KeyPoint> KeyPointCollection;
+//typedef std::vector<cv::KeyPoint> KeyPointCollection;
 /** \class DescriptorMatchGeneric
 
   A generic descriptor matcher that incorporates both extraction and matching.
@@ -97,16 +97,19 @@ class DescriptorMatchGeneric
 public:
 
     //! Adds keypoints from several images to the training set (descriptors are supposed to be calculated here)
-    virtual void add(KeyPointCollection& keypoints);
+    //virtual void add(KeyPointCollection& keypoints);
 
     //! Adds keypoints from a single image to the training set (descriptors are supposed to be calculated here)
     virtual void add(const Mat& image, vector<KeyPoint>& points) = 0;
 
     //! Classifies test keypoints
-    virtual void classify(const Mat& image, vector<KeyPoint>& points);
+    virtual void classify(const Mat& image, vector<KeyPoint>& points){};
 
     //! Matches test keypoints to the training set
-    virtual void match(const Mat& image, vector<KeyPoint>& points, vector<int>& indices) = 0;
+    virtual void match(const Mat& image, vector<KeyPoint>& points, vector<int>& indices){};
+
+    //! Search for training keypoints in the test image
+    virtual void search(const Mat& test_image, vector<KeyPoint>& output_found_points, vector<int>& training_point_indices){};
 };
 
 

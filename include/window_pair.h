@@ -12,7 +12,7 @@ class WindowPair{
 public:
     WindowPair(const cv::Mat & im1, const cv::Mat & im2, const std::string & name);
     void DrawArrow(cv::Point im1_from, cv::Point  im2_to, const cv::Scalar & color, int thickness=1, int lineType=8, int shift=0);
-    void Show(int delay=0);
+    int Show(int delay=0);
     void Save(const std::string & filename);
     cv::Mat get_image();
 private:

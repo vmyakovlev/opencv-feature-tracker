@@ -37,6 +37,7 @@ void KLTTracker::search(const Mat& test_image, vector<Point2f>& output_found_poi
 
     // Putting the results into the output structures
     output_found_points.clear();
+    training_point_indices.clear();
     for (int i=0; i<status.size(); ++i){
         if (status[i] == 1){
             output_found_points.push_back(target_points[i]);

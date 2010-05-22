@@ -90,6 +90,9 @@ int main (int argc, char ** argv){
         // Find these points in the next frame
         feature_matcher.search(next_frame, new_points, old_points_indices);
 
+        // Tally these new points into our graphical model
+
+
         // Show the frames (with optional annotations)
         WindowPair window_pair(prev_frame,next_frame,window1);
         // Draw these keypoints
@@ -97,10 +100,13 @@ int main (int argc, char ** argv){
             window_pair.DrawArrow(key_points[old_points_indices[i]].pt, new_points[i], CV_RGB(255,0,0));
         }
 
-        // Handle the events by waiting for a key
+        // Handle GUI events by waiting for a key
         keypressed_code = window_pair.Show();
-        if (keypressed_code == 27) // ESC key
+        if (keypressed_code == 27){ // ESC key
+            // take a screenshot
+            imwrite("screenshot.png", a_frame);
             break;
+        }
 
         // Go to the next frame
         next_frame.copyTo(prev_frame);

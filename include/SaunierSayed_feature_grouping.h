@@ -13,18 +13,29 @@ namespace SaunierSayed{
     } LinkInformation;
 
     typedef struct TrackInformation_{
-        cv::Point position;
+        cv::Point2f pos;
         int number_of_times_tracked;
         bool activated;
         std::map<int, LinkInformation> links;
     } TrackInformation;
 
+    typedef std::map<int, TrackInformation> Tracks;
+
     class TrackManager{
     public:
-        void AddPoints(const std::vector<cv::Point2f> new_points);
+        TrackManager();
+
+        //! Add new tracks
+        void AddPoints(const std::vector<cv::Point2f> & new_points);
+
+        //! Update current tracks with new points
         void UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices);
 
-        std::map<int, TrackInformation> tracks;
+        Tracks & tracks();
+    private:
+        //! The id to be used for the next new track
+        int next_id_;
+        Tracks tracks_;
     };
 }
 

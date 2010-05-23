@@ -28,9 +28,11 @@ class SSTrackManagerTest : public ::testing::Test {
       old_indices_1_2.push_back(3);
 
       // points detected at time t + 1
-      points2.push_back(Point2f(2.0,2.5));
-      points2.push_back(Point2f(3.0,2.5));
-      points2.push_back(Point2f(12.0,23.5));
+      // NOTE: the 2nd and 3rd points is the same as new_points
+      //       this is because there is high-chance that
+      points2.push_back(Point2f(4.0,2.5));
+      points2.push_back(Point2f(2.1,23.5));
+      points2.push_back(Point2f(10.1,223.5));
       points2.push_back(Point2f(12.5,24.5));
   }
 
@@ -58,4 +60,25 @@ TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
     ASSERT_NEAR(1.1, track_manager_.tracks()[0].pos.x, 0.001);
     ASSERT_NEAR(23.5, track_manager_.tracks()[1].pos.y, 0.001);
 
+    // At time t+1, we detect a couple of points which happen to be the same as
+    // points already in tracks
+    track_manager_.AddPossiblyDuplicatePoints(points2);
+    ASSERT_EQ(6, track_manager_.tracks().size());
+    ASSERT_NEAR(12.5, track_manager_.tracks()[5].pos.x, 0.001);
+    ASSERT_NEAR(223.5, track_manager_.tracks()[2].pos.y, 0.001);
+}
+
+TEST_F(SSTrackManagerTest, RemoveDuplicatePoints){
+    track_manager_.AddPoints(points);
+    std::vector<cv::Point2f> new_points = points;
+    track_manager_.RemoveDuplicatePoints(new_points);
+    ASSERT_EQ(0, new_points.size());
+}
+
+TEST_F(SSTrackManagerTest, RemoveDuplicatePointsAfterUpdate){
+    track_manager_.AddPoints(points);
+    track_manager_.UpdatePoints(new_points, old_indices_1_2);
+    track_manager_.RemoveDuplicatePoints(points2);
+
+    ASSERT_EQ(2, points2.size());
 }

@@ -20,6 +20,7 @@ namespace SaunierSayed{
     } TrackInformation;
 
     typedef std::map<int, TrackInformation> Tracks;
+    typedef std::map<int, TrackInformation>::iterator TracksIterator;
 
     class TrackManager{
     public:
@@ -27,6 +28,12 @@ namespace SaunierSayed{
 
         //! Add new tracks
         void AddPoints(const std::vector<cv::Point2f> & new_points);
+
+        //! Add newly detected points. Remove duplicates.
+        void AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points);
+
+        //! Remove points that is already in one of the tracks
+        void RemoveDuplicatePoints(std::vector<cv::Point2f> & input_points);
 
         //! Update current tracks with new points
         void UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices);

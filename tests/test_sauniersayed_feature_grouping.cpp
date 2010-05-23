@@ -11,6 +11,8 @@ namespace ss = SaunierSayed;
 class SSTrackManagerTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
+      track_manager_ = ss::TrackManager(2, 4, 20);
+
       // points detected at time t
       points.push_back(Point2f(1.0,2.5));
       points.push_back(Point2f(2.0,23.5));
@@ -49,6 +51,11 @@ TEST_F(SSTrackManagerTest, AddPoints){
     track_manager_.AddPoints(points);
 
     ASSERT_EQ(4, track_manager_.tracks().size());
+
+    for (int i=0; i<track_manager_.tracks().size(); ++i){
+        ASSERT_EQ(1, track_manager_.tracks()[i].number_of_times_tracked);
+        ASSERT_FALSE(track_manager_.tracks()[i].activated);
+    }
 }
 
 TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
@@ -60,12 +67,23 @@ TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
     ASSERT_NEAR(1.1, track_manager_.tracks()[0].pos.x, 0.001);
     ASSERT_NEAR(23.5, track_manager_.tracks()[1].pos.y, 0.001);
 
+    // these points should have been activated
+    for (int i=0; i<track_manager_.tracks().size(); i++){
+        ASSERT_TRUE(track_manager_.tracks()[i].activated);
+        ASSERT_NE(0, track_manager_.tracks()[i].links.size());
+    }
+
     // At time t+1, we detect a couple of points which happen to be the same as
     // points already in tracks
     track_manager_.AddPossiblyDuplicatePoints(points2);
     ASSERT_EQ(6, track_manager_.tracks().size());
     ASSERT_NEAR(12.5, track_manager_.tracks()[5].pos.x, 0.001);
     ASSERT_NEAR(223.5, track_manager_.tracks()[2].pos.y, 0.001);
+
+    // these new points should not have been activated
+    for (int i=4; i<track_manager_.tracks().size(); i++){
+        ASSERT_FALSE(track_manager_.tracks()[i].activated);
+    }
 }
 
 TEST_F(SSTrackManagerTest, RemoveDuplicatePoints){
@@ -81,4 +99,7 @@ TEST_F(SSTrackManagerTest, RemoveDuplicatePointsAfterUpdate){
     track_manager_.RemoveDuplicatePoints(points2);
 
     ASSERT_EQ(2, points2.size());
+}
+
+TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
 }

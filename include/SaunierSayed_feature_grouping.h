@@ -4,6 +4,9 @@
 #include <cv.h>
 #include <map>
 #include <vector>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/connected_components.hpp>
+using namespace boost;
 
 /** Implemetation of Saunier Sayed 2006 algorithm. For the algorithm section, check page 4 of Saunier Sayed
   2006 A feature-based tracking algorithm for vehicles in intersections.
@@ -27,6 +30,8 @@ namespace SaunierSayed{
 
     typedef std::map<int, TrackInformation> Tracks;
     typedef std::map<int, TrackInformation>::iterator TracksIterator;
+
+    typedef adjacency_list <vecS, vecS, undirectedS> TracksConnectionGraph;
 
     class TrackManager{
     public:
@@ -54,6 +59,7 @@ namespace SaunierSayed{
         //! The id to be used for the next new track
         int next_id_;
         Tracks tracks_;
+        TracksConnectionGraph tracks_connection_graph_;
         int min_num_frame_tracked_;
         float maximum_distance_threshold_;
         float feature_segmentation_threshold_;

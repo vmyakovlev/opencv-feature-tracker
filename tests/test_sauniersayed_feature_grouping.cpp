@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include <cv.h>
+#include <iostream>
 #include "SaunierSayed_feature_grouping.h"
 
 using std::vector;
@@ -68,6 +69,8 @@ TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
     ASSERT_EQ(4, track_manager_.num_tracks());
     ASSERT_NEAR(1.1, track_manager_.tracks()[0].pos.x, 0.001);
     ASSERT_NEAR(23.5, track_manager_.tracks()[1].pos.y, 0.001);
+    ASSERT_NEAR(10.1, track_manager_.tracks()[2].pos.x, 0.001);
+    ASSERT_NEAR(1.7, track_manager_.tracks()[3].pos.x, 0.001);
 
     // At time t+1, we detect a couple of points which happen to be the same as
     // points already in tracks
@@ -104,8 +107,10 @@ TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
     // these points should have been activated
     for (int i=0; i<track_manager_.num_tracks(); i++){
         ASSERT_TRUE(track_manager_.tracks()[i].activated);
-
-        // Since these points are activated, they should now be connected to all the nearby nodes
-        // NOTE: only track 1 and track 3 are close enough to each other.
     }
+
+    // Since these points are activated, they should now be connected to all the nearby nodes
+    // NOTE: only track 1 and track 3 are close enough to each other.
+    ASSERT_EQ(4, track_manager_.num_tracks());
+    ASSERT_EQ(1, track_manager_.num_connections());
 }

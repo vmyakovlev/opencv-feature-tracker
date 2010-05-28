@@ -30,12 +30,17 @@ namespace SaunierSayed{
 
             tracks_connection_graph_[v].pos = new_points[i];
             tracks_connection_graph_[v].number_of_times_tracked++;
+        }
 
-            // NOTE: activation only happens once
+        // NOTE: Activation only happens once
+        // NOTE: Activation needs to happen after ALL the positions have been updated
+        for (int i=0; i<old_points_indices.size(); i++){
+            v = vertex(i, tracks_connection_graph_);
             if (tracks_connection_graph_[v].number_of_times_tracked == min_num_frame_tracked_){
                 ActivateTrack(i);
             }
         }
+
     }
 
     void TrackManager::ActivateTrack(int id){
@@ -55,7 +60,7 @@ namespace SaunierSayed{
         float distance;
         for( tie(vi,vi_end) = vertices(tracks_connection_graph_); vi!=vi_end; vi++){
             distance = Distance(v, *vi);
-            if (distance < maximum_distance_threshold_){
+            if (distance < maximum_distance_threshold_ && v!=*vi){
                 // make a connection between these two
                 tie(e, operation_success) = add_edge(v, *vi, tracks_connection_graph_);
 
@@ -93,6 +98,10 @@ namespace SaunierSayed{
 
     int TrackManager::num_tracks(){
         return num_vertices(tracks_connection_graph_);
+    }
+
+    int TrackManager::num_connections(){
+        return num_edges(tracks_connection_graph_);
     }
 
     void TrackManager::AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points){
@@ -137,7 +146,7 @@ namespace SaunierSayed{
 
     float TrackManager::Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2){
         // L2 distance between two tracks' positions
-        float norm_l2;
+        float norm_l2 = -1;
 
         const cv::Point2f point1 = tracks_connection_graph_[v1].pos;
         const cv::Point2f point2 = tracks_connection_graph_[v2].pos;

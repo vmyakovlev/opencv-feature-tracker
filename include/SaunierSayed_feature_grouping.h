@@ -54,6 +54,9 @@ namespace SaunierSayed{
         //! Return the number of tracks
         int num_tracks();
 
+        //! Return the number of connections amongst tracks
+        int num_connections();
+
         //! Return all tracks information
         Tracks & tracks();
     private:

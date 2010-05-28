@@ -57,7 +57,7 @@ namespace SaunierSayed{
         //! Return all tracks information
         Tracks & tracks();
     private:
-//        Tracks tracks_;
+        float Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2);
         TracksConnectionGraph tracks_connection_graph_;
 
         // Some parameters

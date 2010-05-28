@@ -32,6 +32,8 @@ class SSTrackManagerTest : public ::testing::Test {
       // points detected at time t + 1
       // NOTE: the 2nd and 3rd points is the same as new_points
       //       this is because there is high-chance that
+      //       points matched from previous time will get picked as the corner
+      //       for this time frame as well
       points2.push_back(Point2f(4.0,2.5));
       points2.push_back(Point2f(2.1,23.5));
       points2.push_back(Point2f(10.1,223.5));
@@ -67,12 +69,6 @@ TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
     ASSERT_NEAR(1.1, track_manager_.tracks()[0].pos.x, 0.001);
     ASSERT_NEAR(23.5, track_manager_.tracks()[1].pos.y, 0.001);
 
-    // these points should have been activated
-    for (int i=0; i<track_manager_.num_tracks(); i++){
-        ASSERT_TRUE(track_manager_.tracks()[i].activated);
-//        ASSERT_NE(0, track_manager_.tracks()[i].links.size());
-    }
-
     // At time t+1, we detect a couple of points which happen to be the same as
     // points already in tracks
     track_manager_.AddPossiblyDuplicatePoints(points2);
@@ -102,4 +98,14 @@ TEST_F(SSTrackManagerTest, RemoveDuplicatePointsAfterUpdate){
 }
 
 TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
+    track_manager_.AddPoints(points);
+    track_manager_.UpdatePoints(new_points, old_indices_1_2);
+
+    // these points should have been activated
+    for (int i=0; i<track_manager_.num_tracks(); i++){
+        ASSERT_TRUE(track_manager_.tracks()[i].activated);
+
+        // Since these points are activated, they should now be connected to all the nearby nodes
+        // NOTE: only track 1 and track 3 are close enough to each other.
+    }
 }

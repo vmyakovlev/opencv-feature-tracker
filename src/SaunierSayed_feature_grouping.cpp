@@ -1,4 +1,5 @@
 #include "SaunierSayed_feature_grouping.h"
+#include <iostream>
 
 namespace SaunierSayed{
     TrackManager::TrackManager(int min_num_frame_tracked, float maximum_distance_threshold, float feature_segmentation_threshold){
@@ -39,11 +40,36 @@ namespace SaunierSayed{
 
     void TrackManager::ActivateTrack(int id){
         TracksConnectionGraph::vertex_descriptor v;
+        TracksConnectionGraph::edge_descriptor e;
+        bool operation_success;
 
         v = vertex(id, tracks_connection_graph_);
         tracks_connection_graph_[v].activated = true;
 
+        // *****************************************
         // find all close-by tracks and connect them
+
+        // Find nearby tracks: this is naive algorithm but since we didn't build
+        // a kd-tree index for these vertex positions, there is not much else we can do
+        TracksConnectionGraph::vertex_iterator vi, vi_end;
+        float distance;
+        for( tie(vi,vi_end) = vertices(tracks_connection_graph_); vi!=vi_end; vi++){
+            distance = Distance(v, *vi);
+            if (distance < maximum_distance_threshold_){
+                // make a connection between these two
+                tie(e, operation_success) = add_edge(v, *vi, tracks_connection_graph_);
+
+                if (!operation_success){
+                    // TODO: Devise a better warning technique
+                    //       Consider exception
+                    std::cerr << "Unable to add an edge between " << v << " and " << *vi << std::endl;
+                }
+
+                // Assign some initial values for this edge information
+                tracks_connection_graph_[e].min_distance = distance;
+                tracks_connection_graph_[e].max_distance = distance;
+            }
+        }
     }
 
     /**
@@ -108,4 +134,18 @@ namespace SaunierSayed{
 
         input_points = cleaned_input_points;
     }
+
+    float TrackManager::Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2){
+        // L2 distance between two tracks' positions
+        float norm_l2;
+
+        const cv::Point2f point1 = tracks_connection_graph_[v1].pos;
+        const cv::Point2f point2 = tracks_connection_graph_[v2].pos;
+
+        return sqrt( (point1.x - point2.x) * (point1.x - point2.x) +
+                     (point1.y - point2.y) * (point1.y - point2.y)
+                   );
+    }
 }
+
+

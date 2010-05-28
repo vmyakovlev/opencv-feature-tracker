@@ -14,30 +14,27 @@ using namespace boost;
 namespace SaunierSayed{
 
     typedef struct LinkInformation_{
+        int id; // id of this edge (currently not used/updated)
         double min_distance; // the minimum distance this track has ever had with the target track
         double max_distance; // the maximum distance this track has ever had with the target track
     } LinkInformation;
 
-    typedef std::map<int, LinkInformation> Links;
-    typedef std::map<int, LinkInformation>::iterator LinksIterator;
-
     typedef struct TrackInformation_{
+        int id; // if of the track (vertex) (currently not used/updated)
         cv::Point2f pos;
         int number_of_times_tracked;
         bool activated;
-        std::map<int, LinkInformation> links;
     } TrackInformation;
 
     typedef std::map<int, TrackInformation> Tracks;
-    typedef std::map<int, TrackInformation>::iterator TracksIterator;
 
-    typedef adjacency_list <vecS, vecS, undirectedS> TracksConnectionGraph;
+    typedef adjacency_list <listS, listS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
 
     class TrackManager{
     public:
         TrackManager(int min_num_frame_tracked = 2, float maximum_distance_threshold = 4, float feature_segmentation_threshold = 25);
 
-        //! Add new tracks
+        //! Add new tracks without checking if there is duplications
         void AddPoints(const std::vector<cv::Point2f> & new_points);
 
         //! Add newly detected points. Remove duplicates.
@@ -54,12 +51,16 @@ namespace SaunierSayed{
         */
         void ActivateTrack(int id);
 
+        //! Return the number of tracks
+        int num_tracks();
+
+        //! Return all tracks information
         Tracks & tracks();
     private:
-        //! The id to be used for the next new track
-        int next_id_;
-        Tracks tracks_;
+//        Tracks tracks_;
         TracksConnectionGraph tracks_connection_graph_;
+
+        // Some parameters
         int min_num_frame_tracked_;
         float maximum_distance_threshold_;
         float feature_segmentation_threshold_;

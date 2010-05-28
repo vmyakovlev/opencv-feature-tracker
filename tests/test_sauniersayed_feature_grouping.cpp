@@ -50,9 +50,9 @@ class SSTrackManagerTest : public ::testing::Test {
 TEST_F(SSTrackManagerTest, AddPoints){
     track_manager_.AddPoints(points);
 
-    ASSERT_EQ(4, track_manager_.tracks().size());
+    ASSERT_EQ(4, track_manager_.num_tracks());
 
-    for (int i=0; i<track_manager_.tracks().size(); ++i){
+    for (int i=0; i<track_manager_.num_tracks(); ++i){
         ASSERT_EQ(1, track_manager_.tracks()[i].number_of_times_tracked);
         ASSERT_FALSE(track_manager_.tracks()[i].activated);
     }
@@ -60,28 +60,28 @@ TEST_F(SSTrackManagerTest, AddPoints){
 
 TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
     track_manager_.AddPoints(points);
-    ASSERT_EQ(4, track_manager_.tracks().size());
+    ASSERT_EQ(4, track_manager_.num_tracks());
 
     track_manager_.UpdatePoints(new_points, old_indices_1_2);
-    ASSERT_EQ(4, track_manager_.tracks().size());
+    ASSERT_EQ(4, track_manager_.num_tracks());
     ASSERT_NEAR(1.1, track_manager_.tracks()[0].pos.x, 0.001);
     ASSERT_NEAR(23.5, track_manager_.tracks()[1].pos.y, 0.001);
 
     // these points should have been activated
-    for (int i=0; i<track_manager_.tracks().size(); i++){
+    for (int i=0; i<track_manager_.num_tracks(); i++){
         ASSERT_TRUE(track_manager_.tracks()[i].activated);
-        ASSERT_NE(0, track_manager_.tracks()[i].links.size());
+//        ASSERT_NE(0, track_manager_.tracks()[i].links.size());
     }
 
     // At time t+1, we detect a couple of points which happen to be the same as
     // points already in tracks
     track_manager_.AddPossiblyDuplicatePoints(points2);
-    ASSERT_EQ(6, track_manager_.tracks().size());
+    ASSERT_EQ(6, track_manager_.num_tracks());
     ASSERT_NEAR(12.5, track_manager_.tracks()[5].pos.x, 0.001);
     ASSERT_NEAR(223.5, track_manager_.tracks()[2].pos.y, 0.001);
 
     // these new points should not have been activated
-    for (int i=4; i<track_manager_.tracks().size(); i++){
+    for (int i=4; i<track_manager_.num_tracks(); i++){
         ASSERT_FALSE(track_manager_.tracks()[i].activated);
     }
 }

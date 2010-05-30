@@ -6,7 +6,9 @@ add_subdirectory(thirdparty)
 MACRO(QuickSetup)
 cmake_minimum_required(VERSION 2.6)
 find_package(OpenCV REQUIRED)
+find_package(Boost REQUIRED)
 include_directories(
+    ${Boost_INCLUDE_DIR}
 	${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/thirdparty/daisy-1.8.1/include
 )

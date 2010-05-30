@@ -49,7 +49,7 @@ namespace SaunierSayed{
     /**
       \note This method makes copy of the internal data and is thus very slow
     */
-    Tracks & TrackManager::tracks(){
+    Tracks TrackManager::tracks(){
         Tracks all_track_information;
 
         TracksConnectionGraph::vertex_descriptor v;

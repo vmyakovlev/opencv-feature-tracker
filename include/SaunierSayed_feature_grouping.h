@@ -28,7 +28,7 @@ namespace SaunierSayed{
 
     typedef std::map<int, TrackInformation> Tracks;
 
-    typedef adjacency_list <listS, listS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
+    typedef adjacency_list <setS, setS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
 
     class TrackManager{
     public:
@@ -55,7 +55,8 @@ namespace SaunierSayed{
         int num_tracks();
 
         //! Return all tracks information
-        Tracks & tracks();
+        Tracks tracks();
+
     private:
 //        Tracks tracks_;
         TracksConnectionGraph tracks_connection_graph_;

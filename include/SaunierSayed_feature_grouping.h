@@ -54,11 +54,27 @@ namespace SaunierSayed{
         //! Return the number of tracks
         int num_tracks();
 
-        //! Return all tracks information
-        Tracks tracks();
+        //! Return the number of connections amongst tracks
+        int num_connections();
 
+        //////// These API should be used with care since they are not fast
+        //! Return all tracks information
+        Tracks tracks() const;
+
+        //! Return edge information for a specfic vertex pairs
+        /**
+          Make sure you check the return value prior to accessing the data in output_link_information
+          Since the graph structure is undirected. get_edge_information(1,2,&out) gives the same result as
+          get_edge_information(2,1,&out)
+
+          \param vertex_id_1 id of the first vertex in this edge
+          \param vertex_id_2 id of the second vertex in this edge
+          \param[out] output_link_information structure to write out the link information
+          \return True if an edge exists
+        */
+        bool get_edge_information(int vertex_id_1, int vertex_id_2, LinkInformation * output_link_information) const;
     private:
-//        Tracks tracks_;
+        float Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2);
         TracksConnectionGraph tracks_connection_graph_;
 
         // Some parameters

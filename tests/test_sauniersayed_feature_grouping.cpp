@@ -128,16 +128,26 @@ TEST_F(SSTrackManagerTest, RemoveDuplicatePointsAfterUpdate){
 TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
     track_manager_.AddPoints(points);
     track_manager_.UpdatePoints(new_points, old_indices_1_2);
+    track_manager_.AddPossiblyDuplicatePoints(points2);
 
-    // these points should have been activated
-    for (int i=0; i<track_manager_.num_tracks(); i++){
+    // 0-3 points should have been activated
+    for (int i=0; i<4; i++){
         ASSERT_TRUE(track_manager_.tracks()[i].activated);
     }
 
     // Since these points are activated, they should now be connected to all the nearby nodes
     // NOTE: only track 1 and track 3 are close enough to each other.
-    ASSERT_EQ(4, track_manager_.num_tracks());
+    ASSERT_EQ(6, track_manager_.num_tracks());
     ASSERT_EQ(1, track_manager_.num_connections());
+
+    // Another time step, only 0-3 are updated
+    track_manager_.UpdatePoints(new_points2, old_indices_2_3);
+    ASSERT_TRUE(track_manager_.tracks()[0].activated);
+    ASSERT_TRUE(track_manager_.tracks()[1].activated);
+    ASSERT_TRUE(track_manager_.tracks()[2].activated);
+    ASSERT_TRUE(track_manager_.tracks()[3].activated);
+    ASSERT_FALSE(track_manager_.tracks()[4].activated);
+    ASSERT_FALSE(track_manager_.tracks()[5].activated);
 }
 
 TEST_F(SSTrackManagerTest, MaxDistanceMinDistanceUpdate){

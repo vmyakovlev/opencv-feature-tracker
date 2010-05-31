@@ -65,7 +65,7 @@ namespace SaunierSayed{
         for (int i=0; i<old_points_indices.size(); i++){
             v = vertex(old_points_indices[i], tracks_connection_graph_);
             if (tracks_connection_graph_[v].number_of_times_tracked == min_num_frame_tracked_){
-                ActivateTrack(i);
+                ActivateTrack(old_points_indices[i]);
             }
         }
 

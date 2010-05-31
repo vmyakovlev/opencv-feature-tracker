@@ -5,7 +5,6 @@
 #include <map>
 #include <vector>
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/connected_components.hpp>
 using namespace boost;
 
 /** Implemetation of Saunier Sayed 2006 algorithm. For the algorithm section, check page 4 of Saunier Sayed
@@ -20,15 +19,17 @@ namespace SaunierSayed{
     } LinkInformation;
 
     typedef struct TrackInformation_{
-        int id; // if of the track (vertex) (currently not used/updated)
+        int id; // if of the track (vertex) (synced with vertex_index internally managed by BGL)
         cv::Point2f pos;
         int number_of_times_tracked;
         bool activated;
     } TrackInformation;
 
     typedef std::map<int, TrackInformation> Tracks;
+    typedef std::vector<TrackInformation> ConnectedComponent;
+    typedef std::vector<ConnectedComponent> ConnectedComponents;
 
-    typedef adjacency_list <setS, setS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
+    typedef adjacency_list <listS, vecS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
 
     class TrackManager{
     public:
@@ -50,6 +51,17 @@ namespace SaunierSayed{
         /** Activate a track will connect it to all tracks that are current close by
         */
         void ActivateTrack(int id);
+
+        //! Cut the link(edge) where max_distance - min_distance > D_segmentation
+        void SegmentFarAwayTracks();
+
+        //! Find the connected components in our graph structure
+        /** The name is intentionally CamelCase despite methods that starts with get usually has lower cases.
+          The reason is because this operation is not simple. The CamelCase signifies this.
+
+          \return connected components (each connected component is a group of TrackInformation)
+         */
+        ConnectedComponents GetConnectedComponents() const;
 
         //! Return the number of tracks
         int num_tracks();

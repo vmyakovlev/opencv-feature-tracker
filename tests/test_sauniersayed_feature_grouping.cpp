@@ -56,16 +56,23 @@ class SSTrackManagerTest : public ::testing::Test {
       new_points2.push_back(Point2f(1.7, 24.6));
       old_indices_2_3.push_back(1);
       old_indices_2_3.push_back(3);
+
+      // how these detected points map to new points at time t + 3
+      new_points3.push_back(Point2f(1, 0));
+      new_points3.push_back(Point2f(1.7, 54.6));
+      old_indices_3_4.push_back(1);
+      old_indices_3_4.push_back(3);
   }
 
   // virtual void TearDown() {}
 
   ss::TrackManager track_manager_;
   vector<Point2f> points;
-  vector<Point2f> new_points, new_points2;
+  vector<Point2f> new_points, new_points2, new_points3;
   vector<Point2f> points2;
   vector<int> old_indices_1_2, // indices mapping from 1 to 2
-            old_indices_2_3; // indices mapping from 2 to 3
+            old_indices_2_3, // indices mapping from 2 to 3
+            old_indices_3_4;
 };
 
 TEST_F(SSTrackManagerTest, AddPoints){
@@ -169,4 +176,33 @@ TEST_F(SSTrackManagerTest, GetEdgeInformation){
     ASSERT_FALSE(track_manager_.get_edge_information(2,3, &edge_info1));
     ASSERT_FALSE(track_manager_.get_edge_information(0,3, &edge_info1));
     ASSERT_FALSE(track_manager_.get_edge_information(0,1, &edge_info1));
+}
+
+TEST_F(SSTrackManagerTest, EdgeIsSeveredIfDistanceTooLarge){
+    track_manager_.AddPoints(points);
+    track_manager_.UpdatePoints(new_points, old_indices_1_2);
+    track_manager_.UpdatePoints(new_points2, old_indices_2_3);
+    track_manager_.UpdatePoints(new_points3, old_indices_3_4);
+
+    // NOTE: the last point update was meant to break any possible link between 1 and 3
+    ss::LinkInformation edge_info;
+    ASSERT_FALSE(track_manager_.get_edge_information(1,3, &edge_info));
+}
+
+TEST_F(SSTrackManagerTest, GetConnectedComponents){
+    track_manager_.AddPoints(points);
+    track_manager_.UpdatePoints(new_points, old_indices_1_2);
+    track_manager_.UpdatePoints(new_points2, old_indices_2_3);
+
+    ss::ConnectedComponents connected_components = track_manager_.GetConnectedComponents();
+
+    // There are 3 components: one that has 2 element, the other two have 1 elements
+    ASSERT_EQ(3, connected_components.size());
+
+    ASSERT_EQ(1, connected_components[0].size());
+
+    ASSERT_EQ(1, connected_components[1][0].id);
+    ASSERT_EQ(3, connected_components[1][1].id);
+
+    ASSERT_EQ(1, connected_components[2].size());
 }

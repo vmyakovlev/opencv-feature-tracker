@@ -1,4 +1,5 @@
 #include "SaunierSayed_feature_grouping.h"
+#include <boost/graph/connected_components.hpp>
 #include <iostream>
 
 namespace SaunierSayed{
@@ -16,6 +17,7 @@ namespace SaunierSayed{
             v = add_vertex(tracks_connection_graph_);
 
             // set default property values for this vertex
+            tracks_connection_graph_[v].id = (int)v; // TODO: Fix this, casting it to get the vertex_index is not that best idea
             tracks_connection_graph_[v].pos = new_points[i];
             tracks_connection_graph_[v].activated = false;
             tracks_connection_graph_[v].number_of_times_tracked = 1;
@@ -67,6 +69,7 @@ namespace SaunierSayed{
             }
         }
 
+        SegmentFarAwayTracks();
     }
 
     void TrackManager::ActivateTrack(int id){
@@ -87,6 +90,12 @@ namespace SaunierSayed{
         for( tie(vi,vi_end) = vertices(tracks_connection_graph_); vi!=vi_end; vi++){
             distance = Distance(v, *vi);
             if (distance < maximum_distance_threshold_ && v!=*vi){
+                tie(e, operation_success) = edge(v, *vi, tracks_connection_graph_);
+                if (operation_success){
+                    std::cout << "Debug: There already exists an edge between " << v << " and " << *vi << ". Skipping." << std::endl;
+                    continue;
+                }
+
                 // make a connection between these two
                 tie(e, operation_success) = add_edge(v, *vi, tracks_connection_graph_);
 
@@ -99,6 +108,27 @@ namespace SaunierSayed{
                 // Assign some initial values for this edge information
                 tracks_connection_graph_[e].min_distance = distance;
                 tracks_connection_graph_[e].max_distance = distance;
+            }
+        }
+    }
+
+    void TrackManager::SegmentFarAwayTracks(){
+        // go through all edges
+        TracksConnectionGraph::edge_iterator edge_it, edge_it_end, next_it;
+        float min_distance, max_distance;
+        tie(edge_it, edge_it_end)=edges(tracks_connection_graph_);
+        for (next_it=edge_it; edge_it!=edge_it_end; edge_it=next_it){
+            next_it++;
+
+            // Check that this edge satisfy the condition
+            min_distance = tracks_connection_graph_[*edge_it].min_distance;
+            max_distance = tracks_connection_graph_[*edge_it].max_distance;
+
+            if (max_distance - min_distance > feature_segmentation_threshold_){
+                // severe this edge
+                // Care must be taken not to severe the CURRENT iterator, hence the use of next_it
+                // SEE: http://www.boost.org/doc/libs/1_43_0/libs/graph/doc/adjacency_list.html
+                remove_edge(*edge_it, tracks_connection_graph_);
             }
         }
     }
@@ -200,5 +230,29 @@ namespace SaunierSayed{
         return sqrt( (point1.x - point2.x) * (point1.x - point2.x) +
                      (point1.y - point2.y) * (point1.y - point2.y)
                    );
+    }
+
+    ConnectedComponents TrackManager::GetConnectedComponents() const{
+        // Call Boost Graph connected component function
+        std::vector<int> component(num_vertices(tracks_connection_graph_));
+        int num_components = connected_components(tracks_connection_graph_, &component[0]);
+
+        ConnectedComponents return_connected_components(num_components);
+
+        // This gives us a mapping
+        // vertex_id => component_id
+
+        // What we need now is
+        // component_id => [vertex_id_1, vertex_id_2, vertex_id_3, ...]
+        Tracks all_tracks = tracks();
+
+        //assert(all_tracks.size() == component.size())
+        int component_id;
+        for (int i=0; i<all_tracks.size(); i++){
+            component_id = component[i];
+            return_connected_components[component_id].push_back(all_tracks[i]);
+        }
+
+        return return_connected_components;
     }
 }

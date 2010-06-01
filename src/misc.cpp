@@ -41,9 +41,10 @@ void vector_one_to_another<cv::KeyPoint,cv::Point2f>(const vector<cv::KeyPoint> 
 
   \note Only read float now.
   \todo Templatize to read other datatypes
-  \bug Does not deal with white space at the end the first line.
+  \bug Does not deal with white space at the end the lines.
   \bug Does not deal with comment character (e.g. #)
   \bug Does not deal with column skipping (i.e. not possible to read files that have non-numeric columns)
+  \bug Does not deal with blank lines
 */
 Mat loadtxt(string filename){
     ifstream ifs(filename.c_str());

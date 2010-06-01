@@ -81,3 +81,34 @@ TEST(TestOpenCV, SimpleColumnMultiplyAdd){
 TEST(TestOpenCV, CreateEmptyMatrix){
     ASSERT_TRUE(Mat().empty());
 }
+
+TEST(TestOpenCV, ConvertVectorPoint2fToMat){
+    std::vector<cv::Point2f> points;
+    points.push_back(cv::Point2f(2.5,1.6));
+    points.push_back(cv::Point2f(25,1.3));
+    points.push_back(cv::Point2f(2.6,1.2));
+    points.push_back(cv::Point2f(27,3.6));
+
+    // This won't work
+    // Mat points_mat = points;
+
+    // Convert points (traditional conversion)
+    Mat points_mat(points.size(), 1, CV_32FC2);
+    points_mat.at< cv::Vec2f >(0,0) = points[0];
+    points_mat.at< cv::Vec2f >(1,0) = points[1];
+    points_mat.at< cv::Vec2f >(2,0) = points[2];
+    points_mat.at< cv::Vec2f >(3,0) = points[3];
+
+    ASSERT_NEAR(2.5, points_mat.at<cv::Vec2f>(0,0)[0], 0.001);
+    ASSERT_NEAR(1.3, points_mat.at<cv::Vec2f>(1,0)[1], 0.001);
+    ASSERT_NEAR(25, points_mat.at<cv::Vec2f>(1,0)[0], 0.001);
+
+    // Convert points (use explicit construction from vector)
+    Mat points_mat2(points, false);
+    ASSERT_NEAR(2.5, points_mat2.at<cv::Vec2f>(0,0)[0], 0.001);
+    ASSERT_NEAR(1.3, points_mat2.at<cv::Vec2f>(1,0)[1], 0.001);
+    ASSERT_NEAR(25, points_mat2.at<cv::Vec2f>(1,0)[0], 0.001);
+    ASSERT_EQ(4, points_mat2.rows);
+    ASSERT_EQ(1, points_mat2.cols);
+    ASSERT_EQ(2, points_mat2.channels());
+}

@@ -14,7 +14,19 @@ using namespace cv;
 
 DEFINE_bool(homography_point_correspondence, false, "The homography file contains correspondences instead of the homography matrix");
 
+void convert_to_world_coordinate(const vector<Point2f> & points_in_image_coordinate, const Mat & homography_matrix, vector<Point2f> * points_in_world_coordinate){
+    points_in_world_coordinate->clear();
+    points_in_world_coordinate->resize(points_in_image_coordinate.size());
+    Point2f temp_point;
+
+    Mat points_in_image_coordinate_mat(points_in_image_coordinate, false); // sharing data
+    Mat points_in_world_coordinate_mat(*points_in_world_coordinate, false); // sharing data so output is written to the right place
+    perspectiveTransform(points_in_image_coordinate_mat, points_in_world_coordinate_mat, homography_matrix);
+}
+
 int main (int argc, char ** argv){
+    google::ParseCommandLineFlags(&argc, &argv, true);
+
     if (argc < 3){
         cout << "Usage: %prog [options] input_video.avi homography.txt\n";
         exit(-1);
@@ -78,7 +90,8 @@ int main (int argc, char ** argv){
     //**************************************************************
     // SOME WINDOWS FOR VISUALIZATION
     const string window1("Frame");
-    //namedWindow(window1);
+    const string window2("World Coordinate");
+    namedWindow(window2);
 
     int keypressed_code;
 

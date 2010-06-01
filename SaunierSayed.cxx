@@ -2,6 +2,7 @@
 #include <highgui.h>
 #include <iostream>
 #include <string>
+#include <gflags/gflags.h>
 using namespace std;
 using namespace cv;
 
@@ -9,10 +10,13 @@ using namespace cv;
 #include "feature_detector.h"
 #include "descriptor_match.h"
 #include "window_pair.h"
+#include "SaunierSayed_feature_grouping.h"
+
+DEFINE_bool(homography_point_correspondence, false, "The homography file contains correspondences instead of the homography matrix");
 
 int main (int argc, char ** argv){
     if (argc < 3){
-        cout << "Usage: %prog [options] input_video.avi homography_points.txt\n";
+        cout << "Usage: %prog [options] input_video.avi homography.txt\n";
         exit(-1);
     }
     //**************************************************************
@@ -23,12 +27,24 @@ int main (int argc, char ** argv){
     //**************************************************************
     // Get the homography which brings coordinates in the image ground plane to world ground plane
 
-    // Load points from file
-    Mat homography_points = loadtxt(homography_points_filename);
-    Mat image_points = homography_points.rowRange(0,4);
-    Mat world_points = homography_points.rowRange(4,8);
+    // We allow two different ways to pass in homography information
+    // 1 - Read from a file (default)
+    // 2 - Calculate from points correspondence
+    Mat homography_matrix;
 
-    Mat homography_matrix = findHomography(image_points, world_points);
+    if (FLAGS_homography_point_correspondence){
+        // Load points from file
+        Mat homography_points = loadtxt(homography_points_filename);
+        Mat image_points = homography_points.rowRange(0,4);
+        Mat world_points = homography_points.rowRange(4,8);
+
+        homography_matrix = findHomography(image_points, world_points);
+    } else {
+        // simply read the homography matrix from file
+        homography_matrix = loadtxt(homography_points_filename);
+    }
+
+    // Verbose debug printing
     std::cout << "Homography matrix: " << std::endl;
     print_matrix<float>(homography_matrix);
 
@@ -72,6 +88,7 @@ int main (int argc, char ** argv){
     Mat next_frame;
     vector<Point2f> new_points;
     vector<int> old_points_indices;
+    SaunierSayed::TrackManager feature_grouper;
 
     // Initialize our previous frame
     video_capture.grab();
@@ -79,6 +96,11 @@ int main (int argc, char ** argv){
     cvtColor(a_frame,prev_frame, CV_RGB2GRAY);
     feature_detector.detect(prev_frame, key_points);
     feature_matcher.add(prev_frame, key_points);
+
+    // Add detected points from the first frame to our feature grouper
+    vector<Point2f> frame_points;
+    vector_one_to_another(key_points, frame_points);
+    feature_grouper.AddPoints(frame_points);
 
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
@@ -91,7 +113,7 @@ int main (int argc, char ** argv){
         feature_matcher.search(next_frame, new_points, old_points_indices);
 
         // Tally these new points into our graphical model
-
+        feature_grouper.UpdatePoints(new_points, old_points_indices);
 
         // Show the frames (with optional annotations)
         WindowPair window_pair(prev_frame,next_frame,window1);
@@ -112,7 +134,12 @@ int main (int argc, char ** argv){
         next_frame.copyTo(prev_frame);
         feature_detector.detect(prev_frame, key_points);
         feature_matcher.add(prev_frame, key_points);
+
+        vector_one_to_another(key_points, frame_points);
+        feature_grouper.AddPossiblyDuplicatePoints(frame_points);
     }
+
+    // Collect track information
 
     cout << "Done\n";
 

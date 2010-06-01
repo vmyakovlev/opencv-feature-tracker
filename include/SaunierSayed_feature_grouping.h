@@ -69,7 +69,7 @@ namespace SaunierSayed{
         //! Return the number of connections amongst tracks
         int num_connections();
 
-        //////// These API should be used with care since they are not fast
+        //////// These API should be used with care since they are not fast due to data copying
         //! Return all tracks information
         Tracks tracks() const;
 

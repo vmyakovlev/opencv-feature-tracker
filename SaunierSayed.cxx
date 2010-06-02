@@ -112,8 +112,15 @@ int main (int argc, char ** argv){
 
     // Add detected points from the first frame to our feature grouper
     vector<Point2f> frame_points;
+    vector<Point2f> frame_points_in_world;
     vector_one_to_another(key_points, frame_points);
-    feature_grouper.AddPoints(frame_points);
+    convert_to_world_coordinate(frame_points, homography_matrix, &frame_points_in_world);
+    feature_grouper.AddPoints(frame_points_in_world);
+
+    // unwarp the image using this homography matrix and shows it
+    Mat warpedImage;
+    warpPerspective(a_frame, warpedImage, homography_matrix, Size(512,512), CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS);
+    imshow(window2, warpedImage);
 
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
@@ -149,10 +156,11 @@ int main (int argc, char ** argv){
         feature_matcher.add(prev_frame, key_points);
 
         vector_one_to_another(key_points, frame_points);
-        feature_grouper.AddPossiblyDuplicatePoints(frame_points);
+        convert_to_world_coordinate(frame_points, homography_matrix, &frame_points_in_world);
+        feature_grouper.AddPossiblyDuplicatePoints(frame_points_in_world);
     }
 
-    // Collect track information
+    //TODO: Collect track information and Report
 
     cout << "Done\n";
 

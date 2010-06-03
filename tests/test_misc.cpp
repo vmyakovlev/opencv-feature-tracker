@@ -8,6 +8,32 @@ using cv::Mat;
 using cv::KeyPoint;
 using cv::Point2f;
 
+TEST(TestMisc, UnWarpUsingHomographyFromPoints){
+    Mat corresponding_pairs = loadtxt(data_folder_path + "/test1.avi.homography.txt");
+
+    Mat image_points = corresponding_pairs.rowRange(0,4);
+    printf("image_points =\n");
+    print_matrix<float>(image_points);
+
+    Mat world_points = corresponding_pairs.rowRange(4,8);
+    printf("world_points =\n");
+    print_matrix<float>(world_points);
+
+    Mat homography_matrix = findHomography(image_points, world_points);
+
+    ASSERT_EQ(3, homography_matrix.cols);
+    ASSERT_EQ(3, homography_matrix.rows);
+
+    printf("homography_matrix =\n");
+    print_matrix<float>(homography_matrix);
+
+    // unwrap image
+    Mat im = cv::imread(data_folder_path + "test_avi1.png");
+    Mat unwarped_image;
+    cv::warpPerspective(im, unwarped_image, homography_matrix, cv::Size(400,400));
+    cv::imwrite("unwarped_frame_from_poins.png", unwarped_image);
+}
+
 TEST(TestMisc, UnWarpUsingHomographyMatrixImage){
     Mat homography_matrix = loadtxt(data_folder_path + "/test2.avi.homography.mat");
 
@@ -22,7 +48,7 @@ TEST(TestMisc, UnWarpUsingHomographyMatrixImage){
     Mat unwarped_image;
     cv::warpPerspective(image, unwarped_image, homography_matrix, cv::Size(256,256), CV_WARP_INVERSE_MAP);
 
-    cv::imwrite("unwarped_frame.png", unwarped_image);
+    cv::imwrite("unwarped_frame_from_file.png", unwarped_image);
 }
 
 TEST(TestMisc, UnWarpUsingHomographyMatrix){

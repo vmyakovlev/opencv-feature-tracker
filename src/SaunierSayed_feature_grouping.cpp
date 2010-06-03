@@ -3,10 +3,45 @@
 #include <iostream>
 
 namespace SaunierSayed{
-    TrackManager::TrackManager(int min_num_frame_tracked, float maximum_distance_threshold, float feature_segmentation_threshold){
+    TrackManager::TrackManager(int min_num_frame_tracked, float maximum_distance_threshold, float feature_segmentation_threshold, bool log_track_to_file){
         min_num_frame_tracked_ = min_num_frame_tracked;
         maximum_distance_threshold_ = maximum_distance_threshold;
         feature_segmentation_threshold_ = feature_segmentation_threshold;
+
+        logging_ = log_track_to_file;
+
+        if (logging_){
+            log_file_.open("TrackManager.log", std::ios::out);
+
+            if (!log_file_.is_open()){
+                std::cerr << "Error: Cannot open log file" << std::endl;
+            }
+        }
+
+        current_time_stamp_id_ = 0;
+    }
+
+    TrackManager::~TrackManager(){
+        if (logging_)
+            log_file_.close();
+    }
+
+    TrackManager& TrackManager::operator=(const TrackManager & other){
+        // Handle self assignment
+        if (this == &other)
+            return *this;
+
+        // Perform assignments on everything except log file
+        tracks_connection_graph_ =  other.tracks_connection_graph_ ;
+        min_num_frame_tracked_ = other.min_num_frame_tracked_;
+        maximum_distance_threshold_ = other.maximum_distance_threshold_;
+        feature_segmentation_threshold_ = other.feature_segmentation_threshold_;
+        current_time_stamp_id_ = other.current_time_stamp_id_;
+
+        // Disable logging on copied object since the log file object is not copyable
+        logging_ = false;
+
+        return *this;
     }
 
     void TrackManager::AddPoints(const std::vector<cv::Point2f> & new_points){
@@ -69,7 +104,30 @@ namespace SaunierSayed{
             }
         }
 
+        // Log: current information of each track at this time frame
+        if (logging_){
+            LogCurrentTrackInfo();
+        }
+
         SegmentFarAwayTracks();
+
+        // next time stamp
+        current_time_stamp_id_++;
+    }
+
+    void TrackManager::LogCurrentTrackInfo(){
+        // iterate through tracks
+        TracksConnectionGraph::vertex_iterator vi, viend;
+
+        for (tie(vi, viend) = vertices(tracks_connection_graph_); vi != viend; ++vi ){
+            // Write this track information to file
+            log_file_ << current_time_stamp_id_ << " "
+                    << tracks_connection_graph_[*vi].id << " "
+                    << tracks_connection_graph_[*vi].pos.x << " "
+                    << tracks_connection_graph_[*vi].pos.y << " "
+                    << tracks_connection_graph_[*vi].activated << " "
+                    << std::endl;
+        }
     }
 
     void TrackManager::ActivateTrack(int id){

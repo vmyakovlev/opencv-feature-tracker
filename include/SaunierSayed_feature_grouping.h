@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <boost/graph/adjacency_list.hpp>
+#include <fstream>
 using namespace boost;
 
 /** Implemetation of Saunier Sayed 2006 algorithm. For the algorithm section, check page 4 of Saunier Sayed
@@ -33,7 +34,10 @@ namespace SaunierSayed{
 
     class TrackManager{
     public:
-        TrackManager(int min_num_frame_tracked = 2, float maximum_distance_threshold = 4, float feature_segmentation_threshold = 25);
+        TrackManager(int min_num_frame_tracked = 2, float maximum_distance_threshold = 4, float feature_segmentation_threshold = 25, bool log_track_to_file = false);
+        ~TrackManager();
+
+        TrackManager& operator=(const TrackManager & other);
 
         //! Add new tracks without checking if there is duplications
         void AddPoints(const std::vector<cv::Point2f> & new_points);
@@ -87,12 +91,25 @@ namespace SaunierSayed{
         bool get_edge_information(int vertex_id_1, int vertex_id_2, LinkInformation * output_link_information) const;
     private:
         float Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2);
+
+        /** \brief Log the current track information into internal log file
+
+          Currently only log track positions
+        */
+        void LogCurrentTrackInfo();
+
         TracksConnectionGraph tracks_connection_graph_;
 
         // Some parameters
         int min_num_frame_tracked_;
         float maximum_distance_threshold_;
         float feature_segmentation_threshold_;
+
+        // Some flags
+        bool logging_; //!< Are we logging track information?
+
+        int current_time_stamp_id_;
+        std::ofstream log_file_;
     };
 }
 

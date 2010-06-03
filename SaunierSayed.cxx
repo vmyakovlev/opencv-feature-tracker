@@ -1,6 +1,7 @@
 #include <cv.h>
 #include <highgui.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <gflags/gflags.h>
 using namespace std;
@@ -13,6 +14,7 @@ using namespace cv;
 #include "SaunierSayed_feature_grouping.h"
 
 DEFINE_bool(homography_point_correspondence, false, "The homography file contains correspondences instead of the homography matrix");
+DEFINE_bool(debug_gui, true, "Use GUI to debug");
 
 void convert_to_world_coordinate(const vector<Point2f> & points_in_image_coordinate, const Mat & homography_matrix, vector<Point2f> * points_in_world_coordinate){
     points_in_world_coordinate->clear();
@@ -27,14 +29,16 @@ void convert_to_world_coordinate(const vector<Point2f> & points_in_image_coordin
 int main (int argc, char ** argv){
     google::ParseCommandLineFlags(&argc, &argv, true);
 
-    if (argc < 3){
-        cout << "Usage: %prog [options] input_video.avi homography.txt\n";
+    if (argc < 4){
+        cout << "Usage: %prog [options] input_video.avi homography.txt output.txt\n";
         exit(-1);
     }
+
     //**************************************************************
     // PARAMETERS
     const string input_video_filename = string(argv[1]);
     const string homography_points_filename = string(argv[2]);
+    const string output_filename = string(argv[3]);
 
     //**************************************************************
     // Get the homography which brings coordinates in the image ground plane to world ground plane
@@ -103,7 +107,7 @@ int main (int argc, char ** argv){
     Mat next_frame;
     vector<Point2f> new_points;
     vector<int> old_points_indices;
-    SaunierSayed::TrackManager feature_grouper;
+    SaunierSayed::TrackManager feature_grouper(2,4,25,true);
 
     // Initialize our previous frame
     video_capture.grab();
@@ -120,13 +124,13 @@ int main (int argc, char ** argv){
     feature_grouper.AddPoints(frame_points_in_world);
 
     // unwarp the image using this homography matrix and shows it
-    Mat warpedImage;
-    warpPerspective(a_frame, warpedImage, homography_matrix, Size(512,512),
-                    //CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS);
-                    CV_WARP_INVERSE_MAP | CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS);
-    imshow(window2, warpedImage);
-    imshow(window3, a_frame);
-    waitKey(0);
+//    Mat warpedImage;
+//    warpPerspective(a_frame, warpedImage, homography_matrix, Size(512,512),
+//                    //CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS);
+//                    CV_WARP_INVERSE_MAP | CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS);
+//    imshow(window2, warpedImage);
+//    imshow(window3, a_frame);
+//    waitKey(0);
 
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
@@ -142,19 +146,23 @@ int main (int argc, char ** argv){
         // Tally these new points into our graphical model
         feature_grouper.UpdatePoints(new_points, old_points_indices);
 
-        // Show the frames (with optional annotations)
-        WindowPair window_pair(prev_frame,next_frame,window1);
-        // Draw these keypoints
-        for (int i=0; i<old_points_indices.size(); ++i){
-            window_pair.DrawArrow(key_points[old_points_indices[i]].pt, new_points[i], CV_RGB(255,0,0));
-        }
+        // *********************************************************
+        // Show GUI for debugging purposes
+        if (FLAGS_debug_gui){
+            // Show the frames (with optional annotations)
+            WindowPair window_pair(prev_frame,next_frame,window1);
+            // Draw these keypoints
+            for (int i=0; i<old_points_indices.size(); ++i){
+                window_pair.DrawArrow(key_points[old_points_indices[i]].pt, new_points[i], CV_RGB(255,0,0));
+            }
 
-        // Handle GUI events by waiting for a key
-        keypressed_code = window_pair.Show();
-        if (keypressed_code == 27){ // ESC key
-            // take a screenshot
-            imwrite("screenshot.png", a_frame);
-            break;
+            // Handle GUI events by waiting for a key
+            keypressed_code = window_pair.Show();
+            if (keypressed_code == 27){ // ESC key
+                // take a screenshot
+                imwrite("screenshot.png", a_frame);
+                break;
+            }
         }
 
         // Go to the next frame
@@ -165,9 +173,31 @@ int main (int argc, char ** argv){
         vector_one_to_another(key_points, frame_points);
         convert_to_world_coordinate(frame_points, homography_matrix, &frame_points_in_world);
         feature_grouper.AddPossiblyDuplicatePoints(frame_points_in_world);
+
+        // some indication of stuff working
+        std::cout << ".";
     }
 
     //TODO: Collect track information and Report
+    SaunierSayed::ConnectedComponents components = feature_grouper.GetConnectedComponents();
+
+    // Write components to disk
+    ofstream output_file;
+    output_file.open(output_filename.c_str());
+
+    SaunierSayed::ConnectedComponent component;
+    for (int i=0; i<components.size(); ++i){
+        component = components[i];
+
+        output_file << i << " ";
+        for (int j=0; j<component.size(); ++j){
+            output_file << component[j].id << " ";
+        }
+
+        output_file << std::endl;
+    }
+
+    output_file.close();
 
     cout << "Done\n";
 

@@ -22,6 +22,7 @@ else (WIN32)
 		libgflags.dylib
 		HINTS
 		/usr/local/lib			
+        /usr/lib
 	)
 endif (WIN32)
 

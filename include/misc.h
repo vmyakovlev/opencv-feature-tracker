@@ -78,5 +78,8 @@ template<typename T> void print_matrix(const cv::Mat & mat){
         std::cout << std::endl;
     }
 }
+
+// Providing printing support for Vec2f
+std::ostream& operator<< (std::ostream& out, const cv::Vec2f & vec );
 #endif
 

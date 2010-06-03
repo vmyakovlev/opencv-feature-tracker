@@ -90,8 +90,10 @@ int main (int argc, char ** argv){
     //**************************************************************
     // SOME WINDOWS FOR VISUALIZATION
     const string window1("Frame");
+    const string window3("Original");
     const string window2("World Coordinate");
     namedWindow(window2);
+    namedWindow(window3);
 
     int keypressed_code;
 
@@ -119,12 +121,17 @@ int main (int argc, char ** argv){
 
     // unwarp the image using this homography matrix and shows it
     Mat warpedImage;
-    warpPerspective(a_frame, warpedImage, homography_matrix, Size(512,512), CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS);
+    warpPerspective(a_frame, warpedImage, homography_matrix, Size(512,512),
+                    //CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS);
+                    CV_WARP_INVERSE_MAP | CV_INTER_LINEAR | CV_WARP_FILL_OUTLIERS);
     imshow(window2, warpedImage);
+    imshow(window3, a_frame);
+    waitKey(0);
 
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
         cvtColor(a_frame,next_frame, CV_RGB2GRAY);
+        imshow(window3, a_frame);
 
         // Since we are using KLT, we will use KLTTracker directly without
         // switching to using DescriptorExtractor

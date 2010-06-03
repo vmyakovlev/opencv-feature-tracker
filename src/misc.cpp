@@ -184,3 +184,9 @@ Mat FindInterestPoints(const Mat & gray_im, const char * query_point_filename, i
 
     return interest_points;
 }
+
+std::ostream& operator<< (std::ostream& out, const cv::Vec2f & vec )
+{
+    out << vec[0] << " " << vec[1] << " ";
+    return out;
+};

@@ -3,9 +3,49 @@
 #include <gtest/gtest.h>
 
 #include <cv.h>
+#include <highgui.h>
 using cv::Mat;
 using cv::KeyPoint;
 using cv::Point2f;
+
+TEST(TestMisc, UnWarpUsingHomographyMatrixImage){
+    Mat homography_matrix = loadtxt(data_folder_path + "/test2.avi.homography.mat");
+
+    ASSERT_EQ(3, homography_matrix.cols);
+    ASSERT_EQ(3, homography_matrix.rows);
+
+    Mat image = cv::imread(data_folder_path + "/test_frame_avi2.png", 0);
+
+    ASSERT_EQ(1, image.channels());
+
+    // Try to unwarp the image
+    Mat unwarped_image;
+    cv::warpPerspective(image, unwarped_image, homography_matrix, cv::Size(256,256), CV_WARP_INVERSE_MAP);
+
+    cv::imwrite("unwarped_frame.png", unwarped_image);
+}
+
+TEST(TestMisc, UnWarpUsingHomographyMatrix){
+    Mat homography_matrix = loadtxt(data_folder_path + "/test2.avi.homography.mat");
+
+    int num_points = 6;
+    float a[] = {1,1, 100, 101, 150, 151, 170, 171, 50,0, 50, 50};
+    Mat a_mat(num_points,1,CV_32FC2, a);
+
+    Mat unwarped_a;
+    Mat invert_homography_matrix;
+    cv::invert(homography_matrix, invert_homography_matrix);
+    cv::perspectiveTransform(a_mat, unwarped_a, invert_homography_matrix);
+
+    ASSERT_EQ(num_points, unwarped_a.rows);
+    ASSERT_EQ(2, unwarped_a.channels());
+
+    printf("a =\n");
+    print_matrix<cv::Vec2f>(a_mat);
+
+    printf("unwarped_a =\n");
+    print_matrix<cv::Vec2f>(unwarped_a);
+}
 
 TEST(TestMisc, Dataset1){
     Mat loaded_mat = loadtxt(data_folder_path + "/query_points1.txt");

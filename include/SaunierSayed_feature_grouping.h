@@ -34,7 +34,7 @@ namespace SaunierSayed{
 
     class TrackManager{
     public:
-        TrackManager(int min_num_frame_tracked = 2, float maximum_distance_threshold = 4, float feature_segmentation_threshold = 25, bool log_track_to_file = false);
+        TrackManager(int min_num_frame_tracked = 4, float maximum_distance_threshold = 20, float feature_segmentation_threshold = 50, bool log_track_to_file = false);
         ~TrackManager();
 
         TrackManager& operator=(const TrackManager & other);

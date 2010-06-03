@@ -4,9 +4,8 @@
 
 #include <cv.h>
 #include <highgui.h>
-using cv::Mat;
-using cv::KeyPoint;
-using cv::Point2f;
+
+using namespace cv;
 
 TEST(TestMisc, UnWarpUsingHomographyFromPoints){
     Mat corresponding_pairs = loadtxt(data_folder_path + "/test1.avi.homography.txt");
@@ -123,6 +122,58 @@ TEST(TestMisc, ConvertKeyPointToPoint2fAndBack){
     ASSERT_EQ(3, keypoints[1].pt.y);
     ASSERT_EQ(3, keypoints[2].pt.x);
     ASSERT_EQ(4, keypoints[2].pt.y);
+}
+
+TEST(TestMisc, ConvertPointsFromImageToWorld){
+    /* In order to get these data, do this in ipython -pylab
+    points = np.array([[1,3,2,3],[2,3,4,5],[1,1,1,1]], dtype=np.float)
+    homography = np.array([[1,2,3],[2,3,1],[2,2,1]])
+    proj_points = np.dot(homography,points)
+    proj_points_2 = proj_points / proj_points[2,:]
+
+    In [18]: proj_points_2
+    Out[18]:
+    array([[ 1.14285714,  0.92307692,  1.        ,  0.94117647],
+           [ 1.28571429,  1.23076923,  1.30769231,  1.29411765],
+           [ 1.        ,  1.        ,  1.        ,  1.        ]])
+    */
+
+    // Create the points
+    std::vector<Point2f> points;
+
+    points.push_back(cv::Point2f(1,2));
+    points.push_back(cv::Point2f(3,3));
+    points.push_back(cv::Point2f(2,4));
+    points.push_back(cv::Point2f(3,5));
+
+    // Create the homography matrix
+    Mat homography_matrix(3,3, CV_32F);
+    homography_matrix.at<float>(0,0) = 1;
+    homography_matrix.at<float>(0,1) = 2;
+    homography_matrix.at<float>(0,2) = 3;
+    homography_matrix.at<float>(1,0) = 2;
+    homography_matrix.at<float>(1,1) = 3;
+    homography_matrix.at<float>(1,2) = 1;
+    homography_matrix.at<float>(2,0) = 2;
+    homography_matrix.at<float>(2,1) = 2;
+    homography_matrix.at<float>(2,2) = 1;
+
+    // Get the projected_points
+    std::vector<Point2f> proj_points;
+    convert_to_world_coordinate(points, homography_matrix, &proj_points);
+
+    ASSERT_EQ(4, proj_points.size());
+
+    // Check the projected points
+    ASSERT_NEAR(1.14285714, proj_points[0].x, 0.00001);
+    ASSERT_NEAR(0.92307692, proj_points[1].x, 0.00001);
+    ASSERT_NEAR(1., proj_points[2].x, 0.00001);
+    ASSERT_NEAR(0.94117647, proj_points[3].x, 0.00001);
+
+    ASSERT_NEAR(1.28571429, proj_points[0].y, 0.00001);
+    ASSERT_NEAR(1.23076923, proj_points[1].y, 0.00001);
+    ASSERT_NEAR(1.30769231, proj_points[2].y, 0.00001);
+    ASSERT_NEAR(1.29411765, proj_points[3].y, 0.00001);
 }
 
 TEST(TestOpenCV, SimpleColumnMultiplyAdd){

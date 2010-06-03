@@ -16,16 +16,6 @@ using namespace cv;
 DEFINE_bool(homography_point_correspondence, false, "The homography file contains correspondences instead of the homography matrix");
 DEFINE_bool(debug_gui, true, "Use GUI to debug");
 
-void convert_to_world_coordinate(const vector<Point2f> & points_in_image_coordinate, const Mat & homography_matrix, vector<Point2f> * points_in_world_coordinate){
-    points_in_world_coordinate->clear();
-    points_in_world_coordinate->resize(points_in_image_coordinate.size());
-    Point2f temp_point;
-
-    Mat points_in_image_coordinate_mat(points_in_image_coordinate, false); // sharing data
-    Mat points_in_world_coordinate_mat(*points_in_world_coordinate, false); // sharing data so output is written to the right place
-    perspectiveTransform(points_in_image_coordinate_mat, points_in_world_coordinate_mat, homography_matrix);
-}
-
 int main (int argc, char ** argv){
     google::ParseCommandLineFlags(&argc, &argv, true);
 
@@ -107,7 +97,7 @@ int main (int argc, char ** argv){
     Mat next_frame;
     vector<Point2f> new_points;
     vector<int> old_points_indices;
-    SaunierSayed::TrackManager feature_grouper(2,4,25,true);
+    SaunierSayed::TrackManager feature_grouper(4, 20, 50, true);
 
     // Initialize our previous frame
     video_capture.grab();

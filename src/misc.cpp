@@ -190,3 +190,13 @@ std::ostream& operator<< (std::ostream& out, const cv::Vec2f & vec )
     out << vec[0] << " " << vec[1] << " ";
     return out;
 };
+
+void convert_to_world_coordinate(const vector<Point2f> & points_in_image_coordinate, const Mat & homography_matrix, vector<Point2f> * points_in_world_coordinate){
+    points_in_world_coordinate->clear();
+    points_in_world_coordinate->resize(points_in_image_coordinate.size());
+//    Point2f temp_point;
+
+    Mat points_in_image_coordinate_mat(points_in_image_coordinate, false); // sharing data
+    Mat points_in_world_coordinate_mat(*points_in_world_coordinate, false); // sharing data so output is written to the right place
+    perspectiveTransform(points_in_image_coordinate_mat, points_in_world_coordinate_mat, homography_matrix);
+}

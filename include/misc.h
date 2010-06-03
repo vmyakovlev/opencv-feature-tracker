@@ -81,5 +81,8 @@ template<typename T> void print_matrix(const cv::Mat & mat){
 
 // Providing printing support for Vec2f
 std::ostream& operator<< (std::ostream& out, const cv::Vec2f & vec );
+void convert_to_world_coordinate(const vector<cv::Point2f> & points_in_image_coordinate,
+                                 const cv::Mat & homography_matrix,
+                                 vector<cv::Point2f> * points_in_world_coordinate);
 #endif
 

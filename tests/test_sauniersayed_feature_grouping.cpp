@@ -101,7 +101,8 @@ TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
 
     // At time t+1, we detect a couple of points which happen to be the same as
     // points already in tracks
-    track_manager_.AddPossiblyDuplicatePoints(points2);
+    std::vector<int> assigned_ids;
+    track_manager_.AddPossiblyDuplicatePoints(points2, &assigned_ids);
     ASSERT_EQ(6, track_manager_.num_tracks());
     ASSERT_NEAR(12.5, track_manager_.tracks()[5].pos.x, 0.001);
     ASSERT_NEAR(223.5, track_manager_.tracks()[2].pos.y, 0.001);
@@ -123,7 +124,7 @@ TEST_F(SSTrackManagerTest, FindDuplicatePoints){
     track_manager_.AddPoints(points);
 
     std::vector<int> assigned_ids;
-    track_manager_.FindDuplicatePoints(points, &assigned_ids);
+    track_manager_.FindDuplicatePointIds(points, &assigned_ids);
 
     ASSERT_EQ(0, assigned_ids[0]);
     ASSERT_EQ(1, assigned_ids[1]);
@@ -139,10 +140,31 @@ TEST_F(SSTrackManagerTest, RemoveDuplicatePointsAfterUpdate){
     ASSERT_EQ(2, points2.size());
 }
 
+TEST_F(SSTrackManagerTest, AddPossibleDuplicatePointsAndGetAssignedIds){
+    track_manager_.AddPoints(points);
+    track_manager_.UpdatePoints(new_points, old_indices_1_2);
+
+    std::vector<int> assigned_ids;
+    track_manager_.FindDuplicatePointIds(points2, &assigned_ids);
+
+    ASSERT_EQ(-1, assigned_ids[0]);
+    ASSERT_EQ(1, assigned_ids[1]);
+    ASSERT_EQ(2, assigned_ids[2]);
+    ASSERT_EQ(-1, assigned_ids[3]);
+
+    track_manager_.AddPossiblyDuplicatePoints(points2, &assigned_ids);
+
+    ASSERT_EQ(4, assigned_ids[0]); // not duplicate => new id
+    ASSERT_EQ(1, assigned_ids[1]); // duplicate => old id
+    ASSERT_EQ(2, assigned_ids[2]); // duplicate => old id
+    ASSERT_EQ(5, assigned_ids[3]); // not duplicate => new id
+}
+
 TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
     track_manager_.AddPoints(points);
     track_manager_.UpdatePoints(new_points, old_indices_1_2);
-    track_manager_.AddPossiblyDuplicatePoints(points2);
+    vector<int> assigned_ids;
+    track_manager_.AddPossiblyDuplicatePoints(points2, &assigned_ids);
 
     // 0-3 points should have been activated
     for (int i=0; i<4; i++){
@@ -166,8 +188,9 @@ TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
 
 TEST_F(SSTrackManagerTest, MaxDistanceMinDistanceUpdate){
     track_manager_.AddPoints(points);
+    vector<int> assigned_ids;
     track_manager_.UpdatePoints(new_points, old_indices_1_2);
-    track_manager_.AddPossiblyDuplicatePoints(points2);
+    track_manager_.AddPossiblyDuplicatePoints(points2, &assigned_ids);
 
     // NOTE: there is only 1 edge betwen track1 and track3
     // SEE: Test SSTrackManagerTest.TracksWhichPersistsLongEnoughGetActivated

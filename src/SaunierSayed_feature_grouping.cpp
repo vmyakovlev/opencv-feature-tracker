@@ -267,9 +267,8 @@ namespace SaunierSayed{
     }
 
     void TrackManager::AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids){
-        std::vector<cv::Point2f> copy_points = new_points;
-        RemoveDuplicatePoints(copy_points);
-        AddPoints(copy_points);
+        FindDuplicatePointIds(new_points, assigned_ids);
+        AddPoints(new_points, assigned_ids);
     }
 
     //! Remove points that are already in one of the tracks
@@ -278,7 +277,7 @@ namespace SaunierSayed{
 
         // Find the possible duplicates
         std::vector<int> found_ids;
-        FindDuplicatePoints(input_points, &found_ids);
+        FindDuplicatePointIds(input_points, &found_ids);
 
         // For the one that we found ids for, remove them
         for (int i=0; i<found_ids.size(); i++){
@@ -291,7 +290,7 @@ namespace SaunierSayed{
         input_points = cleaned_input_points;
     }
 
-    void TrackManager::FindDuplicatePoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids){
+    void TrackManager::FindDuplicatePointIds(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids){
         // for convenience, we allocate space for the user if he passes in an empty vector<int>
         if (assigned_ids != NULL && assigned_ids->size() == 0)
             assigned_ids->resize(new_points.size(), -1);

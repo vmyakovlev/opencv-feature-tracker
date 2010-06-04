@@ -97,6 +97,7 @@ int main (int argc, char ** argv){
     Mat next_frame;
     vector<Point2f> new_points;
     vector<int> old_points_indices;
+    vector<int> assigned_ids;
     SaunierSayed::TrackManager feature_grouper(4, 20, 50, true);
 
     // Initialize our previous frame
@@ -111,7 +112,7 @@ int main (int argc, char ** argv){
     vector<Point2f> frame_points_in_world;
     vector_one_to_another(key_points, frame_points);
     convert_to_world_coordinate(frame_points, homography_matrix, &frame_points_in_world);
-    feature_grouper.AddPoints(frame_points_in_world);
+    feature_grouper.AddPoints(frame_points_in_world, &assigned_ids);
 
     // unwarp the image using this homography matrix and shows it
 //    Mat warpedImage;
@@ -162,7 +163,8 @@ int main (int argc, char ** argv){
 
         vector_one_to_another(key_points, frame_points);
         convert_to_world_coordinate(frame_points, homography_matrix, &frame_points_in_world);
-        feature_grouper.AddPossiblyDuplicatePoints(frame_points_in_world);
+        assigned_ids.clear();
+        feature_grouper.AddPossiblyDuplicatePoints(frame_points_in_world, &assigned_ids);
 
         // some indication of stuff working
         std::cout << ".";

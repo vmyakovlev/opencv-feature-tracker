@@ -55,12 +55,13 @@ namespace SaunierSayed{
         /**
           \return The assigned ids for these points
          */
-        void AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids = NULL);
+        void AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids);
 
-        //! Remove points that is already in one of the tracks
+        //! Remove points that is already in (i.e. distance to any existing track < epsilon) one of the tracks
         void RemoveDuplicatePoints(std::vector<cv::Point2f> & input_points);
 
-        void FindDuplicatePoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids = NULL);
+        //! Find the Ids of the duplicate points
+        void FindDuplicatePointIds(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids = NULL);
 
         //! Update current tracks with new points
         void UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices);

@@ -99,7 +99,7 @@ int main (int argc, char ** argv){
     vector<int> old_points_indices;
     vector<int> assigned_ids;
     vector<int> matched_track_ids;
-    SaunierSayed::TrackManager feature_grouper(4, 20, 50, true);
+    SaunierSayed::TrackManager feature_grouper(4, 20, 200, true);
 
     // Initialize our previous frame
     video_capture.grab();

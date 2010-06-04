@@ -7,6 +7,30 @@
 
 using namespace cv;
 
+TEST(TestMisc, Indexing){
+    vector<int> points;
+    points.push_back(4);
+    points.push_back(1);
+    points.push_back(2);
+    points.push_back(5);
+    points.push_back(3);
+
+    vector<int> new_indices;
+    new_indices.push_back(2);
+    new_indices.push_back(3);
+    new_indices.push_back(4);
+    new_indices.push_back(1);
+    new_indices.push_back(0);
+
+    vector<int> indexed_points = indexing(points, new_indices);
+
+    ASSERT_EQ(2, indexed_points[0]);
+    ASSERT_EQ(5, indexed_points[1]);
+    ASSERT_EQ(3, indexed_points[2]);
+    ASSERT_EQ(1, indexed_points[3]);
+    ASSERT_EQ(4, indexed_points[4]);
+}
+
 TEST(TestMisc, UnWarpUsingHomographyFromPoints){
     Mat corresponding_pairs = loadtxt(data_folder_path + "/test1.avi.homography.txt");
 

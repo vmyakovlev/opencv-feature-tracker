@@ -98,6 +98,7 @@ int main (int argc, char ** argv){
     vector<Point2f> new_points;
     vector<int> old_points_indices;
     vector<int> assigned_ids;
+    vector<int> matched_track_ids;
     SaunierSayed::TrackManager feature_grouper(4, 20, 50, true);
 
     // Initialize our previous frame
@@ -133,6 +134,9 @@ int main (int argc, char ** argv){
 
         // Find these points in the next frame
         feature_matcher.search(next_frame, new_points, old_points_indices);
+
+        // Map these old indices to the ids of the tracks
+        matched_track_ids = indexing(assigned_ids, old_points_indices);
 
         // Tally these new points into our graphical model
         feature_grouper.UpdatePoints(new_points, old_points_indices);

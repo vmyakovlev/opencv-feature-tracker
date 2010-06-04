@@ -76,11 +76,13 @@ class SSTrackManagerTest : public ::testing::Test {
 };
 
 TEST_F(SSTrackManagerTest, AddPoints){
-    track_manager_.AddPoints(points);
+    std::vector<int> assigned_ids;
+    track_manager_.AddPoints(points, &assigned_ids);
 
     ASSERT_EQ(4, track_manager_.num_tracks());
 
     for (int i=0; i<track_manager_.num_tracks(); ++i){
+        ASSERT_EQ(i, assigned_ids[i]);
         ASSERT_EQ(1, track_manager_.tracks()[i].number_of_times_tracked);
         ASSERT_FALSE(track_manager_.tracks()[i].activated);
     }
@@ -115,6 +117,18 @@ TEST_F(SSTrackManagerTest, RemoveDuplicatePoints){
     std::vector<cv::Point2f> new_points = points;
     track_manager_.RemoveDuplicatePoints(new_points);
     ASSERT_EQ(0, new_points.size());
+}
+
+TEST_F(SSTrackManagerTest, FindDuplicatePoints){
+    track_manager_.AddPoints(points);
+
+    std::vector<int> assigned_ids;
+    track_manager_.FindDuplicatePoints(points, &assigned_ids);
+
+    ASSERT_EQ(0, assigned_ids[0]);
+    ASSERT_EQ(1, assigned_ids[1]);
+    ASSERT_EQ(2, assigned_ids[2]);
+    ASSERT_EQ(1, assigned_ids[3]); //NOTE: point[1] and point[3] are too close together
 }
 
 TEST_F(SSTrackManagerTest, RemoveDuplicatePointsAfterUpdate){

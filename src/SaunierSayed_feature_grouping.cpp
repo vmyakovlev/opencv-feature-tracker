@@ -26,6 +26,18 @@ namespace SaunierSayed{
             log_file_.close();
     }
 
+    TrackManager::TrackManager(const TrackManager & other){
+        // Perform assignments on everything except log file
+        tracks_connection_graph_ =  other.tracks_connection_graph_ ;
+        min_num_frame_tracked_ = other.min_num_frame_tracked_;
+        maximum_distance_threshold_ = other.maximum_distance_threshold_;
+        feature_segmentation_threshold_ = other.feature_segmentation_threshold_;
+        current_time_stamp_id_ = other.current_time_stamp_id_;
+
+        // Disable logging on copied object since the log file object is not copyable
+        logging_ = false;
+    }
+
     TrackManager& TrackManager::operator=(const TrackManager & other){
         // Handle self assignment
         if (this == &other)
@@ -44,10 +56,22 @@ namespace SaunierSayed{
         return *this;
     }
 
-    void TrackManager::AddPoints(const std::vector<cv::Point2f> & new_points){
+    void TrackManager::AddPoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids){
+        // for convenience, we allocate space for the user if he passes in an empty vector<int>
+        if (assigned_ids != NULL && assigned_ids->size() == 0)
+            assigned_ids->resize(new_points.size(), -1);
+
+        // sanity check
+        CV_Assert(assigned_ids == NULL || new_points.size() == assigned_ids->size());
+
         TracksConnectionGraph::vertex_descriptor v;
 
         for (int i=0; i<new_points.size(); ++i){
+            // if this point has been assigned an id, skip it
+            if (assigned_ids != NULL && (*assigned_ids)[i] >= 0){
+                continue;
+            }
+
             // add this new point as a new track in our graph
             v = add_vertex(tracks_connection_graph_);
 
@@ -56,6 +80,10 @@ namespace SaunierSayed{
             tracks_connection_graph_[v].pos = new_points[i];
             tracks_connection_graph_[v].activated = false;
             tracks_connection_graph_[v].number_of_times_tracked = 1;
+
+            if (assigned_ids != NULL){
+                (*assigned_ids)[i] = tracks_connection_graph_[v].id;
+            }
         }
     }
 
@@ -238,44 +266,68 @@ namespace SaunierSayed{
         return num_edges(tracks_connection_graph_);
     }
 
-    void TrackManager::AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points){
+    void TrackManager::AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids){
         std::vector<cv::Point2f> copy_points = new_points;
         RemoveDuplicatePoints(copy_points);
         AddPoints(copy_points);
     }
 
-    //! Remove points that is already in one of the tracks
+    //! Remove points that are already in one of the tracks
     void TrackManager::RemoveDuplicatePoints(std::vector<cv::Point2f> & input_points){
         std::vector<cv::Point2f> cleaned_input_points;
-        std::vector<cv::Point2f>::iterator it;
+
+        // Find the possible duplicates
+        std::vector<int> found_ids;
+        FindDuplicatePoints(input_points, &found_ids);
+
+        // For the one that we found ids for, remove them
+        for (int i=0; i<found_ids.size(); i++){
+            if (found_ids[i] < 0){
+                // duplicate didn't find this, copy it
+                cleaned_input_points.push_back(input_points[i]);
+            }
+        }
+
+        input_points = cleaned_input_points;
+    }
+
+    void TrackManager::FindDuplicatePoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids){
+        // for convenience, we allocate space for the user if he passes in an empty vector<int>
+        if (assigned_ids != NULL && assigned_ids->size() == 0)
+            assigned_ids->resize(new_points.size(), -1);
+
+        // sanity check
+        CV_Assert(assigned_ids == NULL || new_points.size() == assigned_ids->size());
 
         // if the point positions are indexed, this search could be a bit better
         TracksConnectionGraph::vertex_iterator v, vend;
 
         float norm_l1;
-        bool to_be_removed;
+        bool found;
+        int found_id = 0;
         cv::Point2f temp_point;
 
-        for (it=input_points.begin(); it!=input_points.end(); ++it){
-            to_be_removed = false;
+        for (int i=0; i<new_points.size(); ++i){
+            found = false;
 
             for (tie(v,vend) = vertices(tracks_connection_graph_); v!=vend; ++v){
                 temp_point = tracks_connection_graph_[*v].pos;
 
-                norm_l1 = abs( temp_point.x - (*it).x +
-                                temp_point.y - (*it).y );
+                norm_l1 = abs( temp_point.x - new_points[i].x +
+                                temp_point.y - new_points[i].y );
 
-                if ( norm_l1 < 2){
-                    to_be_removed = true;
+                if ( norm_l1 < 1){
+                    found = true;
+                    found_id = tracks_connection_graph_[*v].id;
                     break;
                 }
             }
 
-            if (!to_be_removed)
-                cleaned_input_points.push_back(*it);
+            if (found)
+                (*assigned_ids)[i] = found_id;
+            else
+                (*assigned_ids)[i] = -1;
         }
-
-        input_points = cleaned_input_points;
     }
 
     float TrackManager::Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2){

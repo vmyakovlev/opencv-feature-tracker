@@ -37,16 +37,30 @@ namespace SaunierSayed{
         TrackManager(int min_num_frame_tracked = 4, float maximum_distance_threshold = 20, float feature_segmentation_threshold = 50, bool log_track_to_file = false);
         ~TrackManager();
 
+        TrackManager(const TrackManager & other);
         TrackManager& operator=(const TrackManager & other);
 
+
         //! Add new tracks without checking if there is duplications
-        void AddPoints(const std::vector<cv::Point2f> & new_points);
+        /**
+          One can pass in a pre-populated ids which can be generated from FindDuplicatePointIds() to the 2nd parameter.
+          When this happens, if a specific element has already been found (i.e. assigned_ids[i] >=0), it will be skipped.
+
+          \param[inout] assigned_ids The (newly) assigned ids for the input new_points
+
+        */
+        void AddPoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids = NULL);
 
         //! Add newly detected points. Remove duplicates.
-        void AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points);
+        /**
+          \return The assigned ids for these points
+         */
+        void AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids = NULL);
 
         //! Remove points that is already in one of the tracks
         void RemoveDuplicatePoints(std::vector<cv::Point2f> & input_points);
+
+        void FindDuplicatePoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids = NULL);
 
         //! Update current tracks with new points
         void UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices);

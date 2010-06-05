@@ -78,5 +78,30 @@ template<typename T> void print_matrix(const cv::Mat & mat){
         std::cout << std::endl;
     }
 }
+
+/** Indexing into the container given the indices
+
+  e.g. a = [4,1,2,5,3]
+  new_indices = [2,3,4,1,0]
+
+  This method does similar to a[new_indices]. That is it returns:
+    [2,5,3,1,4]
+*/
+template<typename VT>
+VT indexing(VT input, const vector<int> & indices){
+    VT output(input.size());
+
+    for (int i=0; i<indices.size(); i++){
+        output[i] = input[indices[i]];
+    }
+
+    return output;
+}
+
+// Providing printing support for Vec2f
+std::ostream& operator<< (std::ostream& out, const cv::Vec2f & vec );
+void convert_to_world_coordinate(const vector<cv::Point2f> & points_in_image_coordinate,
+                                 const cv::Mat & homography_matrix,
+                                 vector<cv::Point2f> * points_in_world_coordinate);
 #endif
 

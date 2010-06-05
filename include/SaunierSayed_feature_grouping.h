@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/connected_components.hpp>
+#include <fstream>
 using namespace boost;
 
 /** Implemetation of Saunier Sayed 2006 algorithm. For the algorithm section, check page 4 of Saunier Sayed
@@ -20,28 +20,48 @@ namespace SaunierSayed{
     } LinkInformation;
 
     typedef struct TrackInformation_{
-        int id; // if of the track (vertex) (currently not used/updated)
+        int id; // if of the track (vertex) (synced with vertex_index internally managed by BGL)
         cv::Point2f pos;
         int number_of_times_tracked;
         bool activated;
     } TrackInformation;
 
     typedef std::map<int, TrackInformation> Tracks;
+    typedef std::vector<TrackInformation> ConnectedComponent;
+    typedef std::vector<ConnectedComponent> ConnectedComponents;
 
-    typedef adjacency_list <listS, listS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
+    typedef adjacency_list <listS, vecS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
 
     class TrackManager{
     public:
-        TrackManager(int min_num_frame_tracked = 2, float maximum_distance_threshold = 4, float feature_segmentation_threshold = 25);
+        TrackManager(int min_num_frame_tracked = 4, float maximum_distance_threshold = 20, float feature_segmentation_threshold = 50, bool log_track_to_file = false);
+        ~TrackManager();
+
+        TrackManager(const TrackManager & other);
+        TrackManager& operator=(const TrackManager & other);
+
 
         //! Add new tracks without checking if there is duplications
-        void AddPoints(const std::vector<cv::Point2f> & new_points);
+        /**
+          One can pass in a pre-populated ids which can be generated from FindDuplicatePointIds() to the 2nd parameter.
+          When this happens, if a specific element has already been found (i.e. assigned_ids[i] >=0), it will be skipped.
+
+          \param[inout] assigned_ids The (newly) assigned ids for the input new_points
+
+        */
+        void AddPoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids = NULL);
 
         //! Add newly detected points. Remove duplicates.
-        void AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points);
+        /**
+          \return The assigned ids for these points
+         */
+        void AddPossiblyDuplicatePoints(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids);
 
-        //! Remove points that is already in one of the tracks
+        //! Remove points that is already in (i.e. distance to any existing track < epsilon) one of the tracks
         void RemoveDuplicatePoints(std::vector<cv::Point2f> & input_points);
+
+        //! Find the Ids of the duplicate points
+        void FindDuplicatePointIds(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids = NULL);
 
         //! Update current tracks with new points
         void UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices);
@@ -51,22 +71,60 @@ namespace SaunierSayed{
         */
         void ActivateTrack(int id);
 
+        //! Cut the link(edge) where max_distance - min_distance > D_segmentation
+        void SegmentFarAwayTracks();
+
+        //! Find the connected components in our graph structure
+        /** The name is intentionally CamelCase despite methods that starts with get usually has lower cases.
+          The reason is because this operation is not simple. The CamelCase signifies this.
+
+          \return connected components (each connected component is a group of TrackInformation)
+         */
+        ConnectedComponents GetConnectedComponents() const;
+
         //! Return the number of tracks
         int num_tracks();
 
         //! Return the number of connections amongst tracks
         int num_connections();
 
+        //////// These API should be used with care since they are not fast due to data copying
         //! Return all tracks information
-        Tracks & tracks();
+        Tracks tracks() const;
+
+        //! Return edge information for a specfic vertex pairs
+        /**
+          Make sure you check the return value prior to accessing the data in output_link_information
+          Since the graph structure is undirected. get_edge_information(1,2,&out) gives the same result as
+          get_edge_information(2,1,&out)
+
+          \param vertex_id_1 id of the first vertex in this edge
+          \param vertex_id_2 id of the second vertex in this edge
+          \param[out] output_link_information structure to write out the link information
+          \return True if an edge exists
+        */
+        bool get_edge_information(int vertex_id_1, int vertex_id_2, LinkInformation * output_link_information) const;
     private:
         float Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2);
+
+        /** \brief Log the current track information into internal log file
+
+          Currently only log track positions
+        */
+        void LogCurrentTrackInfo();
+
         TracksConnectionGraph tracks_connection_graph_;
 
         // Some parameters
         int min_num_frame_tracked_;
         float maximum_distance_threshold_;
         float feature_segmentation_threshold_;
+
+        // Some flags
+        bool logging_; //!< Are we logging track information?
+
+        int current_time_stamp_id_;
+        std::ofstream log_file_;
     };
 }
 

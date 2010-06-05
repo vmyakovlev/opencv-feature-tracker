@@ -41,9 +41,10 @@ void vector_one_to_another<cv::KeyPoint,cv::Point2f>(const vector<cv::KeyPoint> 
 
   \note Only read float now.
   \todo Templatize to read other datatypes
-  \bug Does not deal with white space at the end the first line.
+  \bug Does not deal with white space at the end the lines.
   \bug Does not deal with comment character (e.g. #)
   \bug Does not deal with column skipping (i.e. not possible to read files that have non-numeric columns)
+  \bug Does not deal with blank lines
 */
 Mat loadtxt(string filename){
     ifstream ifs(filename.c_str());
@@ -182,4 +183,20 @@ Mat FindInterestPoints(const Mat & gray_im, const char * query_point_filename, i
     }
 
     return interest_points;
+}
+
+std::ostream& operator<< (std::ostream& out, const cv::Vec2f & vec )
+{
+    out << vec[0] << " " << vec[1] << " ";
+    return out;
+};
+
+void convert_to_world_coordinate(const vector<Point2f> & points_in_image_coordinate, const Mat & homography_matrix, vector<Point2f> * points_in_world_coordinate){
+    points_in_world_coordinate->clear();
+    points_in_world_coordinate->resize(points_in_image_coordinate.size());
+//    Point2f temp_point;
+
+    Mat points_in_image_coordinate_mat(points_in_image_coordinate, false); // sharing data
+    Mat points_in_world_coordinate_mat(*points_in_world_coordinate, false); // sharing data so output is written to the right place
+    perspectiveTransform(points_in_image_coordinate_mat, points_in_world_coordinate_mat, homography_matrix);
 }

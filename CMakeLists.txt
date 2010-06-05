@@ -5,8 +5,16 @@ add_subdirectory(thirdparty)
 # macro to setup the projects
 MACRO(QuickSetup)
 cmake_minimum_required(VERSION 2.6)
+SET(CMAKE_MODULE_PATH
+    ${PROJECT_SOURCE_DIR}/cmake_modules
+    ${CMAKE_MODULE_PATH}
+    )
 find_package(OpenCV REQUIRED)
+find_package(Boost REQUIRED)
+find_package(GFlags)
 include_directories(
+    ${Boost_INCLUDE_DIR}
+    ${GFlags_INCLUDE_DIR}
 	${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/thirdparty/daisy-1.8.1/include
 )
@@ -20,6 +28,7 @@ add_executable(${proj_name} ${ARGN})
 target_link_libraries(${proj_name}
     ${OpenCV_LIBS}
       daisy
+    ${GFlags_LIBS}
 )
 ENDMACRO(QuickExecutable)
 
@@ -61,10 +70,6 @@ ENDIF(COMPILE_TESTS)
 	
 OPTION(USE_TBB "Use TBB speed up?")
 IF(USE_TBB)
-    SET(CMAKE_MODULE_PATH 
-        ${PROJECT_SOURCE_DIR}/cmake_modules
-        ${CMAKE_MODULE_PATH}
-        )
     FIND_PACKAGE(TBB)
     include_directories(${TBB_INCLUDE_DIRS})
     link_directories(${TBB_LIBRARY_DIRS})
@@ -72,3 +77,4 @@ IF(USE_TBB)
     add_executable(TBBParallelFor TBBParallelFor.cxx)
     target_link_libraries(TBBParallelFor ${TBB_LIBRARIES})
 ENDIF(USE_TBB)
+

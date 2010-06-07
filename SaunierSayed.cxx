@@ -15,6 +15,7 @@ using namespace cv;
 
 DEFINE_bool(homography_point_correspondence, false, "The homography file contains correspondences instead of the homography matrix");
 DEFINE_bool(debug_gui, true, "Use GUI to debug");
+DEFINE_bool(log_tracks_info, false, "Log most information about tracks as time progress (LOTS OF disk space required)");
 DEFINE_uint64(min_frames_tracked, 4, "Minimum number of frames tracked before it is activated");
 DEFINE_uint64(maximum_distance_activated, 20, "When activated, how far around the point do we search for points to add?");
 DEFINE_uint64(segmentation_threshold, 200, "How much do we allow max_distance - min_distance to vary before an edge is severe.");
@@ -37,10 +38,10 @@ int main (int argc, char ** argv){
     // PRINT OUT PARAMETERS
     cout << "Compute homograph from points: " << FLAGS_homography_point_correspondence << endl;
     cout << "Debug GUI: " << FLAGS_debug_gui << endl;
+    cout << "Logging tracks info: " << FLAGS_log_tracks_info << endl;
     cout << "Min frames tracked: " << FLAGS_min_frames_tracked << endl;
     cout << "Max distance activated: " << FLAGS_maximum_distance_activated << endl;
     cout << "Segmentation threshold: " << FLAGS_segmentation_threshold << endl;
-
 
     //**************************************************************
     // Get the homography which brings coordinates in the image ground plane to world ground plane
@@ -116,7 +117,7 @@ int main (int argc, char ** argv){
             FLAGS_min_frames_tracked,
             FLAGS_maximum_distance_activated,
             FLAGS_segmentation_threshold,
-            true);
+            FLAGS_log_tracks_info);
 
     // Initialize our previous frame
     video_capture.grab();
@@ -156,7 +157,7 @@ int main (int argc, char ** argv){
         matched_track_ids = indexing(assigned_ids, old_points_indices);
 
         // Tally these new points into our graphical model
-        feature_grouper.UpdatePoints(new_points, old_points_indices);
+        feature_grouper.UpdatePoints(new_points, matched_track_ids);
 
         // *********************************************************
         // Show GUI for debugging purposes

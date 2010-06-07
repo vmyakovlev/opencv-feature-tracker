@@ -15,6 +15,9 @@ using namespace cv;
 
 DEFINE_bool(homography_point_correspondence, false, "The homography file contains correspondences instead of the homography matrix");
 DEFINE_bool(debug_gui, true, "Use GUI to debug");
+DEFINE_uint64(min_frames_tracked, 4, "Minimum number of frames tracked before it is activated");
+DEFINE_uint64(maximum_distance_activated, 20, "When activated, how far around the point do we search for points to add?");
+DEFINE_uint64(segmentation_threshold, 200, "How much do we allow max_distance - min_distance to vary before an edge is severe.");
 
 int main (int argc, char ** argv){
     google::ParseCommandLineFlags(&argc, &argv, true);
@@ -29,6 +32,15 @@ int main (int argc, char ** argv){
     const string input_video_filename = string(argv[1]);
     const string homography_points_filename = string(argv[2]);
     const string output_filename = string(argv[3]);
+
+    //**************************************************************
+    // PRINT OUT PARAMETERS
+    cout << "Compute homograph from points: " << FLAGS_homography_point_correspondence << endl;
+    cout << "Debug GUI: " << FLAGS_debug_gui << endl;
+    cout << "Min frames tracked: " << FLAGS_min_frames_tracked << endl;
+    cout << "Max distance activated: " << FLAGS_maximum_distance_activated << endl;
+    cout << "Segmentation threshold: " << FLAGS_segmentation_threshold << endl;
+
 
     //**************************************************************
     // Get the homography which brings coordinates in the image ground plane to world ground plane
@@ -99,7 +111,12 @@ int main (int argc, char ** argv){
     vector<int> old_points_indices;
     vector<int> assigned_ids;
     vector<int> matched_track_ids;
-    SaunierSayed::TrackManager feature_grouper(4, 20, 200, true);
+
+    SaunierSayed::TrackManager feature_grouper(
+            FLAGS_min_frames_tracked,
+            FLAGS_maximum_distance_activated,
+            FLAGS_segmentation_threshold,
+            true);
 
     // Initialize our previous frame
     video_capture.grab();

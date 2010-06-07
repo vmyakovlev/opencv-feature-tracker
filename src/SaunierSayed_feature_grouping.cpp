@@ -146,6 +146,7 @@ namespace SaunierSayed{
     void TrackManager::LogCurrentTrackInfo(){
         // iterate through tracks
         TracksConnectionGraph::vertex_iterator vi, viend;
+        TracksConnectionGraph::adjacency_iterator vi2, vi2end;
 
         for (tie(vi, viend) = vertices(tracks_connection_graph_); vi != viend; ++vi ){
             // Write this track information to file
@@ -153,8 +154,14 @@ namespace SaunierSayed{
                     << tracks_connection_graph_[*vi].id << " "
                     << tracks_connection_graph_[*vi].pos.x << " "
                     << tracks_connection_graph_[*vi].pos.y << " "
-                    << tracks_connection_graph_[*vi].activated << " "
-                    << std::endl;
+                    << tracks_connection_graph_[*vi].activated << " ";
+
+            // print the list of vertices connected to this vertex
+            for (tie(vi2, vi2end)=adjacent_vertices(*vi, tracks_connection_graph_); vi2!=vi2end; ++vi2){
+                log_file_ << tracks_connection_graph_[*vi2].id << " ";
+            }
+
+            log_file_ << std::endl;
         }
     }
 

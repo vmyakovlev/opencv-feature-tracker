@@ -161,6 +161,7 @@ int main (int argc, char ** argv){
 
         // Tally these new points into our graphical model
         feature_grouper.UpdatePoints(new_points, matched_track_ids);
+        visualizer.AddTracks(feature_grouper.tracks());
 
         // *********************************************************
         // Show GUI for debugging purposes

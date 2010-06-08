@@ -142,10 +142,13 @@ int main (int argc, char ** argv){
 //    imshow(window3, a_frame);
 //    waitKey(0);
 
+    FeatureGrouperVisualizer visualizer(homography_matrix);
+
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
         cvtColor(a_frame,next_frame, CV_RGB2GRAY);
         imshow(window3, a_frame);
+        visualizer.NewFrame(a_frame);
 
         // Since we are using KLT, we will use KLTTracker directly without
         // switching to using DescriptorExtractor

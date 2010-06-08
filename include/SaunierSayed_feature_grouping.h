@@ -34,7 +34,10 @@ namespace SaunierSayed{
 
     class TrackManager{
     public:
-        TrackManager(int min_num_frame_tracked = 4, float maximum_distance_threshold = 20, float feature_segmentation_threshold = 50, bool log_track_to_file = false);
+        TrackManager(int min_num_frame_tracked = 4,
+                     float maximum_distance_threshold = 20,
+                     float feature_segmentation_threshold = 50,
+                     bool log_track_to_file = false);
         ~TrackManager();
 
         TrackManager(const TrackManager & other);
@@ -105,6 +108,13 @@ namespace SaunierSayed{
         */
         bool get_edge_information(int vertex_id_1, int vertex_id_2, LinkInformation * output_link_information) const;
     private:
+        /**
+          The visualizer will need the graph information of this class in order to visualizer the graph on the image
+          Thus either we make it a friend or we need to return the entire graph structure.
+          Returning an entire graph structure means repackaging them into some data structures => too expensive
+        */
+        friend class FeatureGrouperVisualizer;
+
         float Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2);
 
         /** \brief Log the current track information into internal log file
@@ -123,6 +133,7 @@ namespace SaunierSayed{
         // Some flags
         bool logging_; //!< Are we logging track information?
 
+        // Variables for logging
         int current_time_stamp_id_;
         std::ofstream log_file_;
     };

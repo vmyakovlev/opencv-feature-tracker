@@ -23,6 +23,7 @@ namespace SaunierSayed{
         string window_;
         Mat homography_matrix_;
         Mat image_;
+        VideoWriter video_writer_;
     };
 }
 

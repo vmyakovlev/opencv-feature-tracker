@@ -12,6 +12,9 @@ namespace SaunierSayed{
 
     void FeatureGrouperVisualizer::NewFrame(Mat new_frame){
         image_ = new_frame.clone();
+
+        if (!video_writer_.isOpened())
+            video_writer_.open("visualizer.avi", CV_FOURCC('M','J','P','G'), 30, new_frame.size());
     }
 
     /** \brief Draw track information on the image
@@ -49,5 +52,6 @@ namespace SaunierSayed{
         }
 
         imshow(window_, image_);
+        video_writer_ << image_;
     }
 }

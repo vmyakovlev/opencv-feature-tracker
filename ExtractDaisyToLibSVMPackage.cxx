@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <stdio.h>
+#include <gflags/gflags.h>
 
 #include "misc.h"
 #include "opencv_io_extra.h"
@@ -21,7 +22,7 @@ using namespace cv;
     \param[in] ofs output file stream
 
 */
-void MatRowToSVMRow(const Mat & descriptors, const string class_string, ofstream * ofs){
+void MatRowToSVMRow(const Mat & descriptors, const string & class_string, ofstream * ofs){
     for (int i=0; i<descriptors.rows; i++){
         *ofs << class_string << " ";
 
@@ -41,7 +42,7 @@ void MatRowToSVMRow(const Mat & descriptors, const string class_string, ofstream
     \param[in] ofs output file stream
 
 */
-void MatRowToTXTRow(const Mat & descriptors, const string class_string, ofstream * ofs){
+void MatRowToTXTRow(const Mat & descriptors, const string & class_string, ofstream * ofs){
     for (int i=0; i<descriptors.rows; i++){
         *ofs << class_string << " ";
 
@@ -57,7 +58,11 @@ void MatRowToTXTRow(const Mat & descriptors, const string class_string, ofstream
 
 /** \file ExtractDaisyToLibSVMPackage.cxx Get the DAISY descriptors into SVM package so they can be fed into SVM for training
 */
+DEFINE_string(label, " ", "To prepend this label to each output descriptor line");
+
 int main(int argc, char ** argv){
+    google::ParseCommandLineFlags(&argc, &argv, true);
+
     if (argc<4){
         printf("Usage: %s [options] image.png query_points.txt output_file.txt \n",argv[0]);
         
@@ -85,7 +90,7 @@ int main(int argc, char ** argv){
     DaisyDescriptorExtractor daisy_extractor;
     daisy_extractor.compute(gray_im, query_points, descriptors);
 
-    MatRowToSVMRow(descriptors, "+1", &ofs);
+    MatRowToSVMRow(descriptors, FLAGS_label, &ofs);
 
     // Done
     ofs.close();

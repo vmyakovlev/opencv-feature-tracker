@@ -194,9 +194,33 @@ std::ostream& operator<< (std::ostream& out, const cv::Vec2f & vec )
 void convert_to_world_coordinate(const vector<Point2f> & points_in_image_coordinate, const Mat & homography_matrix, vector<Point2f> * points_in_world_coordinate){
     points_in_world_coordinate->clear();
     points_in_world_coordinate->resize(points_in_image_coordinate.size());
-//    Point2f temp_point;
 
     Mat points_in_image_coordinate_mat(points_in_image_coordinate, false); // sharing data
     Mat points_in_world_coordinate_mat(*points_in_world_coordinate, false); // sharing data so output is written to the right place
     perspectiveTransform(points_in_image_coordinate_mat, points_in_world_coordinate_mat, homography_matrix);
+}
+
+/** \brief convenience overload for single point
+*/
+void convert_to_image_coordinate(const Point2f & point_in_world_coordinate, const Mat & homography_matrix, Point2f * point_in_image_coordinate){
+    vector<Point2f> world, image;
+    world.push_back(point_in_world_coordinate);
+    image.push_back(*point_in_image_coordinate);
+
+    convert_to_image_coordinate(world, homography_matrix, &image);
+
+    *point_in_image_coordinate = image[0];
+}
+
+/** \brief Convert from world to image coordinate
+    \param homography_matrix the homography matrix from image to world coordinate. It will be inverted before use
+*/
+void convert_to_image_coordinate(const vector<Point2f> & points_in_world_coordinate, const Mat & homography_matrix, vector<Point2f> * points_in_image_coordinate){
+    points_in_image_coordinate->clear();
+    points_in_image_coordinate->resize(points_in_world_coordinate.size());
+
+    Mat points_in_world_coordinate_mat(points_in_world_coordinate, false); // sharing data
+    Mat points_in_image_coordinate_mat(*points_in_image_coordinate, false); // sharing data so output is written to the right place
+
+    perspectiveTransform(points_in_world_coordinate_mat, points_in_image_coordinate_mat, homography_matrix.inv());
 }

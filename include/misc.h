@@ -100,8 +100,15 @@ VT indexing(VT input, const vector<int> & indices){
 
 // Providing printing support for Vec2f
 std::ostream& operator<< (std::ostream& out, const cv::Vec2f & vec );
+
+// Conversion between world and image coordinate
+// NOTE: You can pass just use one and manually invert the homography_matrix
 void convert_to_world_coordinate(const vector<cv::Point2f> & points_in_image_coordinate,
                                  const cv::Mat & homography_matrix,
                                  vector<cv::Point2f> * points_in_world_coordinate);
+void convert_to_image_coordinate(const cv::Point2f & point_in_world_coordinate, const cv::Mat & homography_matrix, cv::Point2f * point_in_image_coordinate);
+void convert_to_image_coordinate(const vector<cv::Point2f> & points_in_world_coordinate,
+                                 const cv::Mat & homography_matrix,
+                                 vector<cv::Point2f> * points_in_image_coordinate);
 #endif
 

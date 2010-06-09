@@ -200,6 +200,47 @@ TEST(TestMisc, ConvertPointsFromImageToWorld){
     ASSERT_NEAR(1.29411765, proj_points[3].y, 0.00001);
 }
 
+TEST(TestMisc, ConvertPointsFromWorldToImage){
+    // See Test_ConvertPointsFromImageToWorld for the data
+
+    // Create the points
+    std::vector<Point2f> points;
+
+    points.push_back(cv::Point2f(1.14285714,1.28571429));
+    points.push_back(cv::Point2f(0.92307692,1.23076923));
+    points.push_back(cv::Point2f(1,1.30769231));
+    points.push_back(cv::Point2f(0.94117647,1.29411765));
+
+    // Create the homography matrix
+    Mat homography_matrix(3,3, CV_32F);
+    homography_matrix.at<float>(0,0) = 1;
+    homography_matrix.at<float>(0,1) = 2;
+    homography_matrix.at<float>(0,2) = 3;
+    homography_matrix.at<float>(1,0) = 2;
+    homography_matrix.at<float>(1,1) = 3;
+    homography_matrix.at<float>(1,2) = 1;
+    homography_matrix.at<float>(2,0) = 2;
+    homography_matrix.at<float>(2,1) = 2;
+    homography_matrix.at<float>(2,2) = 1;
+
+    // Get the projected_points
+    std::vector<Point2f> proj_points;
+    convert_to_image_coordinate(points, homography_matrix, &proj_points);
+
+    ASSERT_EQ(4, proj_points.size());
+
+    // Check the projected points
+    ASSERT_NEAR(1, proj_points[0].x, 0.00001);
+    ASSERT_NEAR(3, proj_points[1].x, 0.00001);
+    ASSERT_NEAR(2., proj_points[2].x, 0.00001);
+    ASSERT_NEAR(3, proj_points[3].x, 0.00001);
+
+    ASSERT_NEAR(2, proj_points[0].y, 0.00001);
+    ASSERT_NEAR(3, proj_points[1].y, 0.00001);
+    ASSERT_NEAR(4, proj_points[2].y, 0.00001);
+    ASSERT_NEAR(5, proj_points[3].y, 0.00001);
+}
+
 TEST(TestOpenCV, SimpleColumnMultiplyAdd){
     Mat column_a = Mat::ones(4,1,CV_32F);
     Mat column_b = Mat::ones(4,1,CV_32F);

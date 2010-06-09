@@ -12,6 +12,7 @@ using namespace cv;
 #include "descriptor_match.h"
 #include "window_pair.h"
 #include "SaunierSayed_feature_grouping.h"
+#include "feature_grouper_visualizer.h"
 
 DEFINE_bool(homography_point_correspondence, false, "The homography file contains correspondences instead of the homography matrix");
 DEFINE_bool(debug_gui, true, "Use GUI to debug");
@@ -142,7 +143,7 @@ int main (int argc, char ** argv){
 //    imshow(window3, a_frame);
 //    waitKey(0);
 
-    FeatureGrouperVisualizer visualizer(homography_matrix);
+    SaunierSayed::FeatureGrouperVisualizer visualizer(homography_matrix, &feature_grouper);
 
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
@@ -155,13 +156,14 @@ int main (int argc, char ** argv){
 
         // Find these points in the next frame
         feature_matcher.search(next_frame, new_points, old_points_indices);
+        convert_to_world_coordinate(new_points, homography_matrix, &frame_points_in_world);
 
         // Map these old indices to the ids of the tracks
         matched_track_ids = indexing(assigned_ids, old_points_indices);
 
         // Tally these new points into our graphical model
-        feature_grouper.UpdatePoints(new_points, matched_track_ids);
-        visualizer.AddTracks(feature_grouper.tracks());
+        feature_grouper.UpdatePoints(frame_points_in_world, matched_track_ids);
+        visualizer.Draw();
 
         // *********************************************************
         // Show GUI for debugging purposes

@@ -11,24 +11,34 @@ namespace ss = SaunierSayed;
 
 class SSTrackManagerTest : public ::testing::Test {
  protected:
+    // NOTE: this constructor with initialization list of track_manager_ is required
+    //       because for some reason track_manager_ will not get the required parameters
+    SSTrackManagerTest():
+        track_manager_(2, 0.05, 4, 20)
+    {
+
+    }
   virtual void SetUp() {
-      track_manager_ = ss::TrackManager(2, 4, 20);
+
 
       // points detected at time t
       points.push_back(Point2f(1.0,2.5));
       points.push_back(Point2f(2.0,23.5));
       points.push_back(Point2f(10.0,223.5));
       points.push_back(Point2f(1.5,24.5));
+      points.push_back(Point2f(200,100));
 
       // how these detected points map the new points at t + 1
       new_points.push_back(Point2f(1.1,2.5));
       new_points.push_back(Point2f(2.1,23.5));
       new_points.push_back(Point2f(10.1,223.5));
       new_points.push_back(Point2f(1.7,24.5));
+      new_points.push_back(Point2f(200,100));
       old_indices_1_2.push_back(0);
       old_indices_1_2.push_back(1);
       old_indices_1_2.push_back(2);
       old_indices_1_2.push_back(3);
+      old_indices_1_2.push_back(4);
 
       // points detected at time t + 1
       // NOTE: the 2nd and 3rd points is the same as new_points
@@ -79,7 +89,7 @@ TEST_F(SSTrackManagerTest, AddPoints){
     std::vector<int> assigned_ids;
     track_manager_.AddPoints(points, &assigned_ids);
 
-    ASSERT_EQ(4, track_manager_.num_tracks());
+    ASSERT_EQ(5, track_manager_.num_tracks());
 
     for (int i=0; i<track_manager_.num_tracks(); ++i){
         ASSERT_EQ(i, assigned_ids[i]);
@@ -90,10 +100,10 @@ TEST_F(SSTrackManagerTest, AddPoints){
 
 TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
     track_manager_.AddPoints(points);
-    ASSERT_EQ(4, track_manager_.num_tracks());
+    ASSERT_EQ(5, track_manager_.num_tracks());
 
     track_manager_.UpdatePoints(new_points, old_indices_1_2);
-    ASSERT_EQ(4, track_manager_.num_tracks());
+    ASSERT_EQ(5, track_manager_.num_tracks());
     ASSERT_NEAR(1.1, track_manager_.tracks()[0].pos.x, 0.001);
     ASSERT_NEAR(23.5, track_manager_.tracks()[1].pos.y, 0.001);
     ASSERT_NEAR(10.1, track_manager_.tracks()[2].pos.x, 0.001);
@@ -103,8 +113,8 @@ TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
     // points already in tracks
     std::vector<int> assigned_ids;
     track_manager_.AddPossiblyDuplicatePoints(points2, &assigned_ids);
-    ASSERT_EQ(6, track_manager_.num_tracks());
-    ASSERT_NEAR(12.5, track_manager_.tracks()[5].pos.x, 0.001);
+    ASSERT_EQ(7, track_manager_.num_tracks());
+    ASSERT_NEAR(12.5, track_manager_.tracks()[6].pos.x, 0.001);
     ASSERT_NEAR(223.5, track_manager_.tracks()[2].pos.y, 0.001);
 
     // these new points should not have been activated
@@ -154,10 +164,10 @@ TEST_F(SSTrackManagerTest, AddPossibleDuplicatePointsAndGetAssignedIds){
 
     track_manager_.AddPossiblyDuplicatePoints(points2, &assigned_ids);
 
-    ASSERT_EQ(4, assigned_ids[0]); // not duplicate => new id
+    ASSERT_EQ(5, assigned_ids[0]); // not duplicate => new id
     ASSERT_EQ(1, assigned_ids[1]); // duplicate => old id
     ASSERT_EQ(2, assigned_ids[2]); // duplicate => old id
-    ASSERT_EQ(5, assigned_ids[3]); // not duplicate => new id
+    ASSERT_EQ(6, assigned_ids[3]); // not duplicate => new id
 }
 
 TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
@@ -171,9 +181,12 @@ TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
         ASSERT_TRUE(track_manager_.tracks()[i].activated);
     }
 
+    // the last point should not be activated since it is a stationary point
+    ASSERT_FALSE(track_manager_.tracks()[4].activated);
+
     // Since these points are activated, they should now be connected to all the nearby nodes
     // NOTE: only track 1 and track 3 are close enough to each other.
-    ASSERT_EQ(6, track_manager_.num_tracks());
+    ASSERT_EQ(7, track_manager_.num_tracks());
     ASSERT_EQ(1, track_manager_.num_connections());
 
     // Another time step, only 0-3 are updated
@@ -243,8 +256,8 @@ TEST_F(SSTrackManagerTest, GetConnectedComponents){
 
     ss::ConnectedComponents connected_components = track_manager_.GetConnectedComponents();
 
-    // There are 3 components: one that has 2 element, the other two have 1 elements
-    ASSERT_EQ(3, connected_components.size());
+    // There are 4 components: one that has 3 element, the other two have 1 elements
+    ASSERT_EQ(4, connected_components.size());
 
     ASSERT_EQ(1, connected_components[0].size());
 

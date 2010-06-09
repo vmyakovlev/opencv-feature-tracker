@@ -18,8 +18,9 @@ DEFINE_bool(homography_point_correspondence, false, "The homography file contain
 DEFINE_bool(debug_gui, true, "Use GUI to debug");
 DEFINE_bool(log_tracks_info, false, "Log most information about tracks as time progress (LOTS OF disk space required)");
 DEFINE_uint64(min_frames_tracked, 4, "Minimum number of frames tracked before it is activated");
-DEFINE_uint64(maximum_distance_activated, 20, "When activated, how far around the point do we search for points to add?");
-DEFINE_uint64(segmentation_threshold, 200, "How much do we allow max_distance - min_distance to vary before an edge is severe.");
+DEFINE_double(min_distance_moved_required, 3, "Minimum number of frames tracked before it is activated");
+DEFINE_double(maximum_distance_activated, 20, "When activated, how far around the point do we search for points to add?");
+DEFINE_double(segmentation_threshold, 200, "How much do we allow max_distance - min_distance to vary before an edge is severe.");
 
 int main (int argc, char ** argv){
     google::ParseCommandLineFlags(&argc, &argv, true);
@@ -41,6 +42,7 @@ int main (int argc, char ** argv){
     cout << "Debug GUI: " << FLAGS_debug_gui << endl;
     cout << "Logging tracks info: " << FLAGS_log_tracks_info << endl;
     cout << "Min frames tracked: " << FLAGS_min_frames_tracked << endl;
+    cout << "Min distance moved required: " << FLAGS_min_distance_moved_required << endl;
     cout << "Max distance activated: " << FLAGS_maximum_distance_activated << endl;
     cout << "Segmentation threshold: " << FLAGS_segmentation_threshold << endl;
 
@@ -116,6 +118,7 @@ int main (int argc, char ** argv){
 
     SaunierSayed::TrackManager feature_grouper(
             FLAGS_min_frames_tracked,
+            FLAGS_min_distance_moved_required,
             FLAGS_maximum_distance_activated,
             FLAGS_segmentation_threshold,
             FLAGS_log_tracks_info);

@@ -23,6 +23,7 @@ namespace SaunierSayed{
     typedef struct TrackInformation_{
         int id; // if of the track (vertex) (synced with vertex_index internally managed by BGL)
         cv::Point2f pos;
+        float total_distance_moved;
         int number_of_times_tracked;
         bool activated;
     } TrackInformation;
@@ -37,6 +38,7 @@ namespace SaunierSayed{
     public:
         friend class FeatureGrouperVisualizer;
         TrackManager(int min_num_frame_tracked = 4,
+                     float min_distance_moved_required = 3,
                      float maximum_distance_threshold = 20,
                      float feature_segmentation_threshold = 50,
                      bool log_track_to_file = false);
@@ -128,6 +130,7 @@ namespace SaunierSayed{
 
         // Some parameters
         int min_num_frame_tracked_;
+        float min_distance_moved_required_;
         float maximum_distance_threshold_;
         float feature_segmentation_threshold_;
 

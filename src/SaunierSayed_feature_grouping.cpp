@@ -3,10 +3,11 @@
 #include <iostream>
 
 namespace SaunierSayed{
-    TrackManager::TrackManager(int min_num_frame_tracked, float maximum_distance_threshold, float feature_segmentation_threshold, bool log_track_to_file){
+    TrackManager::TrackManager(int min_num_frame_tracked, float min_distance_moved_required, float maximum_distance_threshold, float feature_segmentation_threshold, bool log_track_to_file){
         min_num_frame_tracked_ = min_num_frame_tracked;
         maximum_distance_threshold_ = maximum_distance_threshold;
         feature_segmentation_threshold_ = feature_segmentation_threshold;
+        min_distance_moved_required_ = min_distance_moved_required;
 
         logging_ = log_track_to_file;
 
@@ -80,6 +81,7 @@ namespace SaunierSayed{
             tracks_connection_graph_[v].pos = new_points[i];
             tracks_connection_graph_[v].activated = false;
             tracks_connection_graph_[v].number_of_times_tracked = 1;
+            tracks_connection_graph_[v].total_distance_moved = 0;
 
             if (assigned_ids != NULL){
                 (*assigned_ids)[i] = tracks_connection_graph_[v].id;
@@ -90,8 +92,16 @@ namespace SaunierSayed{
     void TrackManager::UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices){
         TracksConnectionGraph::vertex_descriptor v;
 
+        float distance_moved;
         for (int i=0; i<old_points_indices.size(); i++){
             v = vertex(old_points_indices[i], tracks_connection_graph_);
+
+            // calculate distance moved
+            distance_moved = sqrt(
+                    pow(new_points[i].x - tracks_connection_graph_[v].pos.x, 2) +
+                    pow(new_points[i].y - tracks_connection_graph_[v].pos.y, 2)
+                    );
+            tracks_connection_graph_[v].total_distance_moved += distance_moved;
 
             tracks_connection_graph_[v].pos = new_points[i];
             tracks_connection_graph_[v].number_of_times_tracked++;
@@ -127,7 +137,10 @@ namespace SaunierSayed{
         // NOTE: Activation needs to happen after ALL the positions have been updated
         for (int i=0; i<old_points_indices.size(); i++){
             v = vertex(old_points_indices[i], tracks_connection_graph_);
-            if (tracks_connection_graph_[v].number_of_times_tracked == min_num_frame_tracked_){
+            if (tracks_connection_graph_[v].number_of_times_tracked >= min_num_frame_tracked_
+                && tracks_connection_graph_[v].activated == false
+                && tracks_connection_graph_[v].total_distance_moved > min_distance_moved_required_)
+            {
                 ActivateTrack(old_points_indices[i]);
             }
         }

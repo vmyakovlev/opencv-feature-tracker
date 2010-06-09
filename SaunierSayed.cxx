@@ -189,13 +189,26 @@ int main (int argc, char ** argv){
 
         // Go to the next frame
         next_frame.copyTo(prev_frame);
-        feature_detector.detect(prev_frame, key_points);
-        feature_matcher.add(prev_frame, key_points);
 
+        // detect corners for this frame
+        feature_detector.detect(prev_frame, key_points);
+
+        // convert to world coordinate
         vector_one_to_another(key_points, frame_points);
         convert_to_world_coordinate(frame_points, homography_matrix, &frame_points_in_world);
+
+        // Add to our feature grouper
         assigned_ids.clear();
         feature_grouper.AddPossiblyDuplicatePoints(frame_points_in_world, &assigned_ids);
+
+        // Get all points currently in feature grouper
+        feature_grouper.GetAllTracksPositionAndId(&frame_points_in_world, &assigned_ids);
+        convert_to_image_coordinate(frame_points_in_world, homography_matrix, &frame_points);
+
+        vector_one_to_another(frame_points, key_points);
+
+        // Add all these points into the matcher so it can be matched in the next iteration
+        feature_matcher.add(prev_frame, key_points);
 
         // some indication of stuff working
         std::cout << ".";

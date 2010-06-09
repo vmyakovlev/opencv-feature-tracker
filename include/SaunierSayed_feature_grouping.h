@@ -95,6 +95,10 @@ namespace SaunierSayed{
         //! Return the number of connections amongst tracks
         int num_connections();
 
+        /** \brief Get current position of all tracks
+        */
+        void GetAllTracksPositionAndId(std::vector<cv::Point2f> * frame_points, std::vector<int> * ids);
+
         //////// These API should be used with care since they are not fast due to data copying
         //! Return all tracks information
         Tracks tracks() const;

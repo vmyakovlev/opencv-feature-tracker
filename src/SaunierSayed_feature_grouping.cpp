@@ -384,4 +384,20 @@ namespace SaunierSayed{
 
         return return_connected_components;
     }
+
+    void TrackManager::GetAllTracksPositionAndId(std::vector<cv::Point2f> * frame_points, std::vector<int> * ids){
+        frame_points->clear();
+        ids->clear();
+        frame_points->resize(num_vertices(tracks_connection_graph_));
+        ids->resize(num_vertices(tracks_connection_graph_));
+
+        TracksConnectionGraph::vertex_iterator vi, viend;
+
+        int i=0;
+        for (tie(vi,viend) = vertices(tracks_connection_graph_); vi!=viend; ++vi){
+            (*frame_points)[i] = tracks_connection_graph_[*vi].pos;
+            (*ids)[i] = tracks_connection_graph_[*vi].id;
+            i++;
+        }
+    }
 }

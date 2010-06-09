@@ -98,6 +98,22 @@ TEST_F(SSTrackManagerTest, AddPoints){
     }
 }
 
+TEST_F(SSTrackManagerTest, GetAllTrackPositions){
+    std::vector<int> assigned_ids;
+    track_manager_.AddPoints(points, &assigned_ids);
+
+    vector<Point2f> positions;
+    track_manager_.GetAllTracksPositionAndId(&positions, &assigned_ids);
+
+    ASSERT_EQ(5, positions.size());
+
+    for (int i=0; i<track_manager_.num_tracks(); ++i){
+        ASSERT_EQ(points[i].x, positions[i].x);
+        ASSERT_EQ(points[i].y, positions[i].y);
+        ASSERT_EQ(i, assigned_ids[i]);
+    }
+}
+
 TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
     track_manager_.AddPoints(points);
     ASSERT_EQ(5, track_manager_.num_tracks());

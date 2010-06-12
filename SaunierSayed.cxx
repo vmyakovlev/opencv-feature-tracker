@@ -152,6 +152,7 @@ int main (int argc, char ** argv){
     if (FLAGS_visualize_per_step)
         visualizer.ActivateDrawToFile(a_frame.size(), "visualizer.avi", CV_FOURCC('D','I','V','X'));
 
+    int current_num_frame = 0;
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
         cvtColor(a_frame,next_frame, CV_RGB2GRAY);
@@ -215,8 +216,10 @@ int main (int argc, char ** argv){
         feature_matcher.add(prev_frame, key_points);
 
         // some indication of stuff working
-        std::cout << ".";
+        printf("%d\r", current_num_frame);
+        current_num_frame++;
     }
+    printf("\n");
 
     //TODO: Collect track information and Report
     SaunierSayed::ConnectedComponents components = feature_grouper.GetConnectedComponents();

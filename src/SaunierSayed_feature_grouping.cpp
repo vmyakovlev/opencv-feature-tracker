@@ -201,7 +201,7 @@ namespace SaunierSayed{
             if (distance < maximum_distance_threshold_ && v!=*vi){
                 tie(e, operation_success) = edge(v, *vi, tracks_connection_graph_);
                 if (operation_success){
-                    std::cout << "Debug: There already exists an edge between " << v << " and " << *vi << ". Skipping." << std::endl;
+                    //std::cout << "Debug: There already exists an edge between " << v << " and " << *vi << ". Skipping." << std::endl;
                     continue;
                 }
 

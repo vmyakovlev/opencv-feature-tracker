@@ -16,6 +16,7 @@ using namespace cv;
 
 DEFINE_bool(homography_point_correspondence, false, "The homography file contains correspondences instead of the homography matrix");
 DEFINE_bool(debug_gui, true, "Use GUI to debug");
+DEFINE_bool(visualize_per_step, true, "Visualize the status of the feature grouper at each time step?");
 DEFINE_bool(log_tracks_info, false, "Log most information about tracks as time progress (LOTS OF disk space required)");
 DEFINE_uint64(min_frames_tracked, 4, "Minimum number of frames tracked before it is activated");
 DEFINE_double(min_distance_moved_required, 3, "Minimum number of frames tracked before it is activated");
@@ -40,6 +41,7 @@ int main (int argc, char ** argv){
     // PRINT OUT PARAMETERS
     cout << "Compute homograph from points: " << FLAGS_homography_point_correspondence << endl;
     cout << "Debug GUI: " << FLAGS_debug_gui << endl;
+    cout << "Visualize feature grouper at each time step: " << FLAGS_visualize_per_step << endl;
     cout << "Logging tracks info: " << FLAGS_log_tracks_info << endl;
     cout << "Min frames tracked: " << FLAGS_min_frames_tracked << endl;
     cout << "Min distance moved required: " << FLAGS_min_distance_moved_required << endl;
@@ -147,6 +149,8 @@ int main (int argc, char ** argv){
 //    waitKey(0);
 
     SaunierSayed::FeatureGrouperVisualizer visualizer(homography_matrix, &feature_grouper);
+    if (FLAGS_visualize_per_step)
+        visualizer.ActivateDrawToFile(a_frame.size(), "visualizer.avi", CV_FOURCC('D','I','V','X'));
 
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);

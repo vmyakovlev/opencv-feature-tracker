@@ -5,6 +5,7 @@ namespace SaunierSayed{
         window_ = "Feature Grouper status";
         homography_matrix_ = homography_matrix;
         feature_grouper_ = feature_grouper;
+        writing_video_out_ = false;
 
         // Create window
         namedWindow(window_);
@@ -12,9 +13,21 @@ namespace SaunierSayed{
 
     void FeatureGrouperVisualizer::NewFrame(Mat new_frame){
         image_ = new_frame.clone();
+    }
 
-        if (!video_writer_.isOpened())
-            video_writer_.open("visualizer.avi", CV_FOURCC('M','J','P','G'), 30, new_frame.size());
+    void FeatureGrouperVisualizer::ActivateDrawToFile(const cv::Size2i &output_video_frame_size, const string & output_filename, int fourcc){
+        bool video_writer_success;
+        if (!video_writer_.isOpened()){
+            video_writer_success = video_writer_.open(output_filename, fourcc, 30, output_video_frame_size);
+
+            if (!video_writer_success){
+                std::cerr << "Error: Unable to create video writer with supplied arguments\n";
+            }
+        }
+        else
+            std::cout << "Warning: Video writer already activated. Ignoring re-activation request.\n";
+
+        writing_video_out_ = true;
     }
 
     /** \brief Draw track information on the image
@@ -52,6 +65,7 @@ namespace SaunierSayed{
         }
 
         imshow(window_, image_);
-        video_writer_ << image_;
+        if (writing_video_out_)
+            video_writer_ << image_;
     }
 }

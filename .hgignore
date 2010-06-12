@@ -1,0 +1,3 @@
+tests/test_configuration.h
+CMakeLists.txt.user
+.DS_Store

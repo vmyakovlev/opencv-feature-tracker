@@ -1,0 +1,9 @@
+#ifndef __TEST_CONFIGURATION_H
+#define __TEST_CONFIGURATION_H
+
+#include <string>
+
+const std::string data_folder_path = "@TEST_DATA_FOLDER@";
+
+#endif
+

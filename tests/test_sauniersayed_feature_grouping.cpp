@@ -19,8 +19,6 @@ class SSTrackManagerTest : public ::testing::Test {
 
     }
   virtual void SetUp() {
-
-
       // points detected at time t
       points.push_back(Point2f(1.0,2.5));
       points.push_back(Point2f(2.0,23.5));
@@ -29,11 +27,11 @@ class SSTrackManagerTest : public ::testing::Test {
       points.push_back(Point2f(200,100));
 
       // how these detected points map the new points at t + 1
-      new_points.push_back(Point2f(1.1,2.5));
-      new_points.push_back(Point2f(2.1,23.5));
-      new_points.push_back(Point2f(10.1,223.5));
+      new_points.push_back(Point2f(1.2,2.5));
+      new_points.push_back(Point2f(2.2,23.5));
+      new_points.push_back(Point2f(10.2,223.5));
       new_points.push_back(Point2f(1.7,24.5));
-      new_points.push_back(Point2f(200,100));
+      new_points.push_back(Point2f(200.04,100));
       old_indices_1_2.push_back(0);
       old_indices_1_2.push_back(1);
       old_indices_1_2.push_back(2);
@@ -46,17 +44,18 @@ class SSTrackManagerTest : public ::testing::Test {
       //       points matched from previous time will get picked as the corner
       //       for this time frame as well
       points2.push_back(Point2f(4.0,2.5));
-      points2.push_back(Point2f(2.1,23.5));
-      points2.push_back(Point2f(10.1,223.5));
+      points2.push_back(Point2f(2.2,23.5));
+      points2.push_back(Point2f(10.2,223.5));
       points2.push_back(Point2f(12.5,24.5));
 
       // Current situations:
-      /* (1.1, 2.5)
-         (2.1, 23.5)
-         (10.1, 223.5)
+      /* (1.2, 2.5)
+         (2.2, 23.5)
+         (10.2, 223.5)
          (1.7, 24.5)
+         (200.04, 100)
          (4.0, 2.5)
-         (1.7, 24.5)
+         (12.5, 24.5)
 
          Connections: 1 --- 3
        */
@@ -64,8 +63,14 @@ class SSTrackManagerTest : public ::testing::Test {
       // how these detected points map to new points at time t + 2
       new_points2.push_back(Point2f(2.0, 15.5));
       new_points2.push_back(Point2f(1.7, 24.6));
+      new_points2.push_back(Point2f(200, 100));
       old_indices_2_3.push_back(1);
       old_indices_2_3.push_back(3);
+      old_indices_2_3.push_back(4);
+
+      // NOTE: we design this update so that the point (200,100) fluctuates a little bit
+      //       but not actually go anywhere. This point is a point on a static object in
+      //       the scene. Hence, it should not be activated.
 
       // how these detected points map to new points at time t + 3
       new_points3.push_back(Point2f(1, 0));
@@ -120,9 +125,9 @@ TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
 
     track_manager_.UpdatePoints(new_points, old_indices_1_2);
     ASSERT_EQ(5, track_manager_.num_tracks());
-    ASSERT_NEAR(1.1, track_manager_.tracks()[0].pos.x, 0.001);
+    ASSERT_NEAR(1.2, track_manager_.tracks()[0].pos.x, 0.001);
     ASSERT_NEAR(23.5, track_manager_.tracks()[1].pos.y, 0.001);
-    ASSERT_NEAR(10.1, track_manager_.tracks()[2].pos.x, 0.001);
+    ASSERT_NEAR(10.2, track_manager_.tracks()[2].pos.x, 0.001);
     ASSERT_NEAR(1.7, track_manager_.tracks()[3].pos.x, 0.001);
 
     // At time t+1, we detect a couple of points which happen to be the same as
@@ -193,9 +198,10 @@ TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
     track_manager_.AddPossiblyDuplicatePoints(points2, &assigned_ids);
 
     // 0-3 points should have been activated
-    for (int i=0; i<4; i++){
-        ASSERT_TRUE(track_manager_.tracks()[i].activated);
-    }
+    ASSERT_TRUE(track_manager_.tracks()[0].activated);
+    ASSERT_TRUE(track_manager_.tracks()[1].activated);
+    ASSERT_TRUE(track_manager_.tracks()[2].activated);
+    ASSERT_TRUE(track_manager_.tracks()[3].activated);
 
     // the last point should not be activated since it is a stationary point
     ASSERT_FALSE(track_manager_.tracks()[4].activated);
@@ -207,12 +213,14 @@ TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
 
     // Another time step, only 0-3 are updated
     track_manager_.UpdatePoints(new_points2, old_indices_2_3);
-    ASSERT_TRUE(track_manager_.tracks()[0].activated);
-    ASSERT_TRUE(track_manager_.tracks()[1].activated);
-    ASSERT_TRUE(track_manager_.tracks()[2].activated);
-    ASSERT_TRUE(track_manager_.tracks()[3].activated);
-    ASSERT_FALSE(track_manager_.tracks()[4].activated);
-    ASSERT_FALSE(track_manager_.tracks()[5].activated);
+    ss::Tracks current_track_information = track_manager_.tracks();
+    ASSERT_TRUE(current_track_information[0].activated);
+    ASSERT_TRUE(current_track_information[1].activated);
+    ASSERT_TRUE(current_track_information[2].activated);
+    ASSERT_TRUE(current_track_information[3].activated);
+    ASSERT_FALSE(current_track_information[4].activated);
+    ASSERT_FALSE(current_track_information[5].activated);
+    ASSERT_FALSE(current_track_information[6].activated);
 }
 
 TEST_F(SSTrackManagerTest, MaxDistanceMinDistanceUpdate){

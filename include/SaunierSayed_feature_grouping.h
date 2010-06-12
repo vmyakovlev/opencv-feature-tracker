@@ -23,7 +23,10 @@ namespace SaunierSayed{
     typedef struct TrackInformation_{
         int id; // if of the track (vertex) (synced with vertex_index internally managed by BGL)
         cv::Point2f pos;
-        float total_distance_moved;
+        cv::Point2f average_position; // where is this track hovers around. For tracks that have strong movements,
+                                // their new positions are further and further away from the average position.
+                                // For tracks that stay stationary (e.g. scene objects, parked vehicles), their
+                                // new position stay around this value.
         int number_of_times_tracked;
         bool activated;
     } TrackInformation;
@@ -123,7 +126,7 @@ namespace SaunierSayed{
         */
 
         float Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2);
-
+        static float Distance(const cv::Point2f & pt1, const cv::Point2f & pt2);
         /** \brief Log the current track information into internal log file
 
           Currently only log track positions

@@ -81,7 +81,7 @@ namespace SaunierSayed{
             tracks_connection_graph_[v].pos = new_points[i];
             tracks_connection_graph_[v].activated = false;
             tracks_connection_graph_[v].number_of_times_tracked = 1;
-            tracks_connection_graph_[v].total_distance_moved = 0;
+            tracks_connection_graph_[v].average_position = new_points[i];
 
             if (assigned_ids != NULL){
                 (*assigned_ids)[i] = tracks_connection_graph_[v].id;
@@ -92,16 +92,15 @@ namespace SaunierSayed{
     void TrackManager::UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices){
         TracksConnectionGraph::vertex_descriptor v;
 
-        float distance_moved;
+        int number_of_times_tracked;
         for (int i=0; i<old_points_indices.size(); i++){
             v = vertex(old_points_indices[i], tracks_connection_graph_);
 
-            // calculate distance moved
-            distance_moved = sqrt(
-                    pow(new_points[i].x - tracks_connection_graph_[v].pos.x, 2) +
-                    pow(new_points[i].y - tracks_connection_graph_[v].pos.y, 2)
-                    );
-            tracks_connection_graph_[v].total_distance_moved += distance_moved;
+            // update average position
+            number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
+            tracks_connection_graph_[v].average_position = (tracks_connection_graph_[v].average_position * number_of_times_tracked + new_points[i])* (1.0 / (number_of_times_tracked+1));
+
+//            printf("Average position: %f %f\n", tracks_connection_graph_[v].average_position.x, tracks_connection_graph_[v].average_position.y);
 
             tracks_connection_graph_[v].pos = new_points[i];
             tracks_connection_graph_[v].number_of_times_tracked++;
@@ -135,11 +134,15 @@ namespace SaunierSayed{
 
         // NOTE: Activation only happens once
         // NOTE: Activation needs to happen after ALL the positions have been updated
+        float distance_moved_from_average;
         for (int i=0; i<old_points_indices.size(); i++){
             v = vertex(old_points_indices[i], tracks_connection_graph_);
+
+            // TODO: Shouldn't we calculate distance moved from average BEFORE we update the position?
+            distance_moved_from_average = Distance(tracks_connection_graph_[v].average_position, tracks_connection_graph_[v].pos);
             if (tracks_connection_graph_[v].number_of_times_tracked >= min_num_frame_tracked_
                 && tracks_connection_graph_[v].activated == false
-                && tracks_connection_graph_[v].total_distance_moved > min_distance_moved_required_)
+                && distance_moved_from_average > min_distance_moved_required_)
             {
                 ActivateTrack(old_points_indices[i]);
             }
@@ -399,5 +402,12 @@ namespace SaunierSayed{
             (*ids)[i] = tracks_connection_graph_[*vi].id;
             i++;
         }
+    }
+
+    float TrackManager::Distance(const cv::Point2f &pt1, const cv::Point2f &pt2){
+        return sqrt(
+                    pow(pt1.x - pt2.x, 2) +
+                    pow(pt1.y - pt2.y, 2)
+                    );
     }
 }

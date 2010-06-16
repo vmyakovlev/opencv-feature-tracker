@@ -4,6 +4,7 @@
 #include <cv.h>
 #include <map>
 #include <vector>
+#include <queue>
 #include <boost/graph/adjacency_list.hpp>
 #include <fstream>
 
@@ -23,7 +24,8 @@ namespace SaunierSayed{
     typedef struct TrackInformation_{
         int id; // if of the track (vertex) (synced with vertex_index internally managed by BGL)
         cv::Point2f pos;
-        cv::Point2f average_position; // where is this track hovers around. For tracks that have strong movements,
+        std::deque<cv::Point2f> previous_points; // save a fixed set of previous points
+        cv::Point2f average_position; // Average position of this track stored in previous_points. For tracks that have strong movements,
                                 // their new positions are further and further away from the average position.
                                 // For tracks that stay stationary (e.g. scene objects, parked vehicles), their
                                 // new position stay around this value.
@@ -37,6 +39,13 @@ namespace SaunierSayed{
 
     typedef adjacency_list <listS, vecS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
 
+    /** \class TrackManager
+
+      This class implements a manager which group features based on how they move together. It implements the algorithm
+      proposed in Saunier and Sayed 2006.
+
+      \todo Systematically remove points that are not tracked
+    */
     class TrackManager{
     public:
         friend class FeatureGrouperVisualizer;
@@ -102,6 +111,13 @@ namespace SaunierSayed{
         */
         void GetAllTracksPositionAndId(std::vector<cv::Point2f> * frame_points, std::vector<int> * ids);
 
+        /** \brief Advance our feature grouper state to the next frame
+
+          All point addition will be considered for the next time step instead.
+          User should call this method when they are done with this time step
+        */
+        void AdvanceToNextFrame();
+
         //////// These API should be used with care since they are not fast due to data copying
         //! Return all tracks information
         Tracks tracks() const;
@@ -140,6 +156,8 @@ namespace SaunierSayed{
         float min_distance_moved_required_;
         float maximum_distance_threshold_;
         float feature_segmentation_threshold_;
+        int maximum_previous_points_remembered_;
+        float minimum_variance_required_; //!< Minimum variance of motion in the last N frames. Tracks having less than this variance in motion will be removed.
 
         // Some flags
         bool logging_; //!< Are we logging track information?

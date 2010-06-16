@@ -215,11 +215,17 @@ int main (int argc, char ** argv){
         // Add all these points into the matcher so it can be matched in the next iteration
         feature_matcher.add(prev_frame, key_points);
 
+        // Advance to the next frame
+        feature_grouper.AdvanceToNextFrame();
+
         // some indication of stuff working
-        printf("%d\r", current_num_frame);
+        printf("\r%d", current_num_frame);
+        //fflush(stdout);
         current_num_frame++;
     }
     printf("\n");
+
+    printf("Collecting track information\n");
 
     //TODO: Collect track information and Report
     SaunierSayed::ConnectedComponents components = feature_grouper.GetConnectedComponents();

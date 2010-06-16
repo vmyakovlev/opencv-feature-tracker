@@ -10,7 +10,7 @@ namespace SaunierSayed{
         min_distance_moved_required_ = min_distance_moved_required;
 
         maximum_previous_points_remembered_ = 10;
-        minimum_variance_required_ = 20;
+        minimum_variance_required_ = 5;
 
         logging_ = log_track_to_file;
 
@@ -175,7 +175,8 @@ namespace SaunierSayed{
 
                 // if the variance if too low, time to remove it
                 if (variance.x < minimum_variance_required_ && variance.y < minimum_variance_required_){
-                    // TODO: Are you sure that this not invalidate any iterator?
+                    // TODO: Are you sure that this does not invalidate any iterator?
+                    clear_vertex(v, tracks_connection_graph_);
                     remove_vertex(v, tracks_connection_graph_);
                 }
             }

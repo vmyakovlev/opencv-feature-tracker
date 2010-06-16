@@ -9,6 +9,9 @@ namespace SaunierSayed{
         feature_segmentation_threshold_ = feature_segmentation_threshold;
         min_distance_moved_required_ = min_distance_moved_required;
 
+        maximum_previous_points_remembered_ = 10;
+        minimum_variance_required_ = 20;
+
         logging_ = log_track_to_file;
 
         if (logging_){
@@ -82,6 +85,7 @@ namespace SaunierSayed{
             tracks_connection_graph_[v].activated = false;
             tracks_connection_graph_[v].number_of_times_tracked = 1;
             tracks_connection_graph_[v].average_position = new_points[i];
+            tracks_connection_graph_[v].previous_points.push_back(new_points[i]);
 
             if (assigned_ids != NULL){
                 (*assigned_ids)[i] = tracks_connection_graph_[v].id;
@@ -96,9 +100,17 @@ namespace SaunierSayed{
         for (int i=0; i<old_points_indices.size(); i++){
             v = vertex(old_points_indices[i], tracks_connection_graph_);
 
-            // update average position
             number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
-            tracks_connection_graph_[v].average_position = (tracks_connection_graph_[v].average_position * number_of_times_tracked + new_points[i])* (1.0 / (number_of_times_tracked+1));
+            tracks_connection_graph_[v].previous_points.push_back(new_points[i]);
+
+            if (tracks_connection_graph_[v].previous_points.size() > maximum_previous_points_remembered_){
+                // update average position
+                cv::Point2f old_point = tracks_connection_graph_[v].previous_points.front();
+                tracks_connection_graph_[v].previous_points.pop_front();
+                tracks_connection_graph_[v].average_position = (tracks_connection_graph_[v].average_position * maximum_previous_points_remembered_ - old_point + new_points[i]) * (1.0 / maximum_previous_points_remembered_);
+            } else {
+                tracks_connection_graph_[v].average_position = (tracks_connection_graph_[v].average_position * number_of_times_tracked + new_points[i])* (1.0 / (number_of_times_tracked+1));
+            }
 
 //            printf("Average position: %f %f\n", tracks_connection_graph_[v].average_position.x, tracks_connection_graph_[v].average_position.y);
 
@@ -146,6 +158,27 @@ namespace SaunierSayed{
             {
                 ActivateTrack(old_points_indices[i]);
             }
+
+            // Determine for activated points whether there has been enough variance
+            // Not enough variance means the track has been stuck for a while
+            if (tracks_connection_graph_[v].activated){
+                // calculate the variance of the previous points
+                cv::Point2f variance(0,0);
+                cv::Point2f average_pos = tracks_connection_graph_[v].average_position;
+                std::deque<cv::Point2f>::iterator it = tracks_connection_graph_[v].previous_points.begin(),
+                    it_end = tracks_connection_graph_[v].previous_points.end();
+                for (;it!=it_end; ++it){
+                    variance.x += (average_pos.x - it->x)*(average_pos.x - it->x);
+                    variance.y += (average_pos.y - it->y)*(average_pos.y - it->y);
+                }
+                variance *= (1.0 / tracks_connection_graph_[v].previous_points.size());
+
+                // if the variance if too low, time to remove it
+                if (variance.x < minimum_variance_required_ && variance.y < minimum_variance_required_){
+                    // TODO: Are you sure that this not invalidate any iterator?
+                    remove_vertex(v, tracks_connection_graph_);
+                }
+            }
         }
 
         // Log: current information of each track at this time frame
@@ -154,9 +187,6 @@ namespace SaunierSayed{
         }
 
         SegmentFarAwayTracks();
-
-        // next time stamp
-        current_time_stamp_id_++;
     }
 
     void TrackManager::LogCurrentTrackInfo(){
@@ -240,6 +270,10 @@ namespace SaunierSayed{
                 remove_edge(*edge_it, tracks_connection_graph_);
             }
         }
+    }
+
+    void TrackManager::AdvanceToNextFrame(){
+        current_time_stamp_id_++;
     }
 
     /**

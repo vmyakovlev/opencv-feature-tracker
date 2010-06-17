@@ -19,6 +19,7 @@ private:
     cv::Mat im_;
     cv::Point im2_offset; //!< the offset that takes a point in im2 coordinate to window coordinate
     std::string window_name_;
+    float alpha_blending_; //!< alpha blending coefficient
 };
 
 #endif

@@ -3,14 +3,17 @@
 #include <iostream>
 
 namespace SaunierSayed{
-    TrackManager::TrackManager(int min_num_frame_tracked, float min_distance_moved_required, float maximum_distance_threshold, float feature_segmentation_threshold, bool log_track_to_file){
+    TrackManager::TrackManager(int min_num_frame_tracked, float min_distance_moved_required,
+                               float maximum_distance_threshold, float feature_segmentation_threshold,
+                               float minimum_variance_required,
+                               bool log_track_to_file){
         min_num_frame_tracked_ = min_num_frame_tracked;
         maximum_distance_threshold_ = maximum_distance_threshold;
         feature_segmentation_threshold_ = feature_segmentation_threshold;
         min_distance_moved_required_ = min_distance_moved_required;
 
         maximum_previous_points_remembered_ = 10;
-        minimum_variance_required_ = 5;
+        minimum_variance_required_ = minimum_variance_required;
 
         logging_ = log_track_to_file;
 
@@ -152,16 +155,17 @@ namespace SaunierSayed{
 
             // TODO: Shouldn't we calculate distance moved from average BEFORE we update the position?
             distance_moved_from_average = Distance(tracks_connection_graph_[v].average_position, tracks_connection_graph_[v].pos);
-            if (tracks_connection_graph_[v].number_of_times_tracked >= min_num_frame_tracked_
-                && tracks_connection_graph_[v].activated == false
+            if (tracks_connection_graph_[v].activated == false
+                && tracks_connection_graph_[v].number_of_times_tracked >= min_num_frame_tracked_
                 && distance_moved_from_average > min_distance_moved_required_)
             {
                 ActivateTrack(old_points_indices[i]);
+                continue; // so that this point is not tested right away whether it has been moved or not
             }
 
             // Determine for activated points whether there has been enough variance
             // Not enough variance means the track has been stuck for a while
-            if (tracks_connection_graph_[v].activated){
+            if (tracks_connection_graph_[v].activated && tracks_connection_graph_[v].previous_points.size() == min_num_frame_tracked_){
                 // calculate the variance of the previous points
                 cv::Point2f variance(0,0);
                 cv::Point2f average_pos = tracks_connection_graph_[v].average_position;
@@ -173,7 +177,7 @@ namespace SaunierSayed{
                 }
                 variance *= (1.0 / tracks_connection_graph_[v].previous_points.size());
 
-                // if the variance if too low, time to remove it
+                // if the variance is too low, time to remove it
                 if (variance.x < minimum_variance_required_ && variance.y < minimum_variance_required_){
                     // TODO: Are you sure that this does not invalidate any iterator?
                     clear_vertex(v, tracks_connection_graph_);

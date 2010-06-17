@@ -68,4 +68,18 @@ namespace SaunierSayed{
         if (writing_video_out_)
             video_writer_ << image_;
     }
+
+    void FeatureGrouperVisualizer::CustomDraw(const std::vector<Point2f> & points, CvScalar color /*= CV_RGB(255,255,0)*/, bool is_required_homography_transform){
+        cv::Point2f position_in_image;
+
+        for (int i=0; i<points.size(); ++i){
+            if (is_required_homography_transform){
+                convert_to_image_coordinate(points[i], homography_matrix_, &position_in_image);
+            } else {
+                position_in_image = points[i];
+            }
+
+            circle(image_, position_in_image, 1, color);
+        }
+    }
 }

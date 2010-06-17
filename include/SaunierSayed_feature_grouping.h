@@ -53,7 +53,9 @@ namespace SaunierSayed{
                      float min_distance_moved_required = 3,
                      float maximum_distance_threshold = 20,
                      float feature_segmentation_threshold = 50,
-                     bool log_track_to_file = false);
+                     float minimum_variance_required = 5,
+                     bool log_track_to_file = false
+                     );
         ~TrackManager();
 
         TrackManager(const TrackManager & other);

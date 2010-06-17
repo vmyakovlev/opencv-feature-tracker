@@ -22,6 +22,7 @@ DEFINE_uint64(min_frames_tracked, 4, "Minimum number of frames tracked before it
 DEFINE_double(min_distance_moved_required, 3, "Minimum number of frames tracked before it is activated");
 DEFINE_double(maximum_distance_activated, 20, "When activated, how far around the point do we search for points to add?");
 DEFINE_double(segmentation_threshold, 200, "How much do we allow max_distance - min_distance to vary before an edge is severe.");
+DEFINE_double(minimum_variance_required, 5, "How much does the variance of the previous points have to be in order for a track not to be removed.");
 
 int main (int argc, char ** argv){
     google::ParseCommandLineFlags(&argc, &argv, true);
@@ -47,6 +48,7 @@ int main (int argc, char ** argv){
     cout << "Min distance moved required: " << FLAGS_min_distance_moved_required << endl;
     cout << "Max distance activated: " << FLAGS_maximum_distance_activated << endl;
     cout << "Segmentation threshold: " << FLAGS_segmentation_threshold << endl;
+    cout << "Minimum variance required: " << FLAGS_minimum_variance_required << endl;
 
     //**************************************************************
     // Get the homography which brings coordinates in the image ground plane to world ground plane
@@ -123,6 +125,7 @@ int main (int argc, char ** argv){
             FLAGS_min_distance_moved_required,
             FLAGS_maximum_distance_activated,
             FLAGS_segmentation_threshold,
+            FLAGS_minimum_variance_required,
             FLAGS_log_tracks_info);
 
     // Initialize our previous frame
@@ -172,6 +175,7 @@ int main (int argc, char ** argv){
         // Tally these new points into our graphical model
         feature_grouper.UpdatePoints(frame_points_in_world, matched_track_ids);
         visualizer.Draw();
+        visualizer.CustomDraw(new_points, CV_RGB(255,255,0), false);
 
         // *********************************************************
         // Show GUI for debugging purposes
@@ -219,8 +223,7 @@ int main (int argc, char ** argv){
         feature_grouper.AdvanceToNextFrame();
 
         // some indication of stuff working
-        printf("\r%d", current_num_frame);
-        //fflush(stdout);
+        cout << "\r" << current_num_frame << flush;
         current_num_frame++;
     }
     printf("\n");

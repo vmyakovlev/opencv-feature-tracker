@@ -9,6 +9,7 @@ WindowPair::WindowPair(const cv::Mat & im1, const cv::Mat & im2, const std::stri
     im_ = Mat::zeros(max(im1.rows,im2.rows), im1.cols + im2.cols, CV_8UC3);
     im2_offset = cv::Point(im1.cols,0);
     window_name_ = name;
+    alpha_blending_ = 0.9;
 
     // copy image data to the right place
     cv::Mat im_im1 = cv::Mat(im_, cv::Range(0,im1.rows), cv::Range(0,im1.cols));
@@ -42,7 +43,9 @@ WindowPair::WindowPair(const cv::Mat & im1, const cv::Mat & im2, const std::stri
   \param[in] im2_to the end point of the arrow in im2 coordinate
 */
 void WindowPair::DrawArrow(cv::Point im1_from, cv::Point im2_to, const cv::Scalar & color, int thickness, int lineType, int shift){
-    cv::line(im_, im1_from, im2_offset + im2_to, color, thickness, lineType, shift);
+    cv::Mat new_layer = cv::Mat::zeros(im_.size(), CV_8UC3);
+    cv::line(new_layer, im1_from, im2_offset + im2_to, color, thickness, lineType, shift);
+    cv::addWeighted(new_layer, alpha_blending_, im_, 1,0.0,im_);
 }
 
 int WindowPair::Show(int delay){

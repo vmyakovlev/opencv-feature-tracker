@@ -14,6 +14,7 @@ namespace SaunierSayed{
 
         maximum_previous_points_remembered_ = 10;
         minimum_variance_required_ = minimum_variance_required;
+        max_num_frames_not_tracked_allowed_ = 10;
 
         logging_ = log_track_to_file;
 
@@ -89,6 +90,7 @@ namespace SaunierSayed{
             tracks_connection_graph_[v].number_of_times_tracked = 1;
             tracks_connection_graph_[v].average_position = new_points[i];
             tracks_connection_graph_[v].previous_points.push_back(new_points[i]);
+            tracks_connection_graph_[v].last_time_tracked = current_time_stamp_id_;
 
             if (assigned_ids != NULL){
                 (*assigned_ids)[i] = tracks_connection_graph_[v].id;
@@ -105,6 +107,7 @@ namespace SaunierSayed{
 
             number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
             tracks_connection_graph_[v].previous_points.push_back(new_points[i]);
+            tracks_connection_graph_[v].last_time_tracked = current_time_stamp_id_;
 
             if (tracks_connection_graph_[v].previous_points.size() > maximum_previous_points_remembered_){
                 // update average position
@@ -120,6 +123,18 @@ namespace SaunierSayed{
             tracks_connection_graph_[v].pos = new_points[i];
             tracks_connection_graph_[v].number_of_times_tracked++;
         }
+
+        // NOTE: If we find a way to easily sort the old_points_indices (and its respective new_points)
+        //       we can avoid having to do a second loop
+        TracksConnectionGraph::vertex_iterator vi, viend;
+        for (tie(vi, viend)=vertices(tracks_connection_graph_); vi!=viend; ++vi){
+            // if we haven't been tracking this point for a while. Time to remove it
+            if (tracks_connection_graph_[*vi].last_time_tracked - current_time_stamp_id_ > max_num_frames_not_tracked_allowed_){
+                clear_vertex(*vi, tracks_connection_graph_);
+                remove_vertex(*vi, tracks_connection_graph_);
+            }
+        }
+
 
         // Now the points positions have been updated, make sure that min and max distance for their edges are updated too
         TracksConnectionGraph::out_edge_iterator edge_it, edge_it_end;

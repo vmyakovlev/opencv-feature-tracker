@@ -175,7 +175,9 @@ int main (int argc, char ** argv){
         // Tally these new points into our graphical model
         feature_grouper.UpdatePoints(frame_points_in_world, matched_track_ids);
         visualizer.Draw();
+        visualizer.ShowAndWrite();
         visualizer.CustomDraw(new_points, CV_RGB(255,255,0), false);
+        visualizer.ShowAndWrite();
 
         // *********************************************************
         // Show GUI for debugging purposes

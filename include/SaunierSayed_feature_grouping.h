@@ -30,6 +30,7 @@ namespace SaunierSayed{
                                 // For tracks that stay stationary (e.g. scene objects, parked vehicles), their
                                 // new position stay around this value.
         int number_of_times_tracked;
+        int last_time_tracked; // When was the last time-stamp that this track was found
         bool activated;
     } TrackInformation;
 
@@ -160,6 +161,7 @@ namespace SaunierSayed{
         float feature_segmentation_threshold_;
         int maximum_previous_points_remembered_;
         float minimum_variance_required_; //!< Minimum variance of motion in the last N frames. Tracks having less than this variance in motion will be removed.
+        int max_num_frames_not_tracked_allowed_;
 
         // Some flags
         bool logging_; //!< Are we logging track information?

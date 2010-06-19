@@ -63,7 +63,9 @@ namespace SaunierSayed{
                 line(image_, position_in_image, position_in_image2, CV_RGB(0,255,0));
             }
         }
+    }
 
+    void FeatureGrouperVisualizer::ShowAndWrite(){
         imshow(window_, image_);
         if (writing_video_out_)
             video_writer_ << image_;

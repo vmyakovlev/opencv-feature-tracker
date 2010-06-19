@@ -30,6 +30,10 @@ namespace SaunierSayed{
           \param is_required_homography_transform If yes, these points will be transformed with the internally saved homography matrix before being drawn
         */
         void CustomDraw(const std::vector<Point2f> & new_points, CvScalar color = CV_RGB(255,255,0), bool is_required_homography_transform = false);
+
+        /** \brief Show the image and draw the frame to image
+        */
+        void ShowAndWrite();
     private:
         SaunierSayed::TrackManager * feature_grouper_;
         string window_;

@@ -25,6 +25,8 @@ void KLTTracker::add(const Mat& image, vector<KeyPoint>& points){
 
 */
 void KLTTracker::search(const Mat& test_image, vector<Point2f>& output_found_points, vector<int>& training_point_indices){
+    output_found_points.clear();
+    training_point_indices.clear();
     vector<Point2f> target_points;
     vector<uchar> status;
     vector<float> err;
@@ -35,9 +37,7 @@ void KLTTracker::search(const Mat& test_image, vector<Point2f>& output_found_poi
 
     calcOpticalFlowPyrLK(source_image_, test_image, source_points_, target_points, status, err);
 
-    // Putting the results into the output structures
-    output_found_points.clear();
-    training_point_indices.clear();
+    // Putting the results into the output structure
     for (int i=0; i<status.size(); ++i){
         if (status[i] == 1){
             output_found_points.push_back(target_points[i]);

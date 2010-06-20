@@ -45,6 +45,7 @@ namespace SaunierSayed{
         cv::Point2f position_in_image,
             position_in_image2,
             position_in_world;
+        CvScalar color;
 
         for (tie(vi, viend) = vertices(graph); vi != viend; ++vi ){
             // Convert position to image coordinate
@@ -52,7 +53,12 @@ namespace SaunierSayed{
             convert_to_image_coordinate(position_in_world, homography_matrix_, &position_in_image);
 
             // Draw this track
-            circle(image_, position_in_image, 1, CV_RGB(255,0,0));
+            if(graph[*vi].previous_points.size() >= feature_grouper_->maximum_previous_points_remembered_)
+                color = CV_RGB(0,0,255);
+            else
+                color = CV_RGB(255,0,0);
+
+            circle(image_, position_in_image, 1, color);
 
             // Draw lines to adjacent vertices
             for (tie(vi2, vi2end)=adjacent_vertices(*vi, graph); vi2!=vi2end; ++vi2){

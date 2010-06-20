@@ -18,11 +18,11 @@ DEFINE_bool(homography_point_correspondence, false, "The homography file contain
 DEFINE_bool(debug_gui, true, "Use GUI to debug");
 DEFINE_bool(visualize_per_step, true, "Visualize the status of the feature grouper at each time step?");
 DEFINE_bool(log_tracks_info, false, "Log most information about tracks as time progress (LOTS OF disk space required)");
-DEFINE_uint64(min_frames_tracked, 4, "Minimum number of frames tracked before it is activated");
-DEFINE_double(min_distance_moved_required, 3, "Minimum number of frames tracked before it is activated");
-DEFINE_double(maximum_distance_activated, 20, "When activated, how far around the point do we search for points to add?");
+DEFINE_uint64(min_frames_tracked, 15, "Minimum number of frames tracked before it is activated");
+DEFINE_double(min_distance_moved_required, 70, "Minimum number of frames tracked before it is activated");
+DEFINE_double(maximum_distance_activated, 200, "When activated, how far around the point do we search for points to add?");
 DEFINE_double(segmentation_threshold, 200, "How much do we allow max_distance - min_distance to vary before an edge is severe.");
-DEFINE_double(minimum_variance_required, 5, "How much does the variance of the previous points have to be in order for a track not to be removed.");
+DEFINE_double(minimum_variance_required, 70, "How much does the variance of the previous points have to be in order for a track not to be removed.");
 
 int main (int argc, char ** argv){
     google::ParseCommandLineFlags(&argc, &argv, true);

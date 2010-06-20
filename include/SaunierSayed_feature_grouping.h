@@ -155,7 +155,7 @@ namespace SaunierSayed{
         TracksConnectionGraph tracks_connection_graph_;
 
         // Some parameters
-        int min_num_frame_tracked_;
+        int min_num_frame_tracked_; //!< How many frames do we track this point until it is activated
         float min_distance_moved_required_;
         float maximum_distance_threshold_;
         float feature_segmentation_threshold_;

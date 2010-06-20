@@ -101,6 +101,8 @@ namespace SaunierSayed{
     void TrackManager::UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices){
         TracksConnectionGraph::vertex_descriptor v;
 
+        //*********************************************************************************************
+        // UPDATE TRACKS WITH NEW INFORMATION
         int number_of_times_tracked;
         for (int i=0; i<old_points_indices.size(); i++){
             v = vertex(old_points_indices[i], tracks_connection_graph_);
@@ -124,18 +126,7 @@ namespace SaunierSayed{
             tracks_connection_graph_[v].number_of_times_tracked++;
         }
 
-        // NOTE: If we find a way to easily sort the old_points_indices (and its respective new_points)
-        //       we can avoid having to do a second loop
-        TracksConnectionGraph::vertex_iterator vi, viend;
-        for (tie(vi, viend)=vertices(tracks_connection_graph_); vi!=viend; ++vi){
-            // if we haven't been tracking this point for a while. Time to remove it
-            if (tracks_connection_graph_[*vi].last_time_tracked - current_time_stamp_id_ > max_num_frames_not_tracked_allowed_){
-                clear_vertex(*vi, tracks_connection_graph_);
-                remove_vertex(*vi, tracks_connection_graph_);
-            }
-        }
-
-
+        //*********************************************************************************************
         // Now the points positions have been updated, make sure that min and max distance for their edges are updated too
         TracksConnectionGraph::out_edge_iterator edge_it, edge_it_end;
         TracksConnectionGraph::vertex_descriptor the_other_vertex;
@@ -162,6 +153,24 @@ namespace SaunierSayed{
 
         }
 
+        //*********************************************************************************************
+        // REMOVE TRACKS THAT ARE NOT TRACKED FOR AWHILE
+
+        // NOTE: If we find a way to easily sort the old_points_indices (and its respective new_points)
+        //       we can avoid having to do a second loop
+        TracksConnectionGraph::vertex_iterator vi, viend;
+        for (tie(vi, viend)=vertices(tracks_connection_graph_); vi!=viend; ++vi){
+            // if we haven't been tracking this point for a while. Time to remove it
+            if (tracks_connection_graph_[*vi].last_time_tracked - current_time_stamp_id_ > max_num_frames_not_tracked_allowed_){
+                clear_vertex(*vi, tracks_connection_graph_);
+                remove_vertex(*vi, tracks_connection_graph_);
+            }
+        }
+
+        //*********************************************************************************************
+        // ACTIVATE TRACKS THAT HAVE BEEN TRACKED LONG ENOUGH
+        // REMOVE TRACKS THAT HAVE NOT MOVED AROUND FOR A WHILE
+
         // NOTE: Activation only happens once
         // NOTE: Activation needs to happen after ALL the positions have been updated
         float distance_moved_from_average;
@@ -180,7 +189,7 @@ namespace SaunierSayed{
 
             // Determine for activated points whether there has been enough variance
             // Not enough variance means the track has been stuck for a while
-            if (tracks_connection_graph_[v].activated && tracks_connection_graph_[v].previous_points.size() == min_num_frame_tracked_){
+            if (tracks_connection_graph_[v].activated && tracks_connection_graph_[v].previous_points.size() >= maximum_previous_points_remembered_){
                 // calculate the variance of the previous points
                 cv::Point2f variance(0,0);
                 cv::Point2f average_pos = tracks_connection_graph_[v].average_position;
@@ -408,7 +417,6 @@ namespace SaunierSayed{
 
     float TrackManager::Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2){
         // L2 distance between two tracks' positions
-        float norm_l2 = -1;
 
         const cv::Point2f point1 = tracks_connection_graph_[v1].pos;
         const cv::Point2f point2 = tracks_connection_graph_[v2].pos;

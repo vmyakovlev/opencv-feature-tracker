@@ -16,6 +16,9 @@ namespace SaunierSayed{
         minimum_variance_required_ = minimum_variance_required;
         max_num_frames_not_tracked_allowed_ = 10;
 
+        // TODO: Find this value from the homography matrix
+        min_distance_between_tracks_ = 100;
+
         logging_ = log_track_to_file;
 
         if (logging_){
@@ -41,6 +44,10 @@ namespace SaunierSayed{
         maximum_distance_threshold_ = other.maximum_distance_threshold_;
         feature_segmentation_threshold_ = other.feature_segmentation_threshold_;
         current_time_stamp_id_ = other.current_time_stamp_id_;
+        min_distance_moved_required_ = other.min_distance_moved_required_;
+        maximum_previous_points_remembered_ = other.maximum_previous_points_remembered_;
+        minimum_variance_required_ = other.minimum_variance_required_;
+        max_num_frames_not_tracked_allowed_ = other.max_num_frames_not_tracked_allowed_;
 
         // Disable logging on copied object since the log file object is not copyable
         logging_ = false;
@@ -137,6 +144,7 @@ namespace SaunierSayed{
             // Loop through all edges
             for ( tie(edge_it, edge_it_end)=out_edges(v, tracks_connection_graph_); edge_it != edge_it_end; edge_it++){
                 the_other_vertex = target(*edge_it, tracks_connection_graph_);
+                //std::cout << "The other vertex: " << the_other_vertex << std::endl;
 
                 // Compute new distance
                 new_distance = Distance(v, the_other_vertex);
@@ -164,6 +172,7 @@ namespace SaunierSayed{
             if (tracks_connection_graph_[*vi].last_time_tracked - current_time_stamp_id_ > max_num_frames_not_tracked_allowed_){
                 clear_vertex(*vi, tracks_connection_graph_);
                 remove_vertex(*vi, tracks_connection_graph_);
+                std::cout << "Track #" << *vi << " removed" << std::endl;
             }
         }
 
@@ -174,13 +183,14 @@ namespace SaunierSayed{
         // NOTE: Activation only happens once
         // NOTE: Activation needs to happen after ALL the positions have been updated
         float distance_moved_from_average;
+        TracksConnectionGraph::vertex_descriptor vert;
         for (int i=0; i<old_points_indices.size(); i++){
-            v = vertex(old_points_indices[i], tracks_connection_graph_);
+            vert = vertex(old_points_indices[i], tracks_connection_graph_);
 
             // TODO: Shouldn't we calculate distance moved from average BEFORE we update the position?
-            distance_moved_from_average = Distance(tracks_connection_graph_[v].average_position, tracks_connection_graph_[v].pos);
-            if (tracks_connection_graph_[v].activated == false
-                && tracks_connection_graph_[v].number_of_times_tracked >= min_num_frame_tracked_
+            distance_moved_from_average = Distance(tracks_connection_graph_[vert].average_position, tracks_connection_graph_[vert].pos);
+            if (tracks_connection_graph_[vert].activated == false
+                && tracks_connection_graph_[vert].number_of_times_tracked >= min_num_frame_tracked_
                 && distance_moved_from_average > min_distance_moved_required_)
             {
                 ActivateTrack(old_points_indices[i]);
@@ -189,23 +199,25 @@ namespace SaunierSayed{
 
             // Determine for activated points whether there has been enough variance
             // Not enough variance means the track has been stuck for a while
-            if (tracks_connection_graph_[v].activated && tracks_connection_graph_[v].previous_points.size() >= maximum_previous_points_remembered_){
+            if (tracks_connection_graph_[vert].activated &&
+                tracks_connection_graph_[vert].previous_points.size() >= maximum_previous_points_remembered_){
                 // calculate the variance of the previous points
                 cv::Point2f variance(0,0);
-                cv::Point2f average_pos = tracks_connection_graph_[v].average_position;
-                std::deque<cv::Point2f>::iterator it = tracks_connection_graph_[v].previous_points.begin(),
-                    it_end = tracks_connection_graph_[v].previous_points.end();
+                cv::Point2f average_pos = tracks_connection_graph_[vert].average_position;
+                std::deque<cv::Point2f>::iterator it = tracks_connection_graph_[vert].previous_points.begin(),
+                    it_end = tracks_connection_graph_[vert].previous_points.end();
                 for (;it!=it_end; ++it){
                     variance.x += (average_pos.x - it->x)*(average_pos.x - it->x);
                     variance.y += (average_pos.y - it->y)*(average_pos.y - it->y);
                 }
-                variance *= (1.0 / tracks_connection_graph_[v].previous_points.size());
+                variance *= (1.0 / tracks_connection_graph_[vert].previous_points.size());
 
                 // if the variance is too low, time to remove it
                 if (variance.x < minimum_variance_required_ && variance.y < minimum_variance_required_){
                     // TODO: Are you sure that this does not invalidate any iterator?
-                    clear_vertex(v, tracks_connection_graph_);
-                    remove_vertex(v, tracks_connection_graph_);
+                    std::cout << "Track #" << vert << " removed for not moving." << std::endl;
+                    clear_vertex(vert, tracks_connection_graph_);
+                    remove_vertex(vert, tracks_connection_graph_);
                 }
             }
         }
@@ -216,6 +228,10 @@ namespace SaunierSayed{
         }
 
         SegmentFarAwayTracks();
+
+        // Debug: Report current stats of the graph
+        printf("Num vertices: %d\n", num_vertices(tracks_connection_graph_));
+        printf("Num edges: %d\n", num_edges(tracks_connection_graph_));
     }
 
     void TrackManager::LogCurrentTrackInfo(){
@@ -283,7 +299,7 @@ namespace SaunierSayed{
     void TrackManager::SegmentFarAwayTracks(){
         // go through all edges
         TracksConnectionGraph::edge_iterator edge_it, edge_it_end, next_it;
-        float min_distance, max_distance;
+        float min_distance, max_distance, distance_range;
         tie(edge_it, edge_it_end)=edges(tracks_connection_graph_);
         for (next_it=edge_it; edge_it!=edge_it_end; edge_it=next_it){
             next_it++;
@@ -291,11 +307,13 @@ namespace SaunierSayed{
             // Check that this edge satisfy the condition
             min_distance = tracks_connection_graph_[*edge_it].min_distance;
             max_distance = tracks_connection_graph_[*edge_it].max_distance;
+            distance_range = max_distance - min_distance;
 
-            if (max_distance - min_distance > feature_segmentation_threshold_){
+            if (distance_range > feature_segmentation_threshold_){
                 // severe this edge
                 // Care must be taken not to severe the CURRENT iterator, hence the use of next_it
                 // SEE: http://www.boost.org/doc/libs/1_43_0/libs/graph/doc/adjacency_list.html
+                printf("Edge removed since its vertices move too much:%f\n", distance_range);
                 remove_edge(*edge_it, tracks_connection_graph_);
             }
         }
@@ -401,7 +419,7 @@ namespace SaunierSayed{
                 norm_l1 = abs( temp_point.x - new_points[i].x +
                                 temp_point.y - new_points[i].y );
 
-                if ( norm_l1 < 1){
+                if ( norm_l1 < min_distance_between_tracks_){
                     found = true;
                     found_id = tracks_connection_graph_[*v].id;
                     break;

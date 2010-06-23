@@ -49,7 +49,13 @@ namespace SaunierSayed{
     */
     class TrackManager{
     public:
+        /**
+          The visualizer will need the graph information of this class in order to visualizer the graph on the image
+          Thus either we make it a friend or we need to return the entire graph structure.
+          Returning an entire graph structure means repackaging them into some data structures => too expensive
+        */
         friend class FeatureGrouperVisualizer;
+
         TrackManager(int min_num_frame_tracked = 4,
                      float min_distance_moved_required = 3,
                      float maximum_distance_threshold = 20,
@@ -87,11 +93,6 @@ namespace SaunierSayed{
 
         //! Update current tracks with new points
         void UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices);
-
-        //! Activate a track
-        /** Activate a track will connect it to all tracks that are current close by
-        */
-        void ActivateTrack(int id);
 
         //! Cut the link(edge) where max_distance - min_distance > D_segmentation
         void SegmentFarAwayTracks();
@@ -138,11 +139,11 @@ namespace SaunierSayed{
         */
         bool get_edge_information(int vertex_id_1, int vertex_id_2, LinkInformation * output_link_information) const;
     private:
-        /**
-          The visualizer will need the graph information of this class in order to visualizer the graph on the image
-          Thus either we make it a friend or we need to return the entire graph structure.
-          Returning an entire graph structure means repackaging them into some data structures => too expensive
+
+        //! Activate a track
+        /** Activate a track will connect it to all tracks that are current close by
         */
+        void ActivateTrack(TracksConnectionGraph::vertex_descriptor v);
 
         float Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2);
         static float Distance(const cv::Point2f & pt1, const cv::Point2f & pt2);

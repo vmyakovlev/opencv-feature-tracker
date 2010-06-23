@@ -114,11 +114,12 @@ namespace SaunierSayed{
         TracksConnectionGraph::vertex_descriptor v;
 
         std::vector<TracksConnectionGraph::vertex_descriptor> old_points_vertices = GetVertexDescriptors(old_points_ids);
+
         //*********************************************************************************************
         // UPDATE TRACKS WITH NEW INFORMATION
         int number_of_times_tracked;
         for (int i=0; i<old_points_ids.size(); i++){
-            v = vertex(old_points_ids[i], tracks_connection_graph_);
+            v = old_points_vertices[i];
 
             number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
             tracks_connection_graph_[v].previous_points.push_back(new_points[i]);
@@ -145,7 +146,7 @@ namespace SaunierSayed{
         TracksConnectionGraph::vertex_descriptor the_other_vertex;
         float new_distance;
         for (int i=0; i<old_points_ids.size(); i++){
-            v = vertex(old_points_ids[i], tracks_connection_graph_);
+            v = old_points_vertices[i];
 
             // Loop through all edges
             for ( tie(edge_it, edge_it_end)=out_edges(v, tracks_connection_graph_); edge_it != edge_it_end; edge_it++){
@@ -167,6 +168,8 @@ namespace SaunierSayed{
 
         }
 
+        std::vector<TracksConnectionGraph::vertex_descriptor> vertices_to_remove;
+
         //*********************************************************************************************
         // REMOVE TRACKS THAT ARE NOT TRACKED FOR AWHILE
 
@@ -176,8 +179,7 @@ namespace SaunierSayed{
         for (tie(vi, viend)=vertices(tracks_connection_graph_); vi!=viend; ++vi){
             // if we haven't been tracking this point for a while. Time to remove it
             if (tracks_connection_graph_[*vi].last_time_tracked - current_time_stamp_id_ > max_num_frames_not_tracked_allowed_){
-                clear_vertex(*vi, tracks_connection_graph_);
-                remove_vertex(*vi, tracks_connection_graph_);
+                vertices_to_remove.push_back(*vi);
                 std::cout << "Track #" << *vi << " removed" << std::endl;
             }
         }
@@ -190,9 +192,8 @@ namespace SaunierSayed{
         // NOTE: Activation needs to happen after ALL the positions have been updated
         float distance_moved_from_average;
         TracksConnectionGraph::vertex_descriptor vert;
-        std::vector<TracksConnectionGraph::vertex_descriptor> vertices_to_remove;
         for (int i=0; i<old_points_ids.size(); i++){
-            vert = vertex(old_points_ids[i], tracks_connection_graph_);
+            vert = old_points_vertices[i];
 
             // TODO: Shouldn't we calculate distance moved from average BEFORE we update the position?
             distance_moved_from_average = Distance(tracks_connection_graph_[vert].average_position, tracks_connection_graph_[vert].pos);
@@ -200,7 +201,7 @@ namespace SaunierSayed{
                 && tracks_connection_graph_[vert].number_of_times_tracked >= min_num_frame_tracked_
                 && distance_moved_from_average > min_distance_moved_required_)
             {
-                ActivateTrack(old_points_ids[i]);
+                ActivateTrack(vert);
                 continue; // so that this point is not tested right away whether it has been moved or not
             }
 
@@ -230,7 +231,7 @@ namespace SaunierSayed{
             }
         }
 
-        // Now that we no longer use old_point_indices content, we can go on and remove these tracks
+        // Now that we no longer use old_points_ids/old_points_vertices content, we can go on and remove these tracks
         for (int i=0; i<vertices_to_remove.size(); ++i){
             clear_vertex(vertices_to_remove[i], tracks_connection_graph_);
             remove_vertex(vertices_to_remove[i], tracks_connection_graph_);
@@ -271,12 +272,10 @@ namespace SaunierSayed{
         }
     }
 
-    void TrackManager::ActivateTrack(int id){
-        TracksConnectionGraph::vertex_descriptor v;
+    void TrackManager::ActivateTrack(TracksConnectionGraph::vertex_descriptor v){
         TracksConnectionGraph::edge_descriptor e;
         bool operation_success;
 
-        v = vertex(id, tracks_connection_graph_);
         tracks_connection_graph_[v].activated = true;
 
         // *****************************************

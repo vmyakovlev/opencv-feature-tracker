@@ -146,11 +146,15 @@ namespace SaunierSayed{
 
         float Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2);
         static float Distance(const cv::Point2f & pt1, const cv::Point2f & pt2);
+
         /** \brief Log the current track information into internal log file
 
           Currently only log track positions
         */
         void LogCurrentTrackInfo();
+
+        //! Given a list of ids, find the corresponding vertices
+        std::vector<TracksConnectionGraph::vertex_descriptor> GetVertexDescriptors(std::vector<int> old_points_ids);
 
         TracksConnectionGraph tracks_connection_graph_;
 

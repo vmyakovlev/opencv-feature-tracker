@@ -99,20 +99,26 @@ namespace SaunierSayed{
             tracks_connection_graph_[v].previous_points.push_back(new_points[i]);
             tracks_connection_graph_[v].last_time_tracked = current_time_stamp_id_;
 
+            // write out the newly assigned id for this point
             if (assigned_ids != NULL){
                 (*assigned_ids)[i] = tracks_connection_graph_[v].id;
             }
         }
     }
+    /** \brief Update our points stored in the graph with new locations
 
-    void TrackManager::UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices){
+      \param new_points New locations for the points
+      \param old_points_ids The corresponding IDs of the old points. This is NOT the internal vertex id but the Track id
+    */
+    void TrackManager::UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_ids){
         TracksConnectionGraph::vertex_descriptor v;
 
+        std::vector<TracksConnectionGraph::vertex_descriptor> old_points_vertices = GetVertexDescriptors(old_points_ids);
         //*********************************************************************************************
         // UPDATE TRACKS WITH NEW INFORMATION
         int number_of_times_tracked;
-        for (int i=0; i<old_points_indices.size(); i++){
-            v = vertex(old_points_indices[i], tracks_connection_graph_);
+        for (int i=0; i<old_points_ids.size(); i++){
+            v = vertex(old_points_ids[i], tracks_connection_graph_);
 
             number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
             tracks_connection_graph_[v].previous_points.push_back(new_points[i]);
@@ -138,8 +144,8 @@ namespace SaunierSayed{
         TracksConnectionGraph::out_edge_iterator edge_it, edge_it_end;
         TracksConnectionGraph::vertex_descriptor the_other_vertex;
         float new_distance;
-        for (int i=0; i<old_points_indices.size(); i++){
-            v = vertex(old_points_indices[i], tracks_connection_graph_);
+        for (int i=0; i<old_points_ids.size(); i++){
+            v = vertex(old_points_ids[i], tracks_connection_graph_);
 
             // Loop through all edges
             for ( tie(edge_it, edge_it_end)=out_edges(v, tracks_connection_graph_); edge_it != edge_it_end; edge_it++){
@@ -184,8 +190,9 @@ namespace SaunierSayed{
         // NOTE: Activation needs to happen after ALL the positions have been updated
         float distance_moved_from_average;
         TracksConnectionGraph::vertex_descriptor vert;
-        for (int i=0; i<old_points_indices.size(); i++){
-            vert = vertex(old_points_indices[i], tracks_connection_graph_);
+        std::vector<TracksConnectionGraph::vertex_descriptor> vertices_to_remove;
+        for (int i=0; i<old_points_ids.size(); i++){
+            vert = vertex(old_points_ids[i], tracks_connection_graph_);
 
             // TODO: Shouldn't we calculate distance moved from average BEFORE we update the position?
             distance_moved_from_average = Distance(tracks_connection_graph_[vert].average_position, tracks_connection_graph_[vert].pos);
@@ -193,7 +200,7 @@ namespace SaunierSayed{
                 && tracks_connection_graph_[vert].number_of_times_tracked >= min_num_frame_tracked_
                 && distance_moved_from_average > min_distance_moved_required_)
             {
-                ActivateTrack(old_points_indices[i]);
+                ActivateTrack(old_points_ids[i]);
                 continue; // so that this point is not tested right away whether it has been moved or not
             }
 
@@ -214,13 +221,21 @@ namespace SaunierSayed{
 
                 // if the variance is too low, time to remove it
                 if (variance.x < minimum_variance_required_ && variance.y < minimum_variance_required_){
-                    // TODO: Are you sure that this does not invalidate any iterator?
+                    // NOTE: Remember that BGL will try to keep the vertices ID stay in a continuous range
+                    //       Thus, we cannot remove these tracks now and expect the old_point_indices to still work correctly
+                    //       in the next iteration
                     std::cout << "Track #" << vert << " removed for not moving." << std::endl;
-                    clear_vertex(vert, tracks_connection_graph_);
-                    remove_vertex(vert, tracks_connection_graph_);
+                    vertices_to_remove.push_back(vert);
                 }
             }
         }
+
+        // Now that we no longer use old_point_indices content, we can go on and remove these tracks
+        for (int i=0; i<vertices_to_remove.size(); ++i){
+            clear_vertex(vertices_to_remove[i], tracks_connection_graph_);
+            remove_vertex(vertices_to_remove[i], tracks_connection_graph_);
+        }
+
 
         // Log: current information of each track at this time frame
         if (logging_){
@@ -394,6 +409,14 @@ namespace SaunierSayed{
         input_points = cleaned_input_points;
     }
 
+    /** \brief Find the ids of duplicate points. Return -1 for points that are not a possible duplicate
+
+      Example FindDuplicatePointIds([1,2,3]). Let's assume that 1 and 2 are duplicates and 3 is not.
+      The returned assigned_ids will then be: [id_of_1, id_of_2, -1]
+
+      \param new_points New points to test whether they are duplicate
+      \param[out] assigned_ids The assigned ids for the duplicate points, -1 for non-duplicate points
+      */
     void TrackManager::FindDuplicatePointIds(const std::vector<cv::Point2f> & new_points, std::vector<int> * assigned_ids){
         // for convenience, we allocate space for the user if he passes in an empty vector<int>
         if (assigned_ids != NULL && assigned_ids->size() == 0)
@@ -489,5 +512,35 @@ namespace SaunierSayed{
                     pow(pt1.x - pt2.x, 2) +
                     pow(pt1.y - pt2.y, 2)
                     );
+    }
+
+    /** \brief Given a list of ids, find the corresponding vertices
+
+      Example: let's say we are interested in getting vertex descriptor for track id 10,12,25, we can do:
+
+          interested_ids = [10,12,25]
+          a = GetVertexDescriptors(interested_ids)
+
+      \param old_points_ids IDs of the tracks you are interested in getting the vertices descriptors
+      \return a vector of the same size of old_points_ids where each element point to the correponding vertex descriptor
+    */
+    std::vector<TracksConnectionGraph::vertex_descriptor> TrackManager::GetVertexDescriptors(std::vector<int> old_points_ids){
+        // First construct a hash that store track_id => vertex_id
+        std::map<int, int> tracks_vertices_map;
+
+        // Go through all vertices and populate this map
+        TracksConnectionGraph::vertex_iterator vi, viend;
+        for (tie(vi,viend) = vertices(tracks_connection_graph_); vi!=viend; ++vi){
+            tracks_vertices_map[ tracks_connection_graph_[*vi].id ] = *vi;
+        }
+
+        // Second, go through the ids we need to search and populate the results
+        std::vector<TracksConnectionGraph::vertex_descriptor> found_vertex_descriptors(old_points_ids.size());
+
+        for (int i=0; i<old_points_ids.size(); ++i){
+            found_vertex_descriptors[i] = tracks_vertices_map[old_points_ids[i]];
+        }
+
+        return found_vertex_descriptors;
     }
 }

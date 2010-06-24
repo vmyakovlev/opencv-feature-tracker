@@ -23,6 +23,7 @@ DEFINE_double(min_distance_moved_required, 70, "Minimum number of frames tracked
 DEFINE_double(maximum_distance_activated, 200, "When activated, how far around the point do we search for points to add?");
 DEFINE_double(segmentation_threshold, 200, "How much do we allow max_distance - min_distance to vary before an edge is severe.");
 DEFINE_double(minimum_variance_required, 70, "How much does the variance of the previous points have to be in order for a track not to be removed.");
+DEFINE_double(min_distance_between_tracks, 20, "");
 
 int main (int argc, char ** argv){
     google::ParseCommandLineFlags(&argc, &argv, true);
@@ -49,6 +50,7 @@ int main (int argc, char ** argv){
     cout << "Max distance activated: " << FLAGS_maximum_distance_activated << endl;
     cout << "Segmentation threshold: " << FLAGS_segmentation_threshold << endl;
     cout << "Minimum variance required: " << FLAGS_minimum_variance_required << endl;
+    cout << "Minimum distance between two tracks before they are considered duplicate: " << FLAGS_min_distance_between_tracks << endl;
 
     //**************************************************************
     // Get the homography which brings coordinates in the image ground plane to world ground plane
@@ -76,7 +78,7 @@ int main (int argc, char ** argv){
 
     //**************************************************************
     // PREPARE TOOLS FOR EXTRACTING FEATURES
-    ShiTomashiFeatureDetector feature_detector;
+    ShiTomashiFeatureDetector feature_detector(300);
     KLTTracker feature_matcher;
 
     vector<KeyPoint> key_points;
@@ -126,6 +128,7 @@ int main (int argc, char ** argv){
             FLAGS_maximum_distance_activated,
             FLAGS_segmentation_threshold,
             FLAGS_minimum_variance_required,
+            FLAGS_min_distance_between_tracks,
             FLAGS_log_tracks_info);
 
     // Initialize our previous frame
@@ -176,8 +179,8 @@ int main (int argc, char ** argv){
         feature_grouper.UpdatePoints(frame_points_in_world, matched_track_ids);
         visualizer.Draw();
         visualizer.ShowAndWrite();
-        visualizer.CustomDraw(new_points, CV_RGB(255,255,0), false);
-        visualizer.ShowAndWrite();
+//        visualizer.CustomDraw(new_points, CV_RGB(255,255,0), false);
+//        visualizer.ShowAndWrite();
 
         // *********************************************************
         // Show GUI for debugging purposes

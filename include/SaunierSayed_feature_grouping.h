@@ -61,6 +61,7 @@ namespace SaunierSayed{
                      float maximum_distance_threshold = 20,
                      float feature_segmentation_threshold = 50,
                      float minimum_variance_required = 5,
+                     float min_distance_between_tracks = 20,
                      bool log_track_to_file = false
                      );
         ~TrackManager();
@@ -168,7 +169,7 @@ namespace SaunierSayed{
 
         /** Tracks that are close to each other (L1 distance between them smaller than this value) is considered the same and will not be added
         This distance is in world coordinate (NOT in pixel coordinate) */
-        int min_distance_between_tracks_;
+        float min_distance_between_tracks_;
 
         float minimum_variance_required_; //!< Minimum variance of motion in the last N frames. Tracks having less than this variance in motion will be removed.
         int max_num_frames_not_tracked_allowed_;

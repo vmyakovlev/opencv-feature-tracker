@@ -179,6 +179,7 @@ namespace SaunierSayed{
 
         // Variables for logging
         int current_time_stamp_id_;
+        int next_track_id_;
         std::ofstream log_file_;
     };
 }

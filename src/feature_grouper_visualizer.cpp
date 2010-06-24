@@ -72,10 +72,10 @@ namespace SaunierSayed{
             }
 
             // Write Text
-            sprintf(position_text, "(%5.1f,%5.1f)",position_in_world.x, position_in_world.y);
+            sprintf(position_text, "%d(%5.1f,%5.1f)", (graph)[*vi].id, position_in_world.x, position_in_world.y);
             position_to_draw.x = position_in_image.x + 5;
             position_to_draw.y = position_in_image.y + 5;
-            putText(image_, position_text, position_to_draw, FONT_HERSHEY_PLAIN, 0.5, CV_RGB(128,128,0));
+            putText(image_, position_text, position_to_draw, FONT_HERSHEY_PLAIN, 0.4, CV_RGB(128,128,0));
         }
     }
 

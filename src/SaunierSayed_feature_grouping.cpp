@@ -30,6 +30,7 @@ namespace SaunierSayed{
         }
 
         current_time_stamp_id_ = 0;
+        next_track_id_ = 0;
     }
 
     TrackManager::~TrackManager(){
@@ -64,6 +65,10 @@ namespace SaunierSayed{
         maximum_distance_threshold_ = other.maximum_distance_threshold_;
         feature_segmentation_threshold_ = other.feature_segmentation_threshold_;
         current_time_stamp_id_ = other.current_time_stamp_id_;
+        min_distance_moved_required_ = other.min_distance_moved_required_;
+        maximum_previous_points_remembered_ = other.maximum_previous_points_remembered_;
+        minimum_variance_required_ = other.minimum_variance_required_;
+        max_num_frames_not_tracked_allowed_ = other.max_num_frames_not_tracked_allowed_;
 
         // Disable logging on copied object since the log file object is not copyable
         logging_ = false;
@@ -91,7 +96,9 @@ namespace SaunierSayed{
             v = add_vertex(tracks_connection_graph_);
 
             // set default property values for this vertex
-            tracks_connection_graph_[v].id = (int)v; // TODO: Fix this, casting it to get the vertex_index is not that best idea
+            tracks_connection_graph_[v].id = next_track_id_;
+            next_track_id_++;
+
             tracks_connection_graph_[v].pos = new_points[i];
             tracks_connection_graph_[v].activated = false;
             tracks_connection_graph_[v].number_of_times_tracked = 1;
@@ -163,9 +170,7 @@ namespace SaunierSayed{
                 if (new_distance > tracks_connection_graph_[*edge_it].max_distance){
                     tracks_connection_graph_[*edge_it].max_distance = new_distance;
                 }
-
             }
-
         }
 
         std::vector<TracksConnectionGraph::vertex_descriptor> vertices_to_remove;

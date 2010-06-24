@@ -23,7 +23,7 @@ DEFINE_double(min_distance_moved_required, 70, "Minimum number of frames tracked
 DEFINE_double(maximum_distance_activated, 200, "When activated, how far around the point do we search for points to add?");
 DEFINE_double(segmentation_threshold, 200, "How much do we allow max_distance - min_distance to vary before an edge is severe.");
 DEFINE_double(minimum_variance_required, 70, "How much does the variance of the previous points have to be in order for a track not to be removed.");
-DEFINE_double(min_distance_between_tracks, 20, "");
+DEFINE_double(min_distance_between_tracks, 30, "The minimum distance between two tracks. Two tracks closer than this minimum is considered duplicate and one will be removed.");
 
 int main (int argc, char ** argv){
     google::ParseCommandLineFlags(&argc, &argv, true);

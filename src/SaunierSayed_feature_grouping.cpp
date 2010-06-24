@@ -5,19 +5,19 @@
 namespace SaunierSayed{
     TrackManager::TrackManager(int min_num_frame_tracked, float min_distance_moved_required,
                                float maximum_distance_threshold, float feature_segmentation_threshold,
-                               float minimum_variance_required,
+                               float minimum_variance_required, float min_distance_between_tracks,
                                bool log_track_to_file){
         min_num_frame_tracked_ = min_num_frame_tracked;
         maximum_distance_threshold_ = maximum_distance_threshold;
         feature_segmentation_threshold_ = feature_segmentation_threshold;
         min_distance_moved_required_ = min_distance_moved_required;
 
-        maximum_previous_points_remembered_ = 10;
+        maximum_previous_points_remembered_ = 30;
         minimum_variance_required_ = minimum_variance_required;
-        max_num_frames_not_tracked_allowed_ = 10;
+        max_num_frames_not_tracked_allowed_ = 30;
 
-        // TODO: Find this value from the homography matrix
-        min_distance_between_tracks_ = 100;
+        // NOTE: Find this value from the homography matrix
+        min_distance_between_tracks_ = min_distance_between_tracks;
 
         logging_ = log_track_to_file;
 
@@ -431,6 +431,7 @@ namespace SaunierSayed{
         bool found;
         int found_id = 0;
         cv::Point2f temp_point;
+        int total_duplicate_found = 0;
 
         for (int i=0; i<new_points.size(); ++i){
             found = false;
@@ -444,6 +445,7 @@ namespace SaunierSayed{
                 if ( norm_l1 < min_distance_between_tracks_){
                     found = true;
                     found_id = tracks_connection_graph_[*v].id;
+                    total_duplicate_found++;
                     break;
                 }
             }
@@ -452,7 +454,11 @@ namespace SaunierSayed{
                 (*assigned_ids)[i] = found_id;
             else
                 (*assigned_ids)[i] = -1;
+
         }
+
+        // Debug: how many duplicates were that
+        printf("Found duplicates: %d/%d\n", total_duplicate_found, new_points.size());
     }
 
     float TrackManager::Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2){

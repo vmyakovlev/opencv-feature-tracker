@@ -14,7 +14,7 @@ class SSTrackManagerTest : public ::testing::Test {
     // NOTE: this constructor with initialization list of track_manager_ is required
     //       because for some reason track_manager_ will not get the required parameters
     SSTrackManagerTest():
-        track_manager_(2, 0.05, 4, 20)
+        track_manager_(2, 0.05, 4, 20, 0, 0.05)
     {
 
     }

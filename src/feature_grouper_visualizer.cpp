@@ -44,9 +44,11 @@ namespace SaunierSayed{
 
         cv::Point2f position_in_image,
             position_in_image2,
-            position_in_world;
+            position_in_world,
+            position_to_draw;
         CvScalar color;
 
+        char position_text[256];
         for (tie(vi, viend) = vertices(graph); vi != viend; ++vi ){
             // Convert position to image coordinate
             position_in_world = (graph)[*vi].pos;
@@ -68,6 +70,12 @@ namespace SaunierSayed{
 
                 line(image_, position_in_image, position_in_image2, CV_RGB(0,255,0));
             }
+
+            // Write Text
+            sprintf(position_text, "(%5.1f,%5.1f)",position_in_world.x, position_in_world.y);
+            position_to_draw.x = position_in_image.x + 5;
+            position_to_draw.y = position_in_image.y + 5;
+            putText(image_, position_text, position_to_draw, FONT_HERSHEY_PLAIN, 0.5, CV_RGB(128,128,0));
         }
     }
 

@@ -221,7 +221,9 @@ TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
     // Since these points are activated, they should now be connected to all the nearby nodes
     // NOTE: only track 1 and track 3 are close enough to each other.
     ASSERT_EQ(7, track_manager_.num_tracks());
-    ASSERT_EQ(1, track_manager_.num_connections());
+    ss::LinkInformation link_info;
+    track_manager_.get_edge_information(1, 3, &link_info);
+    ASSERT_TRUE(link_info.active);
 
     // Another time step, only 0-3 are updated
     track_manager_.UpdatePoints(new_points2, old_indices_2_3);
@@ -237,17 +239,21 @@ TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
 
 TEST_F(SSTrackManagerTest, MaxDistanceMinDistanceUpdate){
     track_manager_.AddPoints(points);
+
     vector<int> assigned_ids;
+    ss::LinkInformation edge_info_old, edge_info_new;
+
     track_manager_.UpdatePoints(new_points, old_indices_1_2);
+    ASSERT_TRUE(track_manager_.get_edge_information(1,3, &edge_info_old));
+
     track_manager_.AddPossiblyDuplicatePoints(points2, &assigned_ids);
 
     // NOTE: there is only 1 edge betwen track1 and track3
     // SEE: Test SSTrackManagerTest.TracksWhichPersistsLongEnoughGetActivated
-    ss::LinkInformation edge_info_old, edge_info_new;
-    track_manager_.get_edge_information(1,3, &edge_info_old);
+    ASSERT_TRUE(track_manager_.get_edge_information(1,3, &edge_info_old));
 
     track_manager_.UpdatePoints(new_points2, old_indices_2_3);
-    track_manager_.get_edge_information(1,3, &edge_info_new);
+    ASSERT_TRUE(track_manager_.get_edge_information(1,3, &edge_info_new));
 
     // Since the points are moving away from each other, min_distance doesn't change
     // but max_distace definitely should
@@ -265,13 +271,7 @@ TEST_F(SSTrackManagerTest, GetEdgeInformation){
 
     ASSERT_TRUE(track_manager_.get_edge_information(1,3, &edge_info1));
     ASSERT_NE(0, edge_info1.min_distance);
-    ASSERT_NE(0, edge_info1.max_distance);
-
-    // There are no other tracks
-    ASSERT_FALSE(track_manager_.get_edge_information(1,2, &edge_info1));
-    ASSERT_FALSE(track_manager_.get_edge_information(2,3, &edge_info1));
-    ASSERT_FALSE(track_manager_.get_edge_information(0,3, &edge_info1));
-    ASSERT_FALSE(track_manager_.get_edge_information(0,1, &edge_info1));
+    ASSERT_NE(0, edge_info1.max_distance);    
 }
 
 TEST_F(SSTrackManagerTest, EdgeIsSeveredIfDistanceTooLarge){

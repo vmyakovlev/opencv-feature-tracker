@@ -2,6 +2,8 @@
 #include <boost/graph/connected_components.hpp>
 #include <iostream>
 
+#define DEBUG_PRINTOUT
+
 namespace SaunierSayed{
     TrackManager::TrackManager(int min_num_frame_tracked, float min_distance_moved_required,
                                float maximum_distance_threshold, float feature_segmentation_threshold,
@@ -102,17 +104,6 @@ namespace SaunierSayed{
             // add this new point as a new track in our graph
             v = add_vertex(tracks_connection_graph_);
 
-            // connect this new vertex to all current vertices
-            for(; vi!=viend; vi++){
-                tie(e, is_edge_addition_success) = add_edge(v, *vi, tracks_connection_graph_);
-
-                // Assign some initial values for this edge information
-                distance = Distance(v, *vi);
-                tracks_connection_graph_[e].active = false;
-                tracks_connection_graph_[e].min_distance = distance;
-                tracks_connection_graph_[e].max_distance = distance;
-            }
-
             // set default property values for this vertex
             tracks_connection_graph_[v].id = next_track_id_;
             next_track_id_++;
@@ -127,6 +118,17 @@ namespace SaunierSayed{
             // write out the newly assigned id for this point
             if (assigned_ids != NULL){
                 (*assigned_ids)[i] = tracks_connection_graph_[v].id;
+            }
+
+            // connect this new vertex to all current vertices
+            for(; vi!=viend; vi++){
+                tie(e, is_edge_addition_success) = add_edge(v, *vi, tracks_connection_graph_);
+
+                // Assign some initial values for this edge information
+                distance = Distance(v, *vi);
+                tracks_connection_graph_[e].active = false;
+                tracks_connection_graph_[e].min_distance = distance;
+                tracks_connection_graph_[e].max_distance = distance;
             }
         }
     }
@@ -248,7 +250,9 @@ namespace SaunierSayed{
                     // NOTE: Remember that BGL will try to keep the vertices ID stay in a continuous range
                     //       Thus, we cannot remove these tracks now and expect the old_point_indices to still work correctly
                     //       in the next iteration
+#ifdef DEBUG_PRINOUT
                     std::cout << "Track #" << vert << " removed for not moving." << std::endl;
+#endif
                     vertices_to_remove.push_back(vert);
                 }
             }
@@ -268,9 +272,11 @@ namespace SaunierSayed{
 
         SegmentFarAwayTracks();
 
+#ifdef DEBUG_PRINTOUT
         // Debug: Report current stats of the graph
         printf("Num vertices: %d\n", num_vertices(tracks_connection_graph_));
         printf("Num edges: %d\n", num_edges(tracks_connection_graph_));
+#endif
     }
 
     void TrackManager::LogCurrentTrackInfo(){
@@ -312,23 +318,17 @@ namespace SaunierSayed{
             distance = Distance(v, *vi);
             if (distance < maximum_distance_threshold_ && v!=*vi){
                 tie(e, operation_success) = edge(v, *vi, tracks_connection_graph_);
-                if (operation_success){
-                    //std::cout << "Debug: There already exists an edge between " << v << " and " << *vi << ". Skipping." << std::endl;
-                    continue;
-                }
-
-                // make a connection between these two
-                tie(e, operation_success) = add_edge(v, *vi, tracks_connection_graph_);
 
                 if (!operation_success){
-                    // TODO: Devise a better warning technique
-                    //       Consider exception
-                    std::cerr << "Warning: Unable to add an edge between " << v << " and " << *vi << std::endl;
+                    // Although they are close to each other, they have been moving non-harmoniously
+                    // and the edge had been previously severed
+                    continue;
                 }
 
                 // Assign some initial values for this edge information
                 tracks_connection_graph_[e].min_distance = distance;
                 tracks_connection_graph_[e].max_distance = distance;
+                tracks_connection_graph_[e].active = true;
             }
         }
     }
@@ -350,7 +350,12 @@ namespace SaunierSayed{
                 // severe this edge
                 // Care must be taken not to severe the CURRENT iterator, hence the use of next_it
                 // SEE: http://www.boost.org/doc/libs/1_43_0/libs/graph/doc/adjacency_list.html
-                printf("Edge removed since its vertices move too much:%f\n", distance_range);
+#ifdef DEBUG_PRINTOUT
+                TracksConnectionGraph::vertex_descriptor v, v2;
+                v = source(*edge_it, tracks_connection_graph_);
+                v2 = target(*edge_it, tracks_connection_graph_);
+                printf("Edge (%ld,%ld) removed since its vertices move too much: %6.3f (threshold = %f)\n", v, v2, distance_range, feature_segmentation_threshold_);
+#endif
                 remove_edge(*edge_it, tracks_connection_graph_);
             }
         }
@@ -395,6 +400,7 @@ namespace SaunierSayed{
             output_link_information->id = tracks_connection_graph_[e].id;
             output_link_information->min_distance = tracks_connection_graph_[e].min_distance;
             output_link_information->max_distance = tracks_connection_graph_[e].max_distance;
+            output_link_information->active = tracks_connection_graph_[e].active;
             return true;
         }
     }
@@ -479,9 +485,10 @@ namespace SaunierSayed{
                 (*assigned_ids)[i] = -1;
 
         }
-
+#ifdef DEBUG_PRINOUT
         // Debug: how many duplicates were that
         printf("Found duplicates: %d/%d\n", total_duplicate_found, new_points.size());
+#endif
     }
 
     float TrackManager::Distance(const TracksConnectionGraph::vertex_descriptor & v1, const TracksConnectionGraph::vertex_descriptor & v2){

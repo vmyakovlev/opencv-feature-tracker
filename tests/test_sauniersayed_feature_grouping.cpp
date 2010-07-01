@@ -96,6 +96,18 @@ TEST_F(SSTrackManagerTest, AddPoints){
 
     ASSERT_EQ(5, track_manager_.num_tracks());
 
+    // All points are connected to all other tracks but they are all inactive
+    ASSERT_EQ(10, track_manager_.num_connections());
+
+    // Check that these connections are inactive
+    ss::LinkInformation link_info;
+    for (int i=0; i<track_manager_.num_tracks(); ++i){
+        for (int j=i+1; j<track_manager_.num_tracks(); ++j){
+            track_manager_.get_edge_information(i, j, &link_info);
+            ASSERT_FALSE(link_info.active);
+        }
+    }
+
     for (int i=0; i<track_manager_.num_tracks(); ++i){
         ASSERT_EQ(i, assigned_ids[i]);
         ASSERT_EQ(1, track_manager_.tracks()[i].number_of_times_tracked);
@@ -238,7 +250,7 @@ TEST_F(SSTrackManagerTest, MaxDistanceMinDistanceUpdate){
     track_manager_.get_edge_information(1,3, &edge_info_new);
 
     // Since the points are moving away from each other, min_distance doesn't change
-    // but max_distacen definitely should
+    // but max_distace definitely should
     ASSERT_EQ(edge_info_old.id, edge_info_new.id);
     ASSERT_EQ(edge_info_old.min_distance, edge_info_new.min_distance);
     ASSERT_LT(edge_info_old.min_distance, edge_info_new.max_distance);

@@ -19,6 +19,7 @@ namespace SaunierSayed{
         int id; // id of this edge (currently not used/updated)
         double min_distance; // the minimum distance this track has ever had with the target track
         double max_distance; // the maximum distance this track has ever had with the target track
+        bool active;
     } LinkInformation;
 
     typedef struct TrackInformation_{

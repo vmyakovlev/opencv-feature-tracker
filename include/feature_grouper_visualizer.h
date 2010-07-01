@@ -34,6 +34,9 @@ namespace SaunierSayed{
         /** \brief Show the image and draw the frame to image
         */
         void ShowAndWrite();
+
+        // public parameters
+        bool is_draw_coordinate;
     private:
         SaunierSayed::TrackManager * feature_grouper_;
         string window_;

@@ -85,6 +85,10 @@ namespace SaunierSayed{
         CV_Assert(assigned_ids == NULL || new_points.size() == assigned_ids->size());
 
         TracksConnectionGraph::vertex_descriptor v;
+        TracksConnectionGraph::vertex_iterator vi, viend;
+        TracksConnectionGraph::edge_descriptor e;
+        bool is_edge_addition_success;
+        float distance;
 
         for (int i=0; i<new_points.size(); ++i){
             // if this point has been assigned an id, skip it
@@ -92,8 +96,22 @@ namespace SaunierSayed{
                 continue;
             }
 
+            // get all current vertices
+            tie(vi, viend) = vertices(tracks_connection_graph_);
+
             // add this new point as a new track in our graph
             v = add_vertex(tracks_connection_graph_);
+
+            // connect this new vertex to all current vertices
+            for(; vi!=viend; vi++){
+                tie(e, is_edge_addition_success) = add_edge(v, *vi, tracks_connection_graph_);
+
+                // Assign some initial values for this edge information
+                distance = Distance(v, *vi);
+                tracks_connection_graph_[e].active = false;
+                tracks_connection_graph_[e].min_distance = distance;
+                tracks_connection_graph_[e].max_distance = distance;
+            }
 
             // set default property values for this vertex
             tracks_connection_graph_[v].id = next_track_id_;

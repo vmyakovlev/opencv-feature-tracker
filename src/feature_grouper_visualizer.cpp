@@ -6,6 +6,7 @@ namespace SaunierSayed{
         homography_matrix_ = homography_matrix;
         feature_grouper_ = feature_grouper;
         writing_video_out_ = false;
+        is_draw_coordinate = false;
 
         // Create window
         namedWindow(window_);
@@ -72,10 +73,12 @@ namespace SaunierSayed{
             }
 
             // Write Text
-            sprintf(position_text, "%d(%5.1f,%5.1f)", (graph)[*vi].id, position_in_world.x, position_in_world.y);
-            position_to_draw.x = position_in_image.x + 5;
-            position_to_draw.y = position_in_image.y + 5;
-            putText(image_, position_text, position_to_draw, FONT_HERSHEY_PLAIN, 0.4, CV_RGB(128,128,0));
+            if (is_draw_coordinate){
+                sprintf(position_text, "%d(%5.1f,%5.1f)", (graph)[*vi].id, position_in_world.x, position_in_world.y);
+                position_to_draw.x = position_in_image.x + 5;
+                position_to_draw.y = position_in_image.y + 5;
+                putText(image_, position_text, position_to_draw, FONT_HERSHEY_PLAIN, 0.4, CV_RGB(128,128,0));
+            }
         }
     }
 

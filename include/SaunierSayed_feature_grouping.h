@@ -39,7 +39,7 @@ namespace SaunierSayed{
     typedef std::vector<TrackInformation> ConnectedComponent;
     typedef std::vector<ConnectedComponent> ConnectedComponents;
 
-    typedef adjacency_list <listS, vecS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
+    typedef adjacency_list <listS, listS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
 
     /** \class TrackManager
 
@@ -141,6 +141,7 @@ namespace SaunierSayed{
         */
         bool get_edge_information(int vertex_id_1, int vertex_id_2, LinkInformation * output_link_information) const;
     private:
+        TrackInformation get_track_information(TracksConnectionGraph::vertex_descriptor v) const;
 
         //! Activate a track
         /** Activate a track will connect it to all tracks that are current close by

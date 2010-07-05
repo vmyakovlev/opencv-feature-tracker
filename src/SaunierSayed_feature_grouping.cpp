@@ -193,7 +193,7 @@ namespace SaunierSayed{
             }
         }
 
-        std::vector<TracksConnectionGraph::vertex_descriptor> vertices_to_remove;
+        std::set<TracksConnectionGraph::vertex_descriptor> vertices_to_remove;
 
         //*********************************************************************************************
         // REMOVE TRACKS THAT ARE NOT TRACKED FOR AWHILE
@@ -204,8 +204,11 @@ namespace SaunierSayed{
         for (tie(vi, viend)=vertices(tracks_connection_graph_); vi!=viend; ++vi){
             // if we haven't been tracking this point for a while. Time to remove it
             if (tracks_connection_graph_[*vi].last_time_tracked - current_time_stamp_id_ > max_num_frames_not_tracked_allowed_){
-                vertices_to_remove.push_back(*vi);
-                std::cout << "Track #" << *vi << " removed" << std::endl;
+                vertices_to_remove.insert(*vi);
+#ifdef DEBUG_PRINOUT
+                std::cout << "Track #" << *vi << " removed for not being tracked for some time" << std::endl;
+#endif
+
             }
         }
 
@@ -253,15 +256,19 @@ namespace SaunierSayed{
 #ifdef DEBUG_PRINOUT
                     std::cout << "Track #" << vert << " removed for not moving." << std::endl;
 #endif
-                    vertices_to_remove.push_back(vert);
+                    vertices_to_remove.insert(vert);
                 }
             }
         }
 
+        SegmentFarAwayTracks();
+
         // Now that we no longer use old_points_ids/old_points_vertices content, we can go on and remove these tracks
-        for (int i=0; i<vertices_to_remove.size(); ++i){
-            clear_vertex(vertices_to_remove[i], tracks_connection_graph_);
-            remove_vertex(vertices_to_remove[i], tracks_connection_graph_);
+        std::set<TracksConnectionGraph::vertex_descriptor>::iterator it = vertices_to_remove.begin();
+        for (; it != vertices_to_remove.end(); ++it){
+            printf("Removing %ld\n", *it);
+            clear_vertex(*it, tracks_connection_graph_);
+            remove_vertex(*it, tracks_connection_graph_);
         }
 
 
@@ -270,7 +277,7 @@ namespace SaunierSayed{
             LogCurrentTrackInfo();
         }
 
-        SegmentFarAwayTracks();
+
 
 #ifdef DEBUG_PRINTOUT
         // Debug: Report current stats of the graph
@@ -325,9 +332,6 @@ namespace SaunierSayed{
                     continue;
                 }
 
-                // Assign some initial values for this edge information
-                tracks_connection_graph_[e].min_distance = distance;
-                tracks_connection_graph_[e].max_distance = distance;
                 tracks_connection_graph_[e].active = true;
             }
         }
@@ -380,6 +384,8 @@ namespace SaunierSayed{
             all_track_information[i].number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
             all_track_information[i].id = tracks_connection_graph_[v].id;
             all_track_information[i].activated = tracks_connection_graph_[v].activated;
+            all_track_information[i].last_time_tracked = tracks_connection_graph_[v].last_time_tracked;
+            all_track_information[i].average_position = tracks_connection_graph_[v].average_position;
         }
 
         return all_track_information;
@@ -504,7 +510,8 @@ namespace SaunierSayed{
 
     ConnectedComponents TrackManager::GetConnectedComponents() const{
         // Call Boost Graph connected component function
-        std::vector<int> component(num_vertices(tracks_connection_graph_));
+        typedef std::map<TracksConnectionGraph::vertex_descriptor, TracksConnectionGraph::vertices_size_type> component_type;
+        component_type component;
         int num_components = connected_components(tracks_connection_graph_, &component[0]);
 
         ConnectedComponents return_connected_components(num_components);
@@ -514,13 +521,15 @@ namespace SaunierSayed{
 
         // What we need now is
         // component_id => [vertex_id_1, vertex_id_2, vertex_id_3, ...]
-        Tracks all_tracks = tracks();
 
         //assert(all_tracks.size() == component.size())
-        int component_id;
-        for (int i=0; i<all_tracks.size(); i++){
-            component_id = component[i];
-            return_connected_components[component_id].push_back(all_tracks[i]);
+        TracksConnectionGraph::vertices_size_type component_id;
+        component_type::iterator it = component.begin();
+        for (; it != component.end(); it++){
+            component_id = (*it).second; // this gives the id that this track is assigned to
+            return_connected_components[component_id].push_back(
+                    get_track_information((*it).first)
+                    );
         }
 
         return return_connected_components;
@@ -561,7 +570,7 @@ namespace SaunierSayed{
     */
     std::vector<TracksConnectionGraph::vertex_descriptor> TrackManager::GetVertexDescriptors(std::vector<int> old_points_ids){
         // First construct a hash that store track_id => vertex_id
-        std::map<int, int> tracks_vertices_map;
+        std::map<int, TracksConnectionGraph::vertex_descriptor> tracks_vertices_map;
 
         // Go through all vertices and populate this map
         TracksConnectionGraph::vertex_iterator vi, viend;

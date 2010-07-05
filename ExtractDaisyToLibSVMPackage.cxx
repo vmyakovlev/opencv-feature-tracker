@@ -24,7 +24,7 @@ using namespace cv;
 */
 void MatRowToSVMRow(const Mat & descriptors, const string & class_string, ofstream * ofs){
     for (int i=0; i<descriptors.rows; i++){
-        *ofs << class_string << " ";
+        *ofs << class_string;
 
         const float * ptr = descriptors.ptr<float>(i);
         for (int j=0; j<descriptors.cols; j++){
@@ -36,29 +36,29 @@ void MatRowToSVMRow(const Mat & descriptors, const string & class_string, ofstre
     }
 }
 
-/** \brief Given a matrix, output into outstream into space-separated format for MATLAB/Python
+/** \brief Given a matrix, output the entire descriptor as one single row
     \param[in] descriptors descriptor matrix where each row is one instance
     \param[in] class_string e.g. (+1 or -1)
     \param[in] ofs output file stream
 
 */
-void MatRowToTXTRow(const Mat & descriptors, const string & class_string, ofstream * ofs){
+void MatToSVMRow(const Mat & descriptors, const string & class_string, ofstream * ofs){
+    int k = 1;
+    *ofs << class_string;
     for (int i=0; i<descriptors.rows; i++){
-        *ofs << class_string << " ";
-
         const float * ptr = descriptors.ptr<float>(i);
         for (int j=0; j<descriptors.cols; j++){
-            *ofs << *ptr << " ";
+            *ofs << k << ":" << *ptr << " ";
             ptr++;
+            k++;
         }
-
-        *ofs << std::endl;
     }
 }
 
 /** \file ExtractDaisyToLibSVMPackage.cxx Get the DAISY descriptors into SVM package so they can be fed into SVM for training
 */
 DEFINE_string(label, " ", "To prepend this label to each output descriptor line");
+DEFINE_bool(individual_points, true, "Is each point a sample? Or all points is one sample set?");
 
 int main(int argc, char ** argv){
     google::ParseCommandLineFlags(&argc, &argv, true);
@@ -90,7 +90,12 @@ int main(int argc, char ** argv){
     DaisyDescriptorExtractor daisy_extractor;
     daisy_extractor.compute(gray_im, query_points, descriptors);
 
-    MatRowToSVMRow(descriptors, FLAGS_label, &ofs);
+    if (FLAGS_individual_points){
+        MatRowToSVMRow(descriptors, FLAGS_label, &ofs);
+    } else {
+        MatToSVMRow(descriptors, FLAGS_label, &ofs);
+    }
+
 
     // Done
     ofs.close();

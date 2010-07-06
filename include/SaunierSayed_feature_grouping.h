@@ -39,7 +39,7 @@ namespace SaunierSayed{
     typedef std::vector<TrackInformation> ConnectedComponent;
     typedef std::vector<ConnectedComponent> ConnectedComponents;
 
-    typedef adjacency_list <listS, listS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
+    typedef adjacency_list <listS, vecS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
 
     /** \class TrackManager
 
@@ -95,6 +95,9 @@ namespace SaunierSayed{
 
         //! Update current tracks with new points
         void UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_indices);
+
+        //! Remove a track given its id
+        void DeleteTrack(int id);
 
         //! Cut the link(edge) where max_distance - min_distance > D_segmentation
         void SegmentFarAwayTracks();

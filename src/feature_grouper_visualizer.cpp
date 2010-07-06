@@ -39,7 +39,8 @@ namespace SaunierSayed{
       */
     void FeatureGrouperVisualizer::Draw(){
         TracksConnectionGraph::vertex_iterator vi, viend;
-        TracksConnectionGraph::adjacency_iterator vi2, vi2end;
+        TracksConnectionGraph::out_edge_iterator ei, eiend;
+        TracksConnectionGraph::vertex_descriptor other_v;
 
         TracksConnectionGraph & graph = feature_grouper_->tracks_connection_graph_;
 
@@ -63,21 +64,27 @@ namespace SaunierSayed{
 
             circle(image_, position_in_image, 1, color);
 
-            // Draw lines to adjacent vertices
-            for (tie(vi2, vi2end)=adjacent_vertices(*vi, graph); vi2!=vi2end; ++vi2){
-                // Convert position to image coordinate
-                position_in_world = (graph)[*vi2].pos;
-                convert_to_image_coordinate(position_in_world, homography_matrix_, &position_in_image2);
-
-                line(image_, position_in_image, position_in_image2, CV_RGB(0,255,0));
-            }
-
-            // Write Text
+            // Write Text Information for this track
             if (is_draw_coordinate){
                 sprintf(position_text, "%d(%5.1f,%5.1f)", (graph)[*vi].id, position_in_world.x, position_in_world.y);
                 position_to_draw.x = position_in_image.x + 5;
                 position_to_draw.y = position_in_image.y + 5;
                 putText(image_, position_text, position_to_draw, FONT_HERSHEY_PLAIN, 0.4, CV_RGB(128,128,0));
+            }
+
+            // Draw lines to adjacent vertices (if the edge is active)
+            for (tie(ei, eiend) = out_edges(*vi, graph); ei!=eiend; ++ei){
+                if (!graph[*ei].active)
+                    continue;
+
+                // Get where this out_edge is pointing to
+                other_v = target(*ei, graph);
+
+                // Convert position to image coordinate
+                position_in_world = (graph)[other_v].pos;
+                convert_to_image_coordinate(position_in_world, homography_matrix_, &position_in_image2);
+
+                line(image_, position_in_image, position_in_image2, CV_RGB(0,255,0));
             }
         }
     }

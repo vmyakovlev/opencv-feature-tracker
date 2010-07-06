@@ -1,5 +1,6 @@
 #include "SaunierSayed_feature_grouping.h"
 #include <boost/graph/connected_components.hpp>
+#include <boost/property_map.hpp>
 #include <iostream>
 
 #define DEBUG_PRINTOUT
@@ -193,7 +194,7 @@ namespace SaunierSayed{
             }
         }
 
-        std::set<TracksConnectionGraph::vertex_descriptor> vertices_to_remove;
+        std::set<int> vertices_to_remove;
 
         //*********************************************************************************************
         // REMOVE TRACKS THAT ARE NOT TRACKED FOR AWHILE
@@ -204,7 +205,7 @@ namespace SaunierSayed{
         for (tie(vi, viend)=vertices(tracks_connection_graph_); vi!=viend; ++vi){
             // if we haven't been tracking this point for a while. Time to remove it
             if (tracks_connection_graph_[*vi].last_time_tracked - current_time_stamp_id_ > max_num_frames_not_tracked_allowed_){
-                vertices_to_remove.insert(*vi);
+                vertices_to_remove.insert(tracks_connection_graph_[*vi].id);
 #ifdef DEBUG_PRINOUT
                 std::cout << "Track #" << *vi << " removed for not being tracked for some time" << std::endl;
 #endif
@@ -256,7 +257,7 @@ namespace SaunierSayed{
 #ifdef DEBUG_PRINOUT
                     std::cout << "Track #" << vert << " removed for not moving." << std::endl;
 #endif
-                    vertices_to_remove.insert(vert);
+                    vertices_to_remove.insert(tracks_connection_graph_[vert].id);
                 }
             }
         }
@@ -264,11 +265,10 @@ namespace SaunierSayed{
         SegmentFarAwayTracks();
 
         // Now that we no longer use old_points_ids/old_points_vertices content, we can go on and remove these tracks
-        std::set<TracksConnectionGraph::vertex_descriptor>::iterator it = vertices_to_remove.begin();
+        std::set<int>::iterator it = vertices_to_remove.begin();
         for (; it != vertices_to_remove.end(); ++it){
-            printf("Removing %ld\n", *it);
-            clear_vertex(*it, tracks_connection_graph_);
-            remove_vertex(*it, tracks_connection_graph_);
+            printf("Removing %d\n", *it);
+            DeleteTrack(*it);
         }
 
 
@@ -380,12 +380,7 @@ namespace SaunierSayed{
         TracksConnectionGraph::vertices_size_type i;
         for (i=0; i<num_vertices(tracks_connection_graph_); i++){
             v = vertex(i, tracks_connection_graph_);
-            all_track_information[i].pos = tracks_connection_graph_[v].pos;
-            all_track_information[i].number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
-            all_track_information[i].id = tracks_connection_graph_[v].id;
-            all_track_information[i].activated = tracks_connection_graph_[v].activated;
-            all_track_information[i].last_time_tracked = tracks_connection_graph_[v].last_time_tracked;
-            all_track_information[i].average_position = tracks_connection_graph_[v].average_position;
+            all_track_information[i] = get_track_information(v);
         }
 
         return all_track_information;
@@ -512,7 +507,9 @@ namespace SaunierSayed{
         // Call Boost Graph connected component function
         typedef std::map<TracksConnectionGraph::vertex_descriptor, TracksConnectionGraph::vertices_size_type> component_type;
         component_type component;
-        int num_components = connected_components(tracks_connection_graph_, &component[0]);
+        boost::associative_property_map< component_type > component_map(component);
+
+        int num_components = connected_components(tracks_connection_graph_, component_map);
 
         ConnectedComponents return_connected_components(num_components);
 
@@ -565,6 +562,8 @@ namespace SaunierSayed{
           interested_ids = [10,12,25]
           a = GetVertexDescriptors(interested_ids)
 
+       Becareful though as these vertex descriptors will be invalidated if a vertex is removed
+
       \param old_points_ids IDs of the tracks you are interested in getting the vertices descriptors
       \return a vector of the same size of old_points_ids where each element point to the correponding vertex descriptor
     */
@@ -586,5 +585,29 @@ namespace SaunierSayed{
         }
 
         return found_vertex_descriptors;
+    }
+
+    TrackInformation TrackManager::get_track_information(TracksConnectionGraph::vertex_descriptor v) const{
+        TrackInformation track_info;
+        track_info.pos = tracks_connection_graph_[v].pos;
+        track_info.number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
+        track_info.id = tracks_connection_graph_[v].id;
+        track_info.activated = tracks_connection_graph_[v].activated;
+        track_info.last_time_tracked = tracks_connection_graph_[v].last_time_tracked;
+        track_info.average_position = tracks_connection_graph_[v].average_position;
+
+        return track_info;
+    }
+
+    void TrackManager::DeleteTrack(int id){
+        TracksConnectionGraph::vertex_iterator vi, viend;
+        tie(vi, viend) = vertices(tracks_connection_graph_);
+        for (; vi!=viend; ++vi){
+            if( tracks_connection_graph_[*vi].id == id ){
+                clear_vertex(*vi, tracks_connection_graph_);
+                remove_vertex(*vi, tracks_connection_graph_);
+                return;
+            }
+        }
     }
 }

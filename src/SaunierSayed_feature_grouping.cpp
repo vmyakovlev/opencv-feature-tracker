@@ -3,7 +3,7 @@
 #include <boost/property_map.hpp>
 #include <iostream>
 
-#define DEBUG_PRINTOUT
+//#define DEBUG_PRINTOUT
 
 namespace SaunierSayed{
     TrackManager::TrackManager(int min_num_frame_tracked, float min_distance_moved_required,
@@ -267,7 +267,7 @@ namespace SaunierSayed{
         // Now that we no longer use old_points_ids/old_points_vertices content, we can go on and remove these tracks
         std::set<int>::iterator it = vertices_to_remove.begin();
         for (; it != vertices_to_remove.end(); ++it){
-            printf("Removing %d\n", *it);
+            printf("Removing track #%d\n", *it);
             DeleteTrack(*it);
         }
 
@@ -358,7 +358,8 @@ namespace SaunierSayed{
                 TracksConnectionGraph::vertex_descriptor v, v2;
                 v = source(*edge_it, tracks_connection_graph_);
                 v2 = target(*edge_it, tracks_connection_graph_);
-                printf("Edge (%ld,%ld) removed since its vertices move too much: %6.3f (threshold = %f)\n", v, v2, distance_range, feature_segmentation_threshold_);
+                printf("Edge (%ld,%ld) removed since its vertices move too much: %6.3f (threshold = %f)\n", tracks_connection_graph_[v].id,
+                       tracks_connection_graph_[v2].id, distance_range, feature_segmentation_threshold_);
 #endif
                 remove_edge(*edge_it, tracks_connection_graph_);
             }

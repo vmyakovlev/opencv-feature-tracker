@@ -141,13 +141,11 @@ namespace SaunierSayed{
     void TrackManager::UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_ids){
         std::vector<TracksConnectionGraph::vertex_descriptor> old_points_vertices = GetVertexDescriptors(old_points_ids);
 
-        //*********************************************************************************************
-        // UPDATE TRACKS WITH NEW INFORMATION
+        // Update tracks with new information
         for (int i=0; i<old_points_vertices.size(); i++){
             UpdatePoint(new_points[i], old_points_vertices[i]);
         }
 
-        //*********************************************************************************************
         // Now the points positions have been updated, make sure that min and max distance for their edges are updated too
         for (int i=0; i<old_points_vertices.size(); i++){
             UpdatePointMinMaxEdgeDistance(old_points_vertices[i]);
@@ -158,55 +156,13 @@ namespace SaunierSayed{
         // Remove tracks that have not been tracked for a while
         FindVerticesNotTrackedFor(max_num_frames_not_tracked_allowed_, &vertices_to_remove);
 
-        //*********************************************************************************************
-        // ACTIVATE TRACKS THAT HAVE BEEN TRACKED LONG ENOUGH
-        // REMOVE TRACKS THAT HAVE NOT MOVED AROUND FOR A WHILE
+        // Activate tracks that have been tracked long enough
+        ActivateTracksTrackedLongEnough(old_points_vertices);
 
-        // NOTE: Activation only happens once
-        // NOTE: Activation needs to happen after ALL the positions have been updated
-        float distance_moved_from_average;
-        TracksConnectionGraph::vertex_descriptor vert;
-        for (int i=0; i<old_points_vertices.size(); i++){
-            vert = old_points_vertices[i];
+        // Remove tracks that have not been moving enough lately
+        FindVerticesNotMovingEnough(min_distance_moved_required_, 3, old_points_vertices, &vertices_to_remove);
 
-            // TODO: Shouldn't we calculate distance moved from average BEFORE we update the position?
-            distance_moved_from_average = Distance(tracks_connection_graph_[vert].average_position, tracks_connection_graph_[vert].pos);
-            if (tracks_connection_graph_[vert].activated == false
-                && tracks_connection_graph_[vert].number_of_times_tracked >= min_num_frame_tracked_
-                && distance_moved_from_average > min_distance_moved_required_)
-            {
-                ActivateTrack(vert);
-                continue; // so that this point is not tested right away whether it has been moved or not
-            }
-
-            // Determine for activated points whether there has been enough variance
-            // Not enough variance means the track has been stuck for a while
-            if (tracks_connection_graph_[vert].activated &&
-                tracks_connection_graph_[vert].previous_points.size() >= maximum_previous_points_remembered_){
-                // calculate the variance of the previous points
-                cv::Point2f variance(0,0);
-                cv::Point2f average_pos = tracks_connection_graph_[vert].average_position;
-                std::deque<cv::Point2f>::iterator it = tracks_connection_graph_[vert].previous_points.begin(),
-                    it_end = tracks_connection_graph_[vert].previous_points.end();
-                for (;it!=it_end; ++it){
-                    variance.x += (average_pos.x - it->x)*(average_pos.x - it->x);
-                    variance.y += (average_pos.y - it->y)*(average_pos.y - it->y);
-                }
-                variance *= (1.0 / tracks_connection_graph_[vert].previous_points.size());
-
-                // if the variance is too low, time to remove it
-                if (variance.x < minimum_variance_required_ && variance.y < minimum_variance_required_){
-                    // NOTE: Remember that BGL will try to keep the vertices ID stay in a continuous range
-                    //       Thus, we cannot remove these tracks now and expect the old_point_indices to still work correctly
-                    //       in the next iteration
-#ifdef DEBUG_PRINOUT
-                    std::cout << "Track #" << vert << " removed for not moving." << std::endl;
-#endif
-                    vertices_to_remove.insert(tracks_connection_graph_[vert].id);
-                }
-            }
-        }
-
+        // Segment far away tracks (tracks that do not move within a certain threshold)
         SegmentFarAwayTracks();
 
         // Now that we no longer use old_points_ids/old_points_vertices content, we can go on and remove these tracks
@@ -559,6 +515,8 @@ namespace SaunierSayed{
         }
     }
 
+    /** \brief Update the track (desribed by v) with a new position
+      */
     void TrackManager::UpdatePoint(const cv::Point2f &new_position, const TracksConnectionGraph::vertex_descriptor & v){
         int number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
         tracks_connection_graph_[v].previous_points.push_back(new_position);
@@ -583,6 +541,8 @@ namespace SaunierSayed{
         tracks_connection_graph_[v].last_time_tracked = current_time_stamp_id_;
     }
 
+    /** \brief Update the out edges of the track (described by v) with new min/max distance
+      */
     void TrackManager::UpdatePointMinMaxEdgeDistance(const TracksConnectionGraph::vertex_descriptor &v){
         TracksConnectionGraph::out_edge_iterator edge_it, edge_it_end;
         TracksConnectionGraph::vertex_descriptor the_other_vertex;
@@ -605,6 +565,8 @@ namespace SaunierSayed{
         }
     }
 
+    /** \brief Find vertices that haven't been tracked for N frames
+      */
     void TrackManager::FindVerticesNotTrackedFor(int number_of_frames_not_tracked, std::set<int> *output_found_track_ids) const{
         TracksConnectionGraph::vertex_iterator vi, viend;
         for (tie(vi, viend)=vertices(tracks_connection_graph_); vi!=viend; ++vi){
@@ -615,6 +577,79 @@ namespace SaunierSayed{
                 std::cout << "Track #" << *vi << " removed for not being tracked for some time" << std::endl;
 #endif
 
+            }
+        }
+    }
+
+    /** \brief Activate tracks that have been tracked long enough
+
+      Activation only happens once (tracks previously activated won't be reactivated).
+      Activation needs to happen after all positions have been updated
+
+      \param vertices_to_consider Vertex descriptors of the points we need to visit
+    */
+    void TrackManager::ActivateTracksTrackedLongEnough(const std::vector<TracksConnectionGraph::vertex_descriptor> & vertices_to_consider){
+        float distance_moved_from_average;
+        TracksConnectionGraph::vertex_descriptor vert;
+
+        for (int i=0; i<vertices_to_consider.size(); i++){
+            vert = vertices_to_consider[i];
+
+            // TODO: Shouldn't we calculate distance moved from average BEFORE we update the position?
+            distance_moved_from_average = Distance(tracks_connection_graph_[vert].average_position, tracks_connection_graph_[vert].pos);
+            if (tracks_connection_graph_[vert].activated == false
+                && tracks_connection_graph_[vert].number_of_times_tracked >= min_num_frame_tracked_
+                && distance_moved_from_average > min_distance_moved_required_)
+            {
+                ActivateTrack(vert);
+                continue; // so that this point is not tested right away whether it has been moved or not
+            }
+        }
+    }
+
+    /** \brief Find vertices where N previous displacements have been less than a certain thresholds
+
+      We assume that this method is called after all point locations, displacements, .... have been updated
+
+      \param min_distance_moved_required Minimum distance moved allowed
+      \param num_previous_points_to_check If a track has been tracked less than this number, it is not considered. If a track has
+                                          been tracked as least this number, all these displacements have to be at least min_distance_moved_required
+      \param vertices_to_consider Vertex descriptors of vertices we should consider
+      \param[inout] output_found_track_ids Set of track ids to remove.
+
+      \note This method used to calculate variance, check revision 247231116b4f
+      */
+    void TrackManager::FindVerticesNotMovingEnough(float min_distance_moved_required,
+                                                   int num_previous_points_to_check,
+                                                   const std::vector<TracksConnectionGraph::vertex_descriptor> & vertices_to_consider,
+                                                   std::set<int> *output_found_track_ids) const{
+        bool is_removing_this_vertex = false;
+        for (int i=0; i<vertices_to_consider.size(); i++){
+            TracksConnectionGraph::vertex_descriptor vert = vertices_to_consider[i];
+
+            // Determine whether there has been enough displacement for this vertex
+            // This is equivalent to: all N previous points having at least minimum displacement
+            if (tracks_connection_graph_[vert].previous_displacements.size() >= num_previous_points_to_check){
+                is_removing_this_vertex = false;
+                int displacement_size = tracks_connection_graph_[vert].previous_displacements.size();
+                for (int j=0; j<num_previous_points_to_check; j++){
+                    if (tracks_connection_graph_[vert].previous_displacements[displacement_size - 1 - j] < min_distance_moved_required){
+                        is_removing_this_vertex = true;
+                        break;
+                    }
+                }
+
+
+                if (is_removing_this_vertex){
+                    // NOTE: Remember that BGL will try to keep the vertices ID stay in a continuous range
+                    //       Thus, we cannot remove these tracks now and expect the old_point_indices to still work correctly
+                    //       in the next iteration
+#ifdef DEBUG_PRINOUT
+                    std::cout << "Track #" << vert << " removed for not moving." << std::endl;
+#endif
+                    // Queue the id for removal
+                    (*output_found_track_ids).insert(tracks_connection_graph_[vert].id);
+                }
             }
         }
     }

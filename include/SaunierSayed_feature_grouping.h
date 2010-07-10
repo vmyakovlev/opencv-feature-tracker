@@ -165,17 +165,15 @@ namespace SaunierSayed{
         //! Given a list of ids, find the corresponding vertices
         std::vector<TracksConnectionGraph::vertex_descriptor> GetVertexDescriptors(std::vector<int> old_points_ids);
 
-        /** \brief Update the track (desribed by v) with a new position
-          */
+        // Methods used in UpdatePoints()
         void UpdatePoint(const cv::Point2f & new_position, const TracksConnectionGraph::vertex_descriptor & v);
-
-        /** \brief Update the out edges of the track (described by v) with new min/max distance
-          */
         void UpdatePointMinMaxEdgeDistance(const TracksConnectionGraph::vertex_descriptor & v);
-
-        /** \brief Find vertices that haven't been tracked for N frames
-          */
         void FindVerticesNotTrackedFor(int number_of_frames_not_tracked, std::set<int> * output_found_track_ids) const;
+        void ActivateTracksTrackedLongEnough(const std::vector<TracksConnectionGraph::vertex_descriptor> & vertices_to_consider);
+        void FindVerticesNotMovingEnough(float min_distance_moved_required,
+                                                       int num_previous_points_to_check,
+                                                       const std::vector<TracksConnectionGraph::vertex_descriptor> & vertices_to_consider,
+                                                       std::set<int> *output_found_track_ids) const;
 
         TracksConnectionGraph tracks_connection_graph_;
 

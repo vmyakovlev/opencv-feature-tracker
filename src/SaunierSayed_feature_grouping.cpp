@@ -15,9 +15,9 @@ namespace SaunierSayed{
         feature_segmentation_threshold_ = feature_segmentation_threshold;
         min_distance_moved_required_ = min_distance_moved_required;
 
-        maximum_previous_points_remembered_ = 30;
+        maximum_previous_points_remembered_ = min_num_frame_tracked;
         minimum_variance_required_ = minimum_variance_required;
-        max_num_frames_not_tracked_allowed_ = 30;
+        max_num_frames_not_tracked_allowed_ = min_num_frame_tracked;
 
         // NOTE: Find this value from the homography matrix
         min_distance_between_tracks_ = min_distance_between_tracks;
@@ -139,79 +139,24 @@ namespace SaunierSayed{
       \param old_points_ids The corresponding IDs of the old points. This is NOT the internal vertex id but the Track id
     */
     void TrackManager::UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_ids){
-        TracksConnectionGraph::vertex_descriptor v;
-
         std::vector<TracksConnectionGraph::vertex_descriptor> old_points_vertices = GetVertexDescriptors(old_points_ids);
 
         //*********************************************************************************************
         // UPDATE TRACKS WITH NEW INFORMATION
-        int number_of_times_tracked;
-        for (int i=0; i<old_points_ids.size(); i++){
-            v = old_points_vertices[i];
-
-            number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
-            tracks_connection_graph_[v].previous_points.push_back(new_points[i]);
-            tracks_connection_graph_[v].last_time_tracked = current_time_stamp_id_;
-
-            if (tracks_connection_graph_[v].previous_points.size() > maximum_previous_points_remembered_){
-                // update average position
-                cv::Point2f old_point = tracks_connection_graph_[v].previous_points.front();
-                tracks_connection_graph_[v].previous_points.pop_front();
-                tracks_connection_graph_[v].average_position = (tracks_connection_graph_[v].average_position * maximum_previous_points_remembered_ - old_point + new_points[i]) * (1.0 / maximum_previous_points_remembered_);
-            } else {
-                tracks_connection_graph_[v].average_position = (tracks_connection_graph_[v].average_position * number_of_times_tracked + new_points[i])* (1.0 / (number_of_times_tracked+1));
-            }
-
-//            printf("Average position: %f %f\n", tracks_connection_graph_[v].average_position.x, tracks_connection_graph_[v].average_position.y);
-
-            tracks_connection_graph_[v].pos = new_points[i];
-            tracks_connection_graph_[v].number_of_times_tracked++;
+        for (int i=0; i<old_points_vertices.size(); i++){
+            UpdatePoint(new_points[i], old_points_vertices[i]);
         }
 
         //*********************************************************************************************
         // Now the points positions have been updated, make sure that min and max distance for their edges are updated too
-        TracksConnectionGraph::out_edge_iterator edge_it, edge_it_end;
-        TracksConnectionGraph::vertex_descriptor the_other_vertex;
-        float new_distance;
-        for (int i=0; i<old_points_ids.size(); i++){
-            v = old_points_vertices[i];
-
-            // Loop through all edges
-            for ( tie(edge_it, edge_it_end)=out_edges(v, tracks_connection_graph_); edge_it != edge_it_end; edge_it++){
-                the_other_vertex = target(*edge_it, tracks_connection_graph_);
-                //std::cout << "The other vertex: " << the_other_vertex << std::endl;
-
-                // Compute new distance
-                new_distance = Distance(v, the_other_vertex);
-
-                // Update min and max distance
-                if (new_distance < tracks_connection_graph_[*edge_it].min_distance){
-                    tracks_connection_graph_[*edge_it].min_distance = new_distance;
-                }
-                if (new_distance > tracks_connection_graph_[*edge_it].max_distance){
-                    tracks_connection_graph_[*edge_it].max_distance = new_distance;
-                }
-            }
+        for (int i=0; i<old_points_vertices.size(); i++){
+            UpdatePointMinMaxEdgeDistance(old_points_vertices[i]);
         }
 
         std::set<int> vertices_to_remove;
 
-        //*********************************************************************************************
-        // REMOVE TRACKS THAT ARE NOT TRACKED FOR AWHILE
-
-        // NOTE: If we find a way to easily sort the old_points_indices (and its respective new_points)
-        //       we can avoid having to do a second loop
-        TracksConnectionGraph::vertex_iterator vi, viend;
-        for (tie(vi, viend)=vertices(tracks_connection_graph_); vi!=viend; ++vi){
-            // if we haven't been tracking this point for a while. Time to remove it
-            if (tracks_connection_graph_[*vi].last_time_tracked - current_time_stamp_id_ > max_num_frames_not_tracked_allowed_){
-                vertices_to_remove.insert(tracks_connection_graph_[*vi].id);
-#ifdef DEBUG_PRINOUT
-                std::cout << "Track #" << *vi << " removed for not being tracked for some time" << std::endl;
-#endif
-
-            }
-        }
+        // Remove tracks that have not been tracked for a while
+        FindVerticesNotTrackedFor(max_num_frames_not_tracked_allowed_, &vertices_to_remove);
 
         //*********************************************************************************************
         // ACTIVATE TRACKS THAT HAVE BEEN TRACKED LONG ENOUGH
@@ -221,7 +166,7 @@ namespace SaunierSayed{
         // NOTE: Activation needs to happen after ALL the positions have been updated
         float distance_moved_from_average;
         TracksConnectionGraph::vertex_descriptor vert;
-        for (int i=0; i<old_points_ids.size(); i++){
+        for (int i=0; i<old_points_vertices.size(); i++){
             vert = old_points_vertices[i];
 
             // TODO: Shouldn't we calculate distance moved from average BEFORE we update the position?
@@ -370,7 +315,8 @@ namespace SaunierSayed{
         current_time_stamp_id_++;
     }
 
-    /**
+    /** \brief Returns the track information in a way that is easily readable
+
       \todo Consider API change so that we no longer needs to return these track information this way
       \note This method makes copy of the internal data and is thus very slow
     */
@@ -596,6 +542,7 @@ namespace SaunierSayed{
         track_info.activated = tracks_connection_graph_[v].activated;
         track_info.last_time_tracked = tracks_connection_graph_[v].last_time_tracked;
         track_info.average_position = tracks_connection_graph_[v].average_position;
+        track_info.previous_displacements = tracks_connection_graph_[v].previous_displacements;
 
         return track_info;
     }
@@ -611,4 +558,65 @@ namespace SaunierSayed{
             }
         }
     }
+
+    void TrackManager::UpdatePoint(const cv::Point2f &new_position, const TracksConnectionGraph::vertex_descriptor & v){
+        int number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
+        tracks_connection_graph_[v].previous_points.push_back(new_position);
+        tracks_connection_graph_[v].previous_displacements.push_back(Distance(tracks_connection_graph_[v].pos, new_position));
+
+        // update average position
+        if (tracks_connection_graph_[v].previous_points.size() > maximum_previous_points_remembered_){
+            cv::Point2f old_point = tracks_connection_graph_[v].previous_points.front();
+            tracks_connection_graph_[v].previous_points.pop_front();
+            tracks_connection_graph_[v].average_position = (tracks_connection_graph_[v].average_position * maximum_previous_points_remembered_ - old_point + new_position) * (1.0 / maximum_previous_points_remembered_);
+
+            // maintain the number of previous_displacements = # of previous points - 1
+            tracks_connection_graph_[v].previous_displacements.pop_front();
+        } else {
+            tracks_connection_graph_[v].average_position = (tracks_connection_graph_[v].average_position * number_of_times_tracked + new_position)* (1.0 / (number_of_times_tracked+1));
+        }
+
+//            printf("Average position: %f %f\n", tracks_connection_graph_[v].average_position.x, tracks_connection_graph_[v].average_position.y);
+
+        tracks_connection_graph_[v].pos = new_position;
+        tracks_connection_graph_[v].number_of_times_tracked++;
+        tracks_connection_graph_[v].last_time_tracked = current_time_stamp_id_;
+    }
+
+    void TrackManager::UpdatePointMinMaxEdgeDistance(const TracksConnectionGraph::vertex_descriptor &v){
+        TracksConnectionGraph::out_edge_iterator edge_it, edge_it_end;
+        TracksConnectionGraph::vertex_descriptor the_other_vertex;
+
+        // Loop through all edges
+        for ( tie(edge_it, edge_it_end)=out_edges(v, tracks_connection_graph_); edge_it != edge_it_end; edge_it++){
+            the_other_vertex = target(*edge_it, tracks_connection_graph_);
+            //std::cout << "The other vertex: " << the_other_vertex << std::endl;
+
+            // Compute new distance
+            float new_distance = Distance(v, the_other_vertex);
+
+            // Update min and max distance
+            if (new_distance < tracks_connection_graph_[*edge_it].min_distance){
+                tracks_connection_graph_[*edge_it].min_distance = new_distance;
+            }
+            if (new_distance > tracks_connection_graph_[*edge_it].max_distance){
+                tracks_connection_graph_[*edge_it].max_distance = new_distance;
+            }
+        }
+    }
+
+    void TrackManager::FindVerticesNotTrackedFor(int number_of_frames_not_tracked, std::set<int> *output_found_track_ids) const{
+        TracksConnectionGraph::vertex_iterator vi, viend;
+        for (tie(vi, viend)=vertices(tracks_connection_graph_); vi!=viend; ++vi){
+            // if we haven't been tracking this point for a while. Time to remove it
+            if (tracks_connection_graph_[*vi].last_time_tracked - current_time_stamp_id_ > number_of_frames_not_tracked){
+                (*output_found_track_ids).insert(tracks_connection_graph_[*vi].id);
+#ifdef DEBUG_PRINOUT
+                std::cout << "Track #" << *vi << " removed for not being tracked for some time" << std::endl;
+#endif
+
+            }
+        }
+    }
 }
+

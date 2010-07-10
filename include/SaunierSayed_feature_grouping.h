@@ -30,6 +30,8 @@ namespace SaunierSayed{
                                 // their new positions are further and further away from the average position.
                                 // For tracks that stay stationary (e.g. scene objects, parked vehicles), their
                                 // new position stay around this value.
+        std::deque<float> previous_displacements; // save a fixed set of previous displacements
+                                                        // the number of previous displacements = number of previous points - 1
         int number_of_times_tracked;
         int last_time_tracked; // When was the last time-stamp that this track was found
         bool activated;
@@ -162,6 +164,18 @@ namespace SaunierSayed{
 
         //! Given a list of ids, find the corresponding vertices
         std::vector<TracksConnectionGraph::vertex_descriptor> GetVertexDescriptors(std::vector<int> old_points_ids);
+
+        /** \brief Update the track (desribed by v) with a new position
+          */
+        void UpdatePoint(const cv::Point2f & new_position, const TracksConnectionGraph::vertex_descriptor & v);
+
+        /** \brief Update the out edges of the track (described by v) with new min/max distance
+          */
+        void UpdatePointMinMaxEdgeDistance(const TracksConnectionGraph::vertex_descriptor & v);
+
+        /** \brief Find vertices that haven't been tracked for N frames
+          */
+        void FindVerticesNotTrackedFor(int number_of_frames_not_tracked, std::set<int> * output_found_track_ids) const;
 
         TracksConnectionGraph tracks_connection_graph_;
 

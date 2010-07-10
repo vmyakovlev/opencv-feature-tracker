@@ -137,18 +137,28 @@ TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
 
     track_manager_.UpdatePoints(new_points, old_indices_1_2);
     ASSERT_EQ(5, track_manager_.num_tracks());
-    ASSERT_NEAR(1.2, track_manager_.tracks()[0].pos.x, 0.001);
-    ASSERT_NEAR(23.5, track_manager_.tracks()[1].pos.y, 0.001);
-    ASSERT_NEAR(10.2, track_manager_.tracks()[2].pos.x, 0.001);
-    ASSERT_NEAR(1.7, track_manager_.tracks()[3].pos.x, 0.001);
+
+    ss::Tracks tracks = track_manager_.tracks();
+
+    ASSERT_NEAR(1.2, tracks[0].pos.x, 0.001);
+    ASSERT_NEAR(23.5, tracks[1].pos.y, 0.001);
+    ASSERT_NEAR(10.2, tracks[2].pos.x, 0.001);
+    ASSERT_NEAR(1.7, tracks[3].pos.x, 0.001);
 
     // At time t+1, we detect a couple of points which happen to be the same as
     // points already in tracks
     std::vector<int> assigned_ids;
     track_manager_.AddPossiblyDuplicatePoints(points2, &assigned_ids);
+
+    tracks = track_manager_.tracks();
     ASSERT_EQ(7, track_manager_.num_tracks());
-    ASSERT_NEAR(12.5, track_manager_.tracks()[6].pos.x, 0.001);
-    ASSERT_NEAR(223.5, track_manager_.tracks()[2].pos.y, 0.001);
+    ASSERT_NEAR(12.5, tracks[6].pos.x, 0.001);
+    ASSERT_NEAR(223.5, tracks[2].pos.y, 0.001);
+
+    // check that the displacements are recorded for updated point
+    ASSERT_EQ(1, tracks[2].previous_displacements.size());
+    // but displacements are not recorded for newly added point
+    ASSERT_EQ(0, tracks[6].previous_displacements.size());
 
     // these new points should not have been activated
     for (int i=4; i<track_manager_.num_tracks(); i++){

@@ -137,6 +137,8 @@ namespace SaunierSayed{
 
       \param new_points New locations for the points
       \param old_points_ids The corresponding IDs of the old points. This is NOT the internal vertex id but the Track id
+
+      \todo Parameterize 2 parameter to the call of FindVerticesNotMovingEnough
     */
     void TrackManager::UpdatePoints(const std::vector<cv::Point2f> & new_points, const std::vector<int> & old_points_ids){
         std::vector<TracksConnectionGraph::vertex_descriptor> old_points_vertices = GetVertexDescriptors(old_points_ids);
@@ -160,7 +162,8 @@ namespace SaunierSayed{
         ActivateTracksTrackedLongEnough(old_points_vertices);
 
         // Remove tracks that have not been moving enough lately
-        FindVerticesNotMovingEnough(min_distance_moved_required_, 3, old_points_vertices, &vertices_to_remove);
+        FindVerticesNotMovingEnough(min_distance_moved_required_, maximum_previous_points_remembered_ - 2
+                                    , old_points_vertices, &vertices_to_remove);
 
         // Segment far away tracks (tracks that do not move within a certain threshold)
         SegmentFarAwayTracks();
@@ -172,13 +175,10 @@ namespace SaunierSayed{
             DeleteTrack(*it);
         }
 
-
         // Log: current information of each track at this time frame
         if (logging_){
             LogCurrentTrackInfo();
         }
-
-
 
 #ifdef DEBUG_PRINTOUT
         // Debug: Report current stats of the graph
@@ -224,7 +224,9 @@ namespace SaunierSayed{
         float distance;
         for( tie(vi,vi_end) = vertices(tracks_connection_graph_); vi!=vi_end; vi++){
             distance = Distance(v, *vi);
-            if (distance < maximum_distance_threshold_ && v!=*vi){
+            if (tracks_connection_graph_[*vi].activated &&
+                distance < maximum_distance_threshold_ &&
+                v!=*vi){
                 tie(e, operation_success) = edge(v, *vi, tracks_connection_graph_);
 
                 if (!operation_success){
@@ -624,16 +626,23 @@ namespace SaunierSayed{
                                                    const std::vector<TracksConnectionGraph::vertex_descriptor> & vertices_to_consider,
                                                    std::set<int> *output_found_track_ids) const{
         bool is_removing_this_vertex = false;
+        float previous_displacement;
+
         for (int i=0; i<vertices_to_consider.size(); i++){
             TracksConnectionGraph::vertex_descriptor vert = vertices_to_consider[i];
 
+            int displacement_size = tracks_connection_graph_[vert].previous_displacements.size();
+
             // Determine whether there has been enough displacement for this vertex
             // This is equivalent to: all N previous points having at least minimum displacement
-            if (tracks_connection_graph_[vert].previous_displacements.size() >= num_previous_points_to_check){
+            if (displacement_size >= num_previous_points_to_check){
                 is_removing_this_vertex = false;
-                int displacement_size = tracks_connection_graph_[vert].previous_displacements.size();
+
+                previous_displacement = 10000;
+
                 for (int j=0; j<num_previous_points_to_check; j++){
-                    if (tracks_connection_graph_[vert].previous_displacements[displacement_size - 1 - j] < min_distance_moved_required){
+                    previous_displacement = tracks_connection_graph_[vert].previous_displacements[displacement_size - 1 - j];
+                    if (previous_displacement < min_distance_moved_required){
                         is_removing_this_vertex = true;
                         break;
                     }

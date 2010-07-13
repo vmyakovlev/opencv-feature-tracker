@@ -37,6 +37,7 @@ namespace SaunierSayed{
 
         // public parameters
         bool is_draw_coordinate;
+        bool is_draw_inactive;
     private:
         SaunierSayed::TrackManager * feature_grouper_;
         string window_;

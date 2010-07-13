@@ -162,6 +162,8 @@ int main (int argc, char ** argv){
     if (FLAGS_visualize_with_coordinates)
         visualizer.is_draw_coordinate = true;
 
+    visualizer.is_draw_inactive = false;
+
     int current_num_frame = 0;
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);

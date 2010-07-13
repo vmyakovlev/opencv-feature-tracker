@@ -62,7 +62,15 @@ namespace SaunierSayed{
             else
                 color = CV_RGB(255,0,0);
 
-            circle(image_, position_in_image, 1, color);
+            if (is_draw_inactive){
+                circle(image_, position_in_image, 1, color);
+            } else {
+                if (graph[*vi].activated){
+                    circle(image_, position_in_image, 1, color);
+                }
+            }
+
+
 
             // Write Text Information for this track
             if (is_draw_coordinate){

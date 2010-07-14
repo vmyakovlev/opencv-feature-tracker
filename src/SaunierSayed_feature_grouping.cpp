@@ -410,15 +410,8 @@ namespace SaunierSayed{
     }
 
     ConnectedComponents TrackManager::GetConnectedComponents() const{
-        // Call Boost Graph connected component function
-        typedef graph_traits < TracksConnectionGraph >::vertices_size_type size_type;
-        std::vector < size_type > component_ids(num_vertices(tracks_connection_graph_));
-
-        size_type num_components;
-        TrackManagerDFSVsitor< size_type * > vis(&component_ids[0], num_components);
-
-        depth_first_search(tracks_connection_graph_, visitor(vis));
-
+        TracksConnectionGraph::vertices_size_type num_components;
+        std::vector < TracksConnectionGraph::vertices_size_type > component_ids = GetConnectedComponentsMap(num_components);
 
         ConnectedComponents return_connected_components(num_components);
 
@@ -436,6 +429,16 @@ namespace SaunierSayed{
         }
 
         return return_connected_components;
+    }
+
+    std::vector<TracksConnectionGraph::vertices_size_type> TrackManager::GetConnectedComponentsMap(TracksConnectionGraph::vertices_size_type & num_components) const{
+        typedef graph_traits < TracksConnectionGraph >::vertices_size_type size_type;
+        std::vector < size_type > component_ids(num_vertices(tracks_connection_graph_));
+        TrackManagerDFSVsitor< size_type * > vis(&component_ids[0], num_components);
+
+        depth_first_search(tracks_connection_graph_, visitor(vis));
+
+        return component_ids;
     }
 
     void TrackManager::GetAllTracksPositionAndId(std::vector<cv::Point2f> * frame_points, std::vector<int> * ids){

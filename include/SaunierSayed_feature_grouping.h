@@ -113,6 +113,16 @@ namespace SaunierSayed{
          */
         ConnectedComponents GetConnectedComponents() const;
 
+        //! Find the connected components map for the vertices
+        /**
+          \param[out] num_components Number of (connected) components
+
+          Note that only activated tracks are considered
+
+          \return a vector that maps a vertex_id/vertex_descriptor to the component id
+         */
+        std::vector<TracksConnectionGraph::vertices_size_type> GetConnectedComponentsMap(TracksConnectionGraph::vertices_size_type & num_components) const;
+
         //! Return the number of tracks
         int num_tracks();
 

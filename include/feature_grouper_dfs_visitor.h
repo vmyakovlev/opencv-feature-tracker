@@ -44,7 +44,9 @@ namespace SaunierSayed{
                 put(component_map_, u, current_component_id_);
                 current_component_id_++;
             }
-            printf("Visited %d: active? %d. Component id: %ld/%ld\n", g[u].id, g[u].activated, get(component_map_, u), num_vertices(g));
+
+            // debug
+            // printf("Visited %d: active? %d. Component id: %ld/%ld\n", g[u].id, g[u].activated, get(component_map_, u), num_vertices(g));
         }
 
         template < typename Edge, typename Graph >

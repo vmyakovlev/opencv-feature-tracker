@@ -43,6 +43,7 @@ namespace SaunierSayed{
 
     typedef adjacency_list <listS, vecS, undirectedS, TrackInformation, LinkInformation> TracksConnectionGraph;
 
+
     /** \class TrackManager
 
       This class implements a manager which group features based on how they move together. It implements the algorithm

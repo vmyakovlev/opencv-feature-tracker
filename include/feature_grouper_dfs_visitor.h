@@ -2,7 +2,7 @@
 #define __FEATURE_GROUPER_DFS_VISITOR_
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/depth_first_search.hpp>
-
+#include <stdlib.h>
 namespace SaunierSayed{
 
     /** \class TrackManagerDFSVistor
@@ -19,9 +19,11 @@ namespace SaunierSayed{
     class TrackManagerDFSVsitor : public boost::default_dfs_visitor {
         typedef typename boost::property_traits < ComponentIDMap >::value_type T;
     public:
-        TrackManagerDFSVsitor(ComponentIDMap component_map)
-            :component_map_(component_map), current_component_id_(0)
-        {}
+        TrackManagerDFSVsitor(ComponentIDMap component_map, T & num_components)
+            :component_map_(component_map), current_component_id_(num_components)
+        {
+            current_component_id_ = 0;
+        }
 
         template < typename Vertex, typename Graph >
           void initialize_vertex(Vertex u, const Graph & g) const
@@ -38,24 +40,30 @@ namespace SaunierSayed{
             // If this vertex has not been assigned into a connected component
             // before, then we will give it a new component id
             // Of course, we need to make sure that it is activated as well
-            if (g[u].activated && get(component_map_, u) != num_vertices(g)){
+            if (g[u].activated && get(component_map_, u) == num_vertices(g)){
                 put(component_map_, u, current_component_id_);
                 current_component_id_++;
             }
-
+            printf("Visited %d: active? %d. Component id: %ld/%ld\n", g[u].id, g[u].activated, get(component_map_, u), num_vertices(g));
         }
 
         template < typename Edge, typename Graph >
           void tree_edge(Edge e, const Graph & g) const
         {
-            assert(get(component_map_, target(e,g)) != num_vertices(g));
+            // sanity check
+            //assert(get(component_map_, source(e,g)) != num_vertices(g));
+            // NOTE: the above cannot be guaranteed, think of a node with two children.
+            //assert(get(component_map_, target(e,g)) != num_vertices(g));
+            // NOTE: the above cannot be guaranteed, think of three vertices connected to each other
+
+            // if this adjacent vertex is activated, assign it the same component id
             if (g[target(e,g)].activated){
                 put(component_map_, target(e,g),  get(component_map_, source(e,g)));
             }
 
         }
 
-        T current_component_id_;
+        T & current_component_id_;
         ComponentIDMap component_map_;
     };
 };

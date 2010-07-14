@@ -302,13 +302,13 @@ TEST_F(SSTrackManagerTest, GetConnectedComponents){
 
     ss::ConnectedComponents connected_components = track_manager_.GetConnectedComponents();
 
-    // There are 4 components: one that has 3 element, the other two have 1 elements
-    ASSERT_EQ(4, connected_components.size());
 
-    ASSERT_EQ(1, connected_components[0].size());
+    ASSERT_EQ(1, connected_components.size());
 
-    ASSERT_EQ(1, connected_components[1][0].id);
-    ASSERT_EQ(3, connected_components[1][1].id);
+    ASSERT_EQ(4, connected_components[0].size());
 
-    ASSERT_EQ(1, connected_components[2].size());
+    ASSERT_EQ(0, connected_components[0][0].id);
+    ASSERT_EQ(1, connected_components[0][1].id);
+    ASSERT_EQ(2, connected_components[0][2].id);
+    ASSERT_EQ(3, connected_components[0][3].id);
 }

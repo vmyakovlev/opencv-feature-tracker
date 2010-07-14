@@ -411,16 +411,14 @@ namespace SaunierSayed{
 
     ConnectedComponents TrackManager::GetConnectedComponents() const{
         // Call Boost Graph connected component function
-        typedef std::map<TracksConnectionGraph::vertex_descriptor, TracksConnectionGraph::vertices_size_type> component_type;
-        component_type component;
-        boost::associative_property_map< component_type > component_map(component);
-
         typedef graph_traits < TracksConnectionGraph >::vertices_size_type size_type;
         std::vector < size_type > component_ids(num_vertices(tracks_connection_graph_));
-        TrackManagerDFSVsitor< size_type * > vis(&component_ids[0]);
+
+        size_type num_components;
+        TrackManagerDFSVsitor< size_type * > vis(&component_ids[0], num_components);
 
         depth_first_search(tracks_connection_graph_, visitor(vis));
-        int num_components = vis.current_component_id_;
+
 
         ConnectedComponents return_connected_components(num_components);
 
@@ -431,12 +429,9 @@ namespace SaunierSayed{
         // component_id => [vertex_id_1, vertex_id_2, vertex_id_3, ...]
 
         //assert(all_tracks.size() == component.size())
-        TracksConnectionGraph::vertices_size_type component_id;
-        component_type::iterator it = component.begin();
-        for (; it != component.end(); it++){
-            component_id = (*it).second; // this gives the id that this track is assigned to
-            return_connected_components[component_id].push_back(
-                    get_track_information((*it).first)
+        for (int i=0; i<component_ids.size(); ++i){
+            return_connected_components[component_ids[i]].push_back(
+                    get_track_information(i)
                     );
         }
 

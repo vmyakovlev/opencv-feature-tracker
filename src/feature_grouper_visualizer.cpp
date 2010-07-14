@@ -1,4 +1,5 @@
 #include "feature_grouper_visualizer.h"
+#include "color_pallete.h"
 
 namespace SaunierSayed{
     FeatureGrouperVisualizer::FeatureGrouperVisualizer(Mat homography_matrix, SaunierSayed::TrackManager *feature_grouper){
@@ -56,21 +57,29 @@ namespace SaunierSayed{
             position_in_world = (graph)[*vi].pos;
             convert_to_image_coordinate(position_in_world, homography_matrix_, &position_in_image);
 
-            // Draw this track
-            if(graph[*vi].previous_points.size() >= feature_grouper_->maximum_previous_points_remembered_)
-                color = CV_RGB(0,0,255);
-            else
-                color = CV_RGB(255,0,0);
+            TracksConnectionGraph::vertices_size_type num_components;
+            std::vector<TracksConnectionGraph::vertices_size_type> connected_components_map = feature_grouper_->GetConnectedComponentsMap(num_components);
 
             if (is_draw_inactive){
+                // Draw this track with only two colors (blue for those tracked for a long time, red otherwise)
+                if(graph[*vi].previous_points.size() >= feature_grouper_->maximum_previous_points_remembered_){
+                    color = CV_RGB(0,0,255);
+                } else {
+                    color = CV_RGB(255,0,0);
+                }
                 circle(image_, position_in_image, 1, color);
             } else {
                 if (graph[*vi].activated){
+                    // color this vertex based on its assigned component_id
+                    if (connected_components_map[*vi] >= ColorPallete::NUM_COLORS_IN_PALLETE){
+                        color = CV_RGB(*vi % 255, *vi % 255, *vi % 255);
+                    } else {
+                        color = ColorPallete::colors[connected_components_map[*vi]];
+                    }
+
                     circle(image_, position_in_image, 1, color);
                 }
             }
-
-
 
             // Write Text Information for this track
             if (is_draw_coordinate){

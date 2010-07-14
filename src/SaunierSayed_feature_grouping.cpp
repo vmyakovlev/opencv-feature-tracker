@@ -1,4 +1,5 @@
 #include "SaunierSayed_feature_grouping.h"
+#include "feature_grouper_dfs_visitor.h"
 #include <boost/graph/connected_components.hpp>
 #include <boost/property_map.hpp>
 #include <iostream>
@@ -414,7 +415,12 @@ namespace SaunierSayed{
         component_type component;
         boost::associative_property_map< component_type > component_map(component);
 
-        int num_components = connected_components(tracks_connection_graph_, component_map);
+        typedef graph_traits < TracksConnectionGraph >::vertices_size_type size_type;
+        std::vector < size_type > component_ids(num_vertices(tracks_connection_graph_));
+        TrackManagerDFSVsitor< size_type * > vis(&component_ids[0]);
+
+        depth_first_search(tracks_connection_graph_, visitor(vis));
+        int num_components = vis.current_component_id_;
 
         ConnectedComponents return_connected_components(num_components);
 

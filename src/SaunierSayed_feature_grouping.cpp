@@ -124,13 +124,15 @@ namespace SaunierSayed{
 
             // connect this new vertex to all current vertices
             for(; vi!=viend; vi++){
-                tie(e, is_edge_addition_success) = add_edge(v, *vi, tracks_connection_graph_);
-
-                // Assign some initial values for this edge information
                 distance = Distance(v, *vi);
-                tracks_connection_graph_[e].active = false;
-                tracks_connection_graph_[e].min_distance = distance;
-                tracks_connection_graph_[e].max_distance = distance;
+
+                if (distance <= maximum_distance_threshold_){
+                    tie(e, is_edge_addition_success) = add_edge(v, *vi, tracks_connection_graph_);
+                    // Assign some initial values for this edge information
+                    tracks_connection_graph_[e].active = false;
+                    tracks_connection_graph_[e].min_distance = distance;
+                    tracks_connection_graph_[e].max_distance = distance;
+                }
             }
         }
     }
@@ -226,7 +228,7 @@ namespace SaunierSayed{
         for( tie(vi,vi_end) = vertices(tracks_connection_graph_); vi!=vi_end; vi++){
             distance = Distance(v, *vi);
             if (tracks_connection_graph_[*vi].activated &&
-                distance < maximum_distance_threshold_ &&
+                //distance < maximum_distance_threshold_ &&
                 v!=*vi){
                 tie(e, operation_success) = edge(v, *vi, tracks_connection_graph_);
 

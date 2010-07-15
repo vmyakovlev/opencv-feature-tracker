@@ -101,7 +101,7 @@ namespace SaunierSayed{
                 position_in_world = (graph)[other_v].pos;
                 convert_to_image_coordinate(position_in_world, homography_matrix_, &position_in_image2);
 
-                line(image_, position_in_image, position_in_image2, CV_RGB(0,255,0));
+                line(image_, position_in_image, position_in_image2, color);
             }
         }
     }

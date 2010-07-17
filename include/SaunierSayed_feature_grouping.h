@@ -12,6 +12,8 @@ using namespace boost;
 
 /** Implemetation of Saunier Sayed 2006 algorithm. For the algorithm section, check page 4 of Saunier Sayed
   2006 A feature-based tracking algorithm for vehicles in intersections.
+
+  \todo Some types that are currently used for id uses int which might cause problems for very long videos
 */
 namespace SaunierSayed{
 
@@ -23,13 +25,9 @@ namespace SaunierSayed{
     } LinkInformation;
 
     typedef struct TrackInformation_{
-        int id; // if of the track (vertex) (synced with vertex_index internally managed by BGL)
+        int id; // if of the track (vertex)
         cv::Point2f pos;
-        std::deque<cv::Point2f> previous_points; // save a fixed set of previous points
-        cv::Point2f average_position; // Average position of this track stored in previous_points. For tracks that have strong movements,
-                                // their new positions are further and further away from the average position.
-                                // For tracks that stay stationary (e.g. scene objects, parked vehicles), their
-                                // new position stay around this value.
+        int component_id; // which component does this track belong? -1 for no component
         std::deque<float> previous_displacements; // save a fixed set of previous displacements
                                                         // the number of previous displacements = number of previous points - 1
         int number_of_times_tracked;
@@ -52,6 +50,7 @@ namespace SaunierSayed{
       \todo Systematically remove points that are not tracked
     */
     class TrackManager{
+        typedef long int ComponentIdType;
     public:
         /**
           The visualizer will need the graph information of this class in order to visualizer the graph on the image
@@ -186,6 +185,7 @@ namespace SaunierSayed{
                                                        const std::vector<TracksConnectionGraph::vertex_descriptor> & vertices_to_consider,
                                                        std::set<int> *output_found_track_ids) const;
 
+        void MergeComponentId(ComponentIdType from_component_id, ComponentIdType to_component_id);
         TracksConnectionGraph tracks_connection_graph_;
 
         // Some parameters
@@ -208,6 +208,7 @@ namespace SaunierSayed{
         // Variables for logging
         int current_time_stamp_id_;
         int next_track_id_;
+        ComponentIdType next_component_id_;
         std::ofstream log_file_;
     };
 }

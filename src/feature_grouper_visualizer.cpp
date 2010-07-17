@@ -58,11 +58,11 @@ namespace SaunierSayed{
             convert_to_image_coordinate(position_in_world, homography_matrix_, &position_in_image);
 
             TracksConnectionGraph::vertices_size_type num_components;
-            std::vector<TracksConnectionGraph::vertices_size_type> connected_components_map = feature_grouper_->GetConnectedComponentsMap(num_components);
+//            std::vector<TracksConnectionGraph::vertices_size_type> connected_components_map = feature_grouper_->GetConnectedComponentsMap(num_components);
 
             if (is_draw_inactive){
                 // Draw this track with only two colors (blue for those tracked for a long time, red otherwise)
-                if(graph[*vi].previous_points.size() >= feature_grouper_->maximum_previous_points_remembered_){
+                if(graph[*vi].previous_displacements.size() >= feature_grouper_->maximum_previous_points_remembered_){
                     color = CV_RGB(0,0,255);
                 } else {
                     color = CV_RGB(255,0,0);
@@ -71,11 +71,7 @@ namespace SaunierSayed{
             } else {
                 if (graph[*vi].activated){
                     // color this vertex based on its assigned component_id
-                    if (connected_components_map[*vi] >= ColorPallete::NUM_COLORS_IN_PALLETE){
-                        color = CV_RGB(*vi % 255, *vi % 255, *vi % 255);
-                    } else {
-                        color = ColorPallete::colors[connected_components_map[*vi]];
-                    }
+                    color = ColorPallete::colors[graph[*vi].component_id % ColorPallete::NUM_COLORS_IN_PALLETE];
 
                     circle(image_, position_in_image, 1, color);
                 }

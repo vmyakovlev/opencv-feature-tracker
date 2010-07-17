@@ -80,7 +80,7 @@ int main (int argc, char ** argv){
 
     //**************************************************************
     // PREPARE TOOLS FOR EXTRACTING FEATURES
-    ShiTomashiFeatureDetector feature_detector(300, 0.1, 2, 2, false, 0.04);
+    ShiTomashiFeatureDetector feature_detector(500, 0.1, 1, 3, false, 0.04);
     KLTTracker feature_matcher;
 
     vector<KeyPoint> key_points;

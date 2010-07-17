@@ -35,6 +35,7 @@ namespace SaunierSayed{
 
         current_time_stamp_id_ = 0;
         next_track_id_ = 0;
+        next_component_id_ = 0;
     }
 
     TrackManager::~TrackManager(){
@@ -113,8 +114,6 @@ namespace SaunierSayed{
             tracks_connection_graph_[v].pos = new_points[i];
             tracks_connection_graph_[v].activated = false;
             tracks_connection_graph_[v].number_of_times_tracked = 1;
-            tracks_connection_graph_[v].average_position = new_points[i];
-            tracks_connection_graph_[v].previous_points.push_back(new_points[i]);
             tracks_connection_graph_[v].last_time_tracked = current_time_stamp_id_;
 
             // write out the newly assigned id for this point
@@ -213,33 +212,50 @@ namespace SaunierSayed{
     }
 
     void TrackManager::ActivateTrack(TracksConnectionGraph::vertex_descriptor v){
-        TracksConnectionGraph::edge_descriptor e;
-        bool operation_success;
-
         tracks_connection_graph_[v].activated = true;
+        tracks_connection_graph_[v].component_id = -1;
 
         // *****************************************
-        // find all close-by tracks and connect them
+        // find adjacent tracks and activate them
+        // also iteratively update the connected component id for each track
+        // NOTE: during AddPoint, the track has been connected to nearby tracks. Ever since it was
+        //       added, its behavior with respect to adjacent tracks have been checked to make sure
+        //       it doesn't deviate too much. Thus, at this step, we only need to go through the adjacent
+        //       tracks and activate their connecting edges
 
-        // Find nearby tracks: this is naive algorithm but since we didn't build
-        // a kd-tree index for these vertex positions, there is not much else we can do
-        TracksConnectionGraph::vertex_iterator vi, vi_end;
-        float distance;
-        for( tie(vi,vi_end) = vertices(tracks_connection_graph_); vi!=vi_end; vi++){
-            distance = Distance(v, *vi);
-            if (tracks_connection_graph_[*vi].activated &&
-                //distance < maximum_distance_threshold_ &&
-                v!=*vi){
-                tie(e, operation_success) = edge(v, *vi, tracks_connection_graph_);
+        TracksConnectionGraph::out_edge_iterator ei, eiend;
+        TracksConnectionGraph::vertex_descriptor other_vertex;
+        for( tie(ei,eiend) = out_edges(v, tracks_connection_graph_); ei!=eiend; ei++){
+            other_vertex = target(*ei, tracks_connection_graph_);
 
-                if (!operation_success){
-                    // Although they are close to each other, they have been moving non-harmoniously
-                    // and the edge had been previously severed
-                    continue;
+            // Go through the adjacent vertices and find a suitable component id for our vertex
+            if (tracks_connection_graph_[other_vertex].activated){
+                // This track is also activated, activate the edge between them
+                tracks_connection_graph_[*ei].active = true;
+
+                // If our current track has no component_id, then we use the one from this vertex
+                if (tracks_connection_graph_[v].component_id < 0){
+                    tracks_connection_graph_[v].component_id = tracks_connection_graph_[other_vertex].component_id;
+                } else if (tracks_connection_graph_[v].component_id != tracks_connection_graph_[other_vertex].component_id){
+                    // Hmm, our track has been assigned a component id
+                    // This means, we need to merge two component ids.
+                    // TODO: on merging component id: we can do it the naive way by going through
+                    //       all tracks and change the component_id. Or we can be a bit smarter.
+                    //       Instead of storing component_id at each vertex, we store a pointer to
+                    //       a component id. That way, if we update the value of the component id
+                    //       that it is pointing to, all vertices pointing to the same component id¡
+                    //       will also get updated. For now, we will just do it the naive way.
+                    MergeComponentId(tracks_connection_graph_[other_vertex].component_id, tracks_connection_graph_[v].component_id);
+
                 }
-
-                tracks_connection_graph_[e].active = true;
             }
+        }
+
+        // If we are unable to find a nearby vertex with some component_id, then let's assign a new
+        // component_id to this vertex
+        if (tracks_connection_graph_[v].component_id < 0){
+            tracks_connection_graph_[v].component_id = next_component_id_;
+            next_component_id_ ++;
         }
     }
 
@@ -505,7 +521,6 @@ namespace SaunierSayed{
         track_info.id = tracks_connection_graph_[v].id;
         track_info.activated = tracks_connection_graph_[v].activated;
         track_info.last_time_tracked = tracks_connection_graph_[v].last_time_tracked;
-        track_info.average_position = tracks_connection_graph_[v].average_position;
         track_info.previous_displacements = tracks_connection_graph_[v].previous_displacements;
 
         return track_info;
@@ -526,23 +541,12 @@ namespace SaunierSayed{
     /** \brief Update the track (desribed by v) with a new position
       */
     void TrackManager::UpdatePoint(const cv::Point2f &new_position, const TracksConnectionGraph::vertex_descriptor & v){
-        int number_of_times_tracked = tracks_connection_graph_[v].number_of_times_tracked;
-        tracks_connection_graph_[v].previous_points.push_back(new_position);
         tracks_connection_graph_[v].previous_displacements.push_back(Distance(tracks_connection_graph_[v].pos, new_position));
 
         // update average position
-        if (tracks_connection_graph_[v].previous_points.size() > maximum_previous_points_remembered_){
-            cv::Point2f old_point = tracks_connection_graph_[v].previous_points.front();
-            tracks_connection_graph_[v].previous_points.pop_front();
-            tracks_connection_graph_[v].average_position = (tracks_connection_graph_[v].average_position * maximum_previous_points_remembered_ - old_point + new_position) * (1.0 / maximum_previous_points_remembered_);
-
-            // maintain the number of previous_displacements = # of previous points - 1
+        if (tracks_connection_graph_[v].previous_displacements.size() > maximum_previous_points_remembered_){
             tracks_connection_graph_[v].previous_displacements.pop_front();
-        } else {
-            tracks_connection_graph_[v].average_position = (tracks_connection_graph_[v].average_position * number_of_times_tracked + new_position)* (1.0 / (number_of_times_tracked+1));
         }
-
-//            printf("Average position: %f %f\n", tracks_connection_graph_[v].average_position.x, tracks_connection_graph_[v].average_position.y);
 
         tracks_connection_graph_[v].pos = new_position;
         tracks_connection_graph_[v].number_of_times_tracked++;
@@ -597,17 +601,13 @@ namespace SaunierSayed{
       \param vertices_to_consider Vertex descriptors of the points we need to visit
     */
     void TrackManager::ActivateTracksTrackedLongEnough(const std::vector<TracksConnectionGraph::vertex_descriptor> & vertices_to_consider){
-        float distance_moved_from_average;
         TracksConnectionGraph::vertex_descriptor vert;
 
         for (int i=0; i<vertices_to_consider.size(); i++){
             vert = vertices_to_consider[i];
 
-            // TODO: Shouldn't we calculate distance moved from average BEFORE we update the position?
-            distance_moved_from_average = Distance(tracks_connection_graph_[vert].average_position, tracks_connection_graph_[vert].pos);
             if (tracks_connection_graph_[vert].activated == false
-                && tracks_connection_graph_[vert].number_of_times_tracked >= min_num_frame_tracked_
-                && distance_moved_from_average > min_distance_moved_required_)
+                && tracks_connection_graph_[vert].number_of_times_tracked >= min_num_frame_tracked_)
             {
                 ActivateTrack(vert);
                 continue; // so that this point is not tested right away whether it has been moved or not
@@ -665,6 +665,18 @@ namespace SaunierSayed{
                     // Queue the id for removal
                     (*output_found_track_ids).insert(tracks_connection_graph_[vert].id);
                 }
+            }
+        }
+    }
+
+    /** \brief Change all vertices with from_component_id to to_component_id
+    */
+    void TrackManager::MergeComponentId(ComponentIdType from_component_id, ComponentIdType to_component_id){
+        TracksConnectionGraph::vertex_iterator vi, viend;
+
+        for (tie(vi,viend)=vertices(tracks_connection_graph_); vi!=viend; vi++){
+            if (tracks_connection_graph_[*vi].component_id == from_component_id){
+                tracks_connection_graph_[*vi].component_id == to_component_id;
             }
         }
     }

@@ -610,7 +610,6 @@ namespace SaunierSayed{
                 && tracks_connection_graph_[vert].number_of_times_tracked >= min_num_frame_tracked_)
             {
                 ActivateTrack(vert);
-                continue; // so that this point is not tested right away whether it has been moved or not
             }
         }
     }

@@ -1,6 +1,8 @@
 #include "emd_matcher.h"
 #include "blob_feature.h"
 
+using namespace cv;
+
 template<class DistanceType>
 void EMDDescriptorMatcher<DistanceType>::index(const std::vector<cv::KeyPoint>& db_keypoints,
                                  const cv::Mat& db_descriptors){

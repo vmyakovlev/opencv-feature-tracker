@@ -3,8 +3,6 @@
 #include <cv.h>
 #include "feature.h"
 
-using namespace cv;
-
 /** \class BlobDescriptorExtractor
   Extract feature from blobs. Blobs are converted to cv::Keypoint
   (thus losing some information)
@@ -14,7 +12,7 @@ using namespace cv;
 class BlobDescriptorExtractor : public DescriptorExtractor
 {
 public:
-    Mat blob_mean_color(const Mat & image, const KeyPoint & keypoint);
+    cv::Mat blob_mean_color(const cv::Mat & image, const cv::KeyPoint & keypoint);
     void compute(const cv::Mat& image,
                  std::vector<cv::KeyPoint>& keypoints,
                  cv::Mat& descriptors);

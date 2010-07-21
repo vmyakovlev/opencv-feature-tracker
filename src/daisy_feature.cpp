@@ -1,5 +1,8 @@
 #include "daisy_feature.h"
 #include <highgui.h>
+
+using namespace cv;
+
 DaisyDescriptorExtractor::DaisyDescriptorExtractor(double rad, int radq, int histq, int thq){
     verbose_level_ = 0;
     rad_ = rad;

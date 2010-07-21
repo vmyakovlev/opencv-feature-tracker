@@ -4,7 +4,7 @@
 #include "cv.h"
 #include "feature.h"
 
-class ShiTomashiFeatureDetector : public FeatureDetector{
+class ShiTomashiFeatureDetector : public ::FeatureDetector{
 public:
     ShiTomashiFeatureDetector(int max_corners = 100, double quality_level = 0.1, double min_distance = 5,
                               int block_size = 3, bool use_harris_detector = false, double k = 0.04) :
@@ -16,7 +16,7 @@ public:
                         std::vector<cv::KeyPoint>& keypoints,
                         const cv::Mat& mask = cv::Mat() ){
 
-        vector<Point2f> corners;
+        std::vector<cv::Point2f> corners;
         cv::goodFeaturesToTrack(image, corners, max_corners_, quality_level_, min_distance_, mask, block_size_, use_harris_detector_, k_ );
 
         // convert these Point2f into cv::KeyPoint

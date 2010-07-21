@@ -1,6 +1,6 @@
 #include "nch_feature.h"
 #include <iostream>
-
+using namespace cv;
 using std::cout;
 using std::endl;
 

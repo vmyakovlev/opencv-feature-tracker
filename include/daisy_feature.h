@@ -3,12 +3,11 @@
 #include <cv.h>
 #include "feature.h"
 #include <daisy/daisy.h>
-using namespace cv;
 
 /** \class DaisyFeatureExtractor
   Extract DAISY features from input image
  */
-class DaisyDescriptorExtractor : public DescriptorExtractor
+class DaisyDescriptorExtractor : public ::DescriptorExtractor
 {
 public:   
     DaisyDescriptorExtractor(double rad=16, int radq=3, int histq=8, int thq=8);
@@ -31,7 +30,7 @@ private:
     int thq_;
 
     daisy* desc_; //!< Daisy descriptor structure
-    Mat image_; //!< in case the input image is not continous, we need to copy it before processing
+    cv::Mat image_; //!< in case the input image is not continous, we need to copy it before processing
 };
 
 #endif

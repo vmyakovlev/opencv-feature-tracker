@@ -20,15 +20,15 @@ public:
                        const cv::Mat& query_descriptors,
                        std::vector<int>& matches,
                        std::vector<float>& distance) const;
-    void SetWeights(const Mat & weight1, const Mat & weight2);
+    void SetWeights(const cv::Mat & weight1, const cv::Mat & weight2);
 private:
     // These signature matrices are to be set up so that
     // cvCalcEMD2 can be used
-    Mat signature1_; //!< Signature matrix for descriptor 1
-    Mat signature2_; //!< Signature matrix for descriptor 2
+    cv::Mat signature1_; //!< Signature matrix for descriptor 1
+    cv::Mat signature2_; //!< Signature matrix for descriptor 2
 
-    Mat weight1_;
-    Mat weight2_;
+    cv::Mat weight1_;
+    cv::Mat weight2_;
 
     // Save these information from index() so they can be used in match()
     std::vector<cv::KeyPoint> db_keypoints_;

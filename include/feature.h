@@ -2,8 +2,6 @@
 #define __FEATURE_H
 #include <cv.h>
 
-using namespace cv;
-
 /** \file Interfaces for feature detector and descriptor extractor
 
   I prefer these class interface functions to be non-const so that their
@@ -100,16 +98,16 @@ public:
     //virtual void add(KeyPointCollection& keypoints);
 
     //! Adds keypoints from a single image to the training set (descriptors are supposed to be calculated here)
-    virtual void add(const Mat& image, vector<KeyPoint>& points) = 0;
+    virtual void add(const cv::Mat& image, std::vector<cv::KeyPoint>& points) = 0;
 
     //! Classifies test keypoints
-    virtual void classify(const Mat& image, vector<KeyPoint>& points){};
+    virtual void classify(const cv::Mat& image, std::vector<cv::KeyPoint>& points){};
 
     //! Matches test keypoints to the training set
-    virtual void match(const Mat& image, vector<KeyPoint>& points, vector<int>& indices){};
+    virtual void match(const cv::Mat& image, std::vector<cv::KeyPoint>& points, std::vector<int>& indices){};
 
     //! Search for training keypoints in the test image
-    virtual void search(const Mat& test_image, vector<KeyPoint>& output_found_points, vector<int>& training_point_indices){};
+    virtual void search(const cv::Mat& test_image, std::vector<cv::KeyPoint>& output_found_points, std::vector<int>& training_point_indices){};
 };
 
 

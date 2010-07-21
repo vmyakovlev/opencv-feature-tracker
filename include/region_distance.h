@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "misc.h"
+using namespace cv;
 
 template <class DistT>
 class RegionDistance

@@ -4,7 +4,9 @@
 
 #include <cv.h>
 #include <highgui.h>
+
 using cv::Mat;
+using namespace cv;
 
 TEST(TestDaisy, LoadImage){
     Mat im = imread(data_folder_path + "/frame_0000.jpg",0);

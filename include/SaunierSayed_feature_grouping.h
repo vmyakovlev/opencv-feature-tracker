@@ -47,6 +47,14 @@ namespace SaunierSayed{
       This class implements a manager which group features based on how they move together. It implements the algorithm
       proposed in Saunier and Sayed 2006.
 
+      A track manager is different from a tracker. One would use a track manager when he has points in world space that belong
+      to different objects. Yet, he does not know which point belong to which object. A track manager will be able to tell him
+      such information given enough information about how the tracks move as time passes.
+
+      A tracker also collect information about how a track has moved over time. However, the purpose of a tracker is to predict
+      the position/state/size (and other properties) of a track before it receives the information of the next frame. In effect,
+      a tracker acts similar to a particle filter. It is a model that predict.
+
       \todo Systematically remove points that are not tracked
     */
     class TrackManager{

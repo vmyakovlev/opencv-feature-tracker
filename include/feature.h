@@ -19,7 +19,7 @@ class FeatureDetector
 public:
     virtual void detect(const cv::Mat& image,
                         std::vector<cv::KeyPoint>& keypoints,
-                        const cv::Mat& mask = cv::Mat() ) = 0 ;
+                        const cv::Mat& mask = cv::Mat() ) const = 0 ;
 };
 
 /** \class DescriptorExtractor
@@ -40,7 +40,7 @@ class DescriptorExtractor
     */
     virtual void compute(const cv::Mat& image,
                          std::vector<cv::KeyPoint>& keypoints,
-                         cv::Mat& descriptors) = 0;
+                         cv::Mat& descriptors) const = 0;
 
     /** \brief Compute dense descriptor
 

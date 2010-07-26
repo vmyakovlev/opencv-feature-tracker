@@ -15,14 +15,14 @@ NCHDescriptorExtractor::NCHDescriptorExtractor( int bins )
 
 NCHDescriptorExtractor::~NCHDescriptorExtractor() {}
 
-void NCHDescriptorExtractor::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors )
+void NCHDescriptorExtractor::compute( const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors ) const
 {
 	cout << "FATAL ERROR: Class NCHFeatureExtractor does not have method compute() implemented." << endl
 		 << "Method compute_dense() should be called instead." << endl;
     CV_Error(CV_StsNotImplemented, "This descriptor does not support compute()");
 }
 
-void NCHDescriptorExtractor::compute_dense( const cv::Mat& image, cv::MatND& descriptor )
+void NCHDescriptorExtractor::compute_dense( const cv::Mat& image, cv::MatND& descriptor ) const
 {
 	// assume the input image is 3-channel
 	CV_Assert(image.channels() == 3);
@@ -79,7 +79,7 @@ void NCHDescriptorExtractor::compute_dense( const cv::Mat& image, cv::MatND& des
 
 }
 
-void NCHDescriptorExtractor::compute_dense( const std::vector<cv::Mat>& images, std::vector<cv::MatND>& descriptors )
+void NCHDescriptorExtractor::compute_dense( const std::vector<cv::Mat>& images, std::vector<cv::MatND>& descriptors ) const
 {
 	int num_of_inputs = images.size();
 	for (int i = 0; i < num_of_inputs; ++i) {

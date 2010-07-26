@@ -19,7 +19,7 @@ DaisyDescriptorExtractor::~DaisyDescriptorExtractor(){
 }
 
 void DaisyDescriptorExtractor::compute_dense(const cv::Mat& image,
-                                       cv::Mat& descriptors){
+                                       cv::Mat& descriptors) const {
     if (image.channels() != 1){
         CV_Error(CV_StsBadSize, "input image needs to be single-channel");
     }
@@ -68,7 +68,7 @@ void DaisyDescriptorExtractor::compute_dense(const cv::Mat& image,
 */
 void DaisyDescriptorExtractor::compute(const cv::Mat& image,
                                   std::vector<cv::KeyPoint>& keypoints,
-                                  cv::Mat& descriptors){
+                                  cv::Mat& descriptors) const{
     // Compute dense descriptor
     Mat dense_descriptor;
     compute_dense(image, dense_descriptor);
@@ -105,7 +105,7 @@ void DaisyDescriptorExtractor::compute(const cv::Mat& image,
   */
 void DaisyDescriptorExtractor::compute(const cv::Mat& image,
                                      cv::Mat& query_points,
-                                     cv::Mat& descriptors){
+                                     cv::Mat& descriptors) const{
     // check that input image is only single channel
     CV_Assert(image.channels() == 1)
 

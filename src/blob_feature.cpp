@@ -15,7 +15,7 @@ static unsigned int DESCRIPTOR_NUM_DIMENSION = 6;
   */
 void BlobDescriptorExtractor::compute(const cv::Mat& image,
                  std::vector<cv::KeyPoint>& keypoints,
-                 cv::Mat& descriptors)
+                 cv::Mat& descriptors) const
 {
     CV_Assert(image.channels() == 3)
 
@@ -51,7 +51,7 @@ void BlobDescriptorExtractor::compute(const cv::Mat& image,
     \todo Use CIELa*b* color instead of RGB
     \return a (1,3) matrix with the mean color of the blob
 */
-Mat BlobDescriptorExtractor::blob_mean_color(const Mat & image, const KeyPoint & keypoint){
+Mat BlobDescriptorExtractor::blob_mean_color(const Mat & image, const KeyPoint & keypoint) const{
     // first we need to get the upright bounding box for to start our scanline
     // NOTE: we lose one of the size dimension when we coverted our blob to keypoint
     Rect bounding_box = RotatedRect(keypoint.pt, Size(keypoint.size, keypoint.size), keypoint.angle).boundingRect();

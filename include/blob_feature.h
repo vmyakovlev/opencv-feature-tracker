@@ -12,10 +12,10 @@
 class BlobDescriptorExtractor : public DescriptorExtractor
 {
 public:
-    cv::Mat blob_mean_color(const cv::Mat & image, const cv::KeyPoint & keypoint);
+    cv::Mat blob_mean_color(const cv::Mat & image, const cv::KeyPoint & keypoint) const;
     void compute(const cv::Mat& image,
                  std::vector<cv::KeyPoint>& keypoints,
-                 cv::Mat& descriptors);
+                 cv::Mat& descriptors) const;
 private:
 
 };

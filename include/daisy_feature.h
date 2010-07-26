@@ -14,12 +14,12 @@ public:
     ~DaisyDescriptorExtractor();
     void compute(const cv::Mat& image,
                  std::vector<cv::KeyPoint>& keypoints,
-                 cv::Mat& descriptors);
+                 cv::Mat& descriptors) const;
     void compute(const cv::Mat& image,
                  cv::Mat& query_points,
-                 cv::Mat& descriptors);
+                 cv::Mat& descriptors) const;
     void compute_dense(const cv::Mat& image,
-                         cv::Mat& descriptors);
+                         cv::Mat& descriptors) const;
     int feature_length() const;
 private:
     int verbose_level_; //!< How verbose is our daisy computation output

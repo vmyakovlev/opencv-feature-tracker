@@ -12,13 +12,20 @@ Blob::Blob(){
     area_ = 0;
 }
 
-/** \brief Create a blob object given input detected points from MSER
+/** \brief Create a blob object given its contour points
 */
-Blob::Blob(const vector<Point> & mser_points ){
-    Mat points(mser_points);
-    convexHull(points, hull_);
-    Mat hull_points(hull_);
+Blob::Blob(const vector<Point> & contour_points ){
+    points_ = contour_points;
+
+    Mat points(contour_points);
+
+    // find bounding rectangle
+    vector<Point2f> hull;
+    convexHull(points, hull);
+    Mat hull_points(hull);
     bounding_rotated_rect_ =  minAreaRect(hull_points); // internally minAreaRect compute convex hull so oh well :D
+
+    // find the areas
     area_ = contourArea(points);
 }
 
@@ -26,8 +33,8 @@ Blob::~Blob(){}
 
 /** \brief Draw this blob to the input image
 */
-void Blob::draw_to(Mat im) const{
-    draw_hull(im,hull_, CV_RGB(255,0,0));
+void Blob::DrawTo(Mat im) const{
+    draw_hull(im, points_, CV_RGB(255,0,0));
 
     // blob minAreaRect drawn as an Ellipse
     rotated_rect(im, bounding_rotated_rect_, CV_RGB(0,255,0));
@@ -38,7 +45,9 @@ void Blob::draw_to(Mat im) const{
 
 /** \brief Get you the area of this blob
 */
-double Blob::area() { return area_;}
+double Blob::Area() const{
+    return area_;
+}
 
 /** \brief Conversion to keypoint to fit into keypoint
 

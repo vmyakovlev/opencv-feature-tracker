@@ -41,7 +41,7 @@ int main (int argc, char ** argv){
 
     //**************************************************************
     // PRINT OUT PARAMETERS
-    cout << "Compute homograph from points: " << FLAGS_homography_point_correspondence << endl;
+    cout << "Compute homography from points: " << FLAGS_homography_point_correspondence << endl;
     cout << "Debug GUI: " << FLAGS_debug_gui << endl;
     cout << "Visualize feature grouper at each time step to: " << FLAGS_visualize_per_step << endl;
     cout << "Visualize with world coordinates?: " << FLAGS_visualize_with_coordinates << endl;
@@ -51,7 +51,7 @@ int main (int argc, char ** argv){
     cout << "Max distance activated: " << FLAGS_maximum_distance_activated << endl;
     cout << "Segmentation threshold: " << FLAGS_segmentation_threshold << endl;
     cout << "Minimum variance required: " << FLAGS_minimum_variance_required << endl;
-    cout << "Minimum distance between two tracks before they are considered duplicate: " << FLAGS_min_distance_between_tracks << endl;
+    cout << "Minimum distance between two tracks before they are considered duplicates: " << FLAGS_min_distance_between_tracks << endl;
 
     //**************************************************************
     // Get the homography which brings coordinates in the image ground plane to world ground plane

@@ -33,7 +33,7 @@ target_link_libraries(${proj_name}
 ENDMACRO(QuickExecutable)
 
 file(GLOB SRCS src/*.cpp src/*.c)
-file(GLOB HDRS include/*.h)
+file(GLOB HDRS include/*.h include/*.hpp include/opencv2/video/*.hpp)
 
 QuickSetup()
 QuickExecutable(DaisyDescriptor ${SRCS} ${HDRS} DAISY.cxx)
@@ -47,6 +47,7 @@ QuickExecutable(ExtractDaisyToLibSVMPackage ${SRCS} ${HDRS} ExtractDaisyToLibSVM
 QuickExecutable(ExtractDaisyToTXT ${SRCS} ${HDRS} ExtractDaisyToTXT.cxx)
 QuickExecutable(TrackMatchingDistance ${SRCS} ${HDRS} TrackMatchingDistance.cxx)
 QuickExecutable(SaunierSayed ${SRCS} ${HDRS} SaunierSayed.cxx)
+QuickExecutable(BlobTrackPedestrian ${SRCS} ${HDRS} BlobTrackPedestrian.cxx)
 
 OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?")
 IF(COMPILE_TESTS)

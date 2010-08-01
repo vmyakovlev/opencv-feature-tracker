@@ -13,7 +13,7 @@ using namespace cv;
 class Blob{
 public:
     Blob();
-    Blob(const vector<Point> & contour_points);
+    Blob(const vector<Point2f> & contour_points);
     ~Blob();
     double Area() const;
     RotatedRect GetBoundingRectangle() const;
@@ -24,7 +24,7 @@ public:
     // Visualization helper methods
     void DrawTo(Mat im) const;
 private:
-    vector<Point> points_; //!< points that make up this contour
+    vector<Point2f> points_; //!< points that make up this contour
     RotatedRect bounding_rotated_rect_; //!< a minimum-area bounding rotated rectangle
     double area_; //!< blob area
 };

@@ -14,7 +14,7 @@ Blob::Blob(){
 
 /** \brief Create a blob object given its contour points
 */
-Blob::Blob(const vector<Point> & contour_points ){
+Blob::Blob(const vector<Point2f> & contour_points ){
     points_ = contour_points;
 
     Mat points(contour_points);

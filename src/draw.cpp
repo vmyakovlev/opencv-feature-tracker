@@ -15,6 +15,15 @@ void draw_hull(Mat im, const vector<Point> hull_points, CvScalar color){
     line(im, hull_points[npts-1], hull_points[0], color);
 }
 
+void draw_hull(Mat im, const vector<Point2f> hull_points, CvScalar color){
+    vector<Point> points(hull_points.size());
+
+    for (size_t i=0; i<hull_points.size(); i++){
+        points[i] = hull_points[i];
+    }
+    draw_hull(im, points, color);
+}
+
 /** \brief Draw this rotated rectangle onto our image with this color
 
   This is just a special case of draw_hull where the number of points on the hull is 4

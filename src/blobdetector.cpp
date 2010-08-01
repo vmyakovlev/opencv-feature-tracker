@@ -1,6 +1,6 @@
 #include <opencv2/video/blobdetector.hpp>
 #include <opencv2/opencv.hpp>
-
+#include "misc.h"
 namespace cv{
     BlobDetector::BlobDetector(){}
 
@@ -19,12 +19,17 @@ namespace cv{
         threshold(input_foreground_mask_image, foreground_mask, 128, 255, THRESH_BINARY);
 
         // find the contours
-        std::vector<std::vector<Point> > contour_points;
-        findContours(foreground_mask, contour_points, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+        // since findContours do not support Point2f, we need a little work
+        std::vector<std::vector<Point> > contour_points_2i;
+        findContours(foreground_mask, contour_points_2i, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
         // assign these contours into blobs
-        for (size_t i=0; i<contour_points.size(); i++){
-            found_blobs.push_back( Blob(contour_points[i]) );
+        std::vector<Point2f> points;
+        for (size_t i=0; i<contour_points_2i.size(); i++){
+            vector_one_to_another(contour_points_2i[i], points);
+            found_blobs.push_back( Blob(points) );
         }
+
+        return found_blobs;
     }
 }

@@ -2,7 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
-#include <opencv2/video/blobdetector.hpp>
+#include <opencv2/video/blobtrack2.hpp>
 #include "test_configuration.h"
 #include "Blob.h"
 

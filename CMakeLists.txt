@@ -32,7 +32,7 @@ target_link_libraries(${proj_name}
 )
 ENDMACRO(QuickExecutable)
 
-file(GLOB SRCS src/*.cpp src/*.c)
+file(GLOB SRCS src/*.cpp src/*.c src/featuretrack/*.cpp src/blobtrack/*.cpp)
 file(GLOB HDRS include/*.h include/*.hpp include/opencv2/video/*.hpp)
 
 QuickSetup()

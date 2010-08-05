@@ -6,7 +6,7 @@
 // Usage of new OpenCV include files
 // Only work with OpenCV SVN
 #include <opencv2/opencv.hpp>
-#include <opencv2/video/blobdetector.hpp>
+#include <opencv2/video/blobtrack2.hpp>
 
 using cv::Mat;
 using namespace std;

@@ -7,7 +7,7 @@ using namespace cv;
 
 /** \class Blob
   A blob can be defined by its contour. However, having a separate blob class is a mental
-  indication that we are dealing with this contour as an object. We are interested in this
+  indication that we are dealing with this contour as an object. That is, we are interested in this
   object's area, its center of mass, its enclosing rectangle ... .
 */
 class Blob{

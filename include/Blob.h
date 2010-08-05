@@ -2,7 +2,7 @@
 #define __BLOB_H
 #include <cv.h>
 #include <vector>
-using std::vector;
+#include <string>
 using namespace cv;
 
 /** \class Blob
@@ -13,7 +13,7 @@ using namespace cv;
 class Blob{
 public:
     Blob();
-    Blob(const vector<Point2f> & contour_points);
+    Blob(const std::vector<Point2f> & contour_points);
     ~Blob();
     double Area() const;
     RotatedRect GetBoundingRectangle() const;
@@ -22,9 +22,9 @@ public:
     operator KeyPoint() const;
 
     // Visualization helper methods
-    void DrawTo(Mat im) const;
+    void DrawTo(Mat im, const std::string custom_msg) const;
 private:
-    vector<Point2f> points_; //!< points that make up this contour
+    std::vector<Point2f> points_; //!< points that make up this contour
     RotatedRect bounding_rotated_rect_; //!< a minimum-area bounding rotated rectangle
     double area_; //!< blob area
 };

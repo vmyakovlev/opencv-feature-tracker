@@ -12,7 +12,7 @@ namespace cv{
     public:
         BlobDetector();
         //BlobDetector(); // fully parameterized specification
-        virtual std::vector<Blob> operator()(const Mat & input_foreground_mask_image) const;
+        virtual std::vector<Blob> operator()(const Mat & input_foreground_mask_image, int close_holes = 1) const;
     private:
         DISALLOW_COPY_AND_ASSIGN(BlobDetector);
     };

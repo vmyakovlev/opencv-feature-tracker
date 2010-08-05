@@ -32,8 +32,8 @@ int main (int argc, char ** argv){
 
     //**************************************************************
     // PREPARE TOOLS FOR BACKGROUND SUBTRACTION
-    cv::BackgroundSubtractorMOG background_subtractor();
-    cv::BlobDetector blob_detector();
+    cv::BackgroundSubtractorMOG background_subtractor;
+    cv::BlobDetector blob_detector;
 
     //**************************************************************
     // GRAB SOME INFORMATION ABOUT THE VIDEO
@@ -57,10 +57,11 @@ int main (int argc, char ** argv){
 
     //**************************************************************
     // SOME WINDOWS FOR VISUALIZATION
-    const string window1("Frame");
+    const string blob_window("Blobs");
     const string original_video("Original");
-    const string window2("World Coordinate");
-    cv::namedWindow(window2);
+    const string fg_window("Foreground");
+    cv::namedWindow(blob_window);
+    cv::namedWindow(fg_window);
     cv::namedWindow(original_video);
 
     int keypressed_code;
@@ -69,17 +70,42 @@ int main (int argc, char ** argv){
     // GO THROUGH THE ENTIRE VIDEO AND BUILD THE SPATIAL TEMPORAL GRAPH
     Mat prev_frame; // the previous frame in grayscale
     Mat next_frame;
+    Mat fg_mask; //foreground mask detected in each frame
+    Mat blob_image = cv::Mat::zeros(a_frame.size(), CV_8UC3); // for visualizing the detected blobs
 
     // Initialize our previous frame
     video_capture.grab();
     video_capture.retrieve(a_frame);
     cvtColor(a_frame,prev_frame, CV_RGB2GRAY);
 
+    std::vector<Blob> detected_blobs;
     int current_num_frame = 0;
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
         cvtColor(a_frame,next_frame, CV_RGB2GRAY);
         imshow(original_video, a_frame);
+
+        // Use the BackgroundSubtractor to subtract the background
+        background_subtractor(a_frame, fg_mask);
+
+        // Debug: Show foreground window
+        imshow(fg_window, fg_mask);
+
+        // Use Blob Detector to detect the blobs
+         detected_blobs = blob_detector(fg_mask, 1);
+
+         // Debug: Visualize detected blobs
+         blob_image.setTo(Scalar(0));
+         for (size_t i=0; i<detected_blobs.size(); i++){
+             detected_blobs[i].DrawTo(blob_image);
+         }
+         imshow(blob_window, blob_image);
+
+         // Handle GUI events by waiting for a key
+         keypressed_code = cv::waitKey();
+         if (keypressed_code == 27){ // ESC key
+             break;
+         }
 
         // some indication of stuff working
         cout << "\r" << current_num_frame << flush;

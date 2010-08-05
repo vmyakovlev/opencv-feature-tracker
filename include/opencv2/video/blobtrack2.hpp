@@ -11,7 +11,7 @@ namespace cv{
     class BlobDetector{
     public:
         BlobDetector();
-        //BlobDetector(); // fully parameter specification
+        //BlobDetector(); // fully parameterized specification
         virtual std::vector<Blob> operator()(const Mat & input_foreground_mask_image) const;
     private:
         DISALLOW_COPY_AND_ASSIGN(BlobDetector);

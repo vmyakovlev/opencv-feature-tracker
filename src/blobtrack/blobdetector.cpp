@@ -1,4 +1,4 @@
-#include <opencv2/video/blobdetector.hpp>
+#include <opencv2/video/blobtrack2.hpp>
 #include <opencv2/opencv.hpp>
 #include "misc.h"
 namespace cv{

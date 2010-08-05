@@ -96,8 +96,10 @@ int main (int argc, char ** argv){
 
          // Debug: Visualize detected blobs
          blob_image.setTo(Scalar(0));
+         char custom_message[50];
          for (size_t i=0; i<detected_blobs.size(); i++){
-             detected_blobs[i].DrawTo(blob_image);
+             sprintf(custom_message, "%d",i );
+             detected_blobs[i].DrawTo(blob_image, custom_message);
          }
          imshow(blob_window, blob_image);
 

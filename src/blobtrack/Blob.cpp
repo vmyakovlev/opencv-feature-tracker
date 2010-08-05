@@ -33,7 +33,7 @@ Blob::~Blob(){}
 
 /** \brief Draw this blob to the input image
 */
-void Blob::DrawTo(Mat im) const{
+void Blob::DrawTo(Mat im, const std::string custom_message) const{
     draw_hull(im, points_, CV_RGB(255,0,0));
 
     // blob minAreaRect drawn as an Ellipse
@@ -41,6 +41,11 @@ void Blob::DrawTo(Mat im) const{
 
     // blob center
     circle(im, bounding_rotated_rect_.center, 1, CV_RGB(0,0,255));
+
+    // Write a custom text
+    if (!custom_message.empty()){
+        cv::putText(im, custom_message, bounding_rotated_rect_.center, FONT_HERSHEY_PLAIN, 1, CV_RGB(255,255,255));
+    }
 }
 
 /** \brief Get you the area of this blob

@@ -17,6 +17,7 @@ public:
     ~Blob();
     double Area() const;
     RotatedRect GetBoundingRectangle() const;
+    Rect GetBoundingUprightRectangle() const;
 
     // Conversion to other objects
     operator KeyPoint() const;

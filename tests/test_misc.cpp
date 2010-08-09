@@ -53,8 +53,8 @@ TEST(TestMisc, UnWarpUsingHomographyFromPoints){
     // unwrap image
     Mat im = cv::imread(data_folder_path + "test_avi1.png");
     Mat unwarped_image;
-    cv::warpPerspective(im, unwarped_image, homography_matrix, cv::Size(400,400));
-    cv::imwrite("unwarped_frame_from_poins.png", unwarped_image);
+//    cv::warpPerspective(im, unwarped_image, homography_matrix, cv::Size(400,400));
+//    cv::imwrite("unwarped_frame_from_poins.png", unwarped_image);
 }
 
 TEST(TestMisc, UnWarpUsingHomographyMatrixImage){
@@ -293,4 +293,20 @@ TEST(TestOpenCV, ConvertVectorPoint2fToMat){
     ASSERT_EQ(4, points_mat2.rows);
     ASSERT_EQ(1, points_mat2.cols);
     ASSERT_EQ(2, points_mat2.channels());
+}
+
+TEST(TestMisc, ConstReferencePushBack){
+    std::vector<cv::Point2f> points;
+    points.push_back(cv::Point2f(2.5,1.6));
+    points.push_back(cv::Point2f(25,1.3));
+    points.push_back(cv::Point2f(2.6,1.2));
+    points.push_back(cv::Point2f(27,3.6));
+
+    int the_size = points.size();
+
+    points.push_back(points.at(points.size() - 1));
+
+    ASSERT_EQ(the_size+1, points.size());
+    ASSERT_EQ(points[3].x, points[4].x);
+    ASSERT_EQ(points[3].y, points[4].y);
 }

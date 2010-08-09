@@ -65,3 +65,13 @@ Blob::operator KeyPoint() const{
                     bounding_rotated_rect_.size.area() // response strength is similar to area
                     );
 }
+
+/** \brief Similar to get bounding box but returns an upright rectangle instead of a rotated one
+*/
+Rect Blob::GetBoundingUprightRectangle() const{
+    return GetBoundingRectangle().boundingRect();
+}
+
+RotatedRect Blob::GetBoundingRectangle() const{
+    return bounding_rotated_rect_;
+}

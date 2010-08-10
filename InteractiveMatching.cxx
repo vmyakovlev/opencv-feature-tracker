@@ -14,6 +14,9 @@ using std::vector;
 using namespace cv;
 
 /** \file InteractiveMatching.cxx Interactively match selected point in descriptor space
+
+  Given two images and the interested locations in the first image, finds that location in the
+  second image.
 */
 int main(int argc, char ** argv){
     if (argc<4){

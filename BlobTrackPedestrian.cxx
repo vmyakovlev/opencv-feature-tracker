@@ -1,3 +1,8 @@
+/** \file BlobTrackPedestrian
+
+  A demo that performs blob tracking on pedestrians. Documentations including different outputs in different versions
+  of this code can be found at https://code.google.com/p/opencv-feature-tracker/wiki/BlobTrackDemo
+*/
 #include <iostream>
 #include <fstream>
 #include <string>

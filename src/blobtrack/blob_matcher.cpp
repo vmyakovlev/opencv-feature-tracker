@@ -67,18 +67,44 @@ namespace cv{
 
     BlobTrajectoryTracker::BlobTrajectoryTracker(){
         current_time_ = 0;
+        next_blob_id_ = 0;
     }
 
-    /** \brief add new blobs to the tracker
-    */
-    void BlobTrajectoryTracker::addBlobs(const std::vector<Blob> & new_blobs){
+    /** \brief Add new blobs to the tracker
 
+      This method does not check whether these blobs are colliding with other blobs. i.e. These new blobs
+      might be the same as those old blobs.
+    */
+    void BlobTrajectoryTracker::addTracks(const std::vector<Blob> & new_blobs){
+        std::vector<Blob>::const_iterator it = new_blobs.begin();
+        for (; it!=new_blobs.end(); it++){
+            blobs_over_time_[current_time_][next_blob_id_] = *it;
+            next_blob_id_++;
+        }
     }
 
-    /** \brief update the blob information
-    */
-    void BlobTrajectoryTracker::updateBlobs(const std::vector<Blob> & new_blobs, const std::vector<int> & ids_to_update){
+    /** \brief Update the blob information
 
+      If you specify a track id that does not current exist, it will be added.
+
+      \param tracks_to_update key is the id of the track, value is the new blob object to update
+
+    */
+    void BlobTrajectoryTracker::updateTracks(const std::map<int, Blob> & tracks_to_update){
+        std::map<int, Blob>::const_iterator it = tracks_to_update.begin();
+        for( ; it!=tracks_to_update.end(); it++){
+            blobs_over_time_[current_time_][(*it).first] = (*it).second;
+        }
+    }
+
+    /** \brief remove certain tracks from the tracker
+      */
+    void BlobTrajectoryTracker::removeTracks(const std::vector<int> & ids_to_remove){
+        std::map<int, Blob>::iterator it;
+        for (size_t i=0; i<ids_to_remove.size(); i++){
+            it = blobs_over_time_[current_time_].find(ids_to_remove[i]);
+            blobs_over_time_[current_time_].erase(it);
+        }
     }
 
     /** \brief check if these new query blobs will fit into the trajectory

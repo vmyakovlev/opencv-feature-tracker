@@ -39,13 +39,15 @@ namespace cv{
     class BlobTrajectoryTracker {
     public:
         BlobTrajectoryTracker();
-        void addBlobs(const std::vector<Blob> & new_blobs);
-        void updateBlobs(const std::vector<Blob> & new_blobs, const std::vector<int> & ids_to_update);
+        void addTracks(const std::vector<Blob> & new_blobs);
+        void updateTracks(const std::map<int, Blob> & tracks_to_update);
+        void removeTracks(const std::vector<int> & ids_to_remove);
         bool isTrajectoryConsistent(const Blob & query_blobs, int target_track_id) const;
         void nextTimeInstance();
     private:
-        std::vector<std::vector<Blob> > blobs_over_time_;
+        std::vector<std::map<int, Blob> > blobs_over_time_;
         int current_time_;
+        int next_blob_id_;
     };
 
 

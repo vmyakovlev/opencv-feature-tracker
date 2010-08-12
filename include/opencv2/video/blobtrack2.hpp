@@ -42,7 +42,7 @@ namespace cv{
         void addTracks(const std::vector<Blob> & new_blobs);
         void updateTracks(const std::map<int, Blob> & tracks_to_update);
         void removeTracks(const std::vector<int> & ids_to_remove);
-        bool isTrajectoryConsistent(const Blob & query_blobs, int target_track_id) const;
+        bool isTrajectoryConsistent(const Blob & query_blobs, int target_track_id, float & error) const;
         void nextTimeInstance();
     private:
         std::vector<std::map<int, Blob> > blobs_over_time_;

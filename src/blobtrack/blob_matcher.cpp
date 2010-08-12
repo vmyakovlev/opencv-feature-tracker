@@ -29,6 +29,9 @@ namespace cv{
         // clear the output variable
         matches.resize(query_blobs.size());
 
+        float best_error = 1e11;
+        int best_track_id = -1;
+        float current_error;
         for (int i=0; i<query_blobs.size(); i++){
             matches[i] = -1;
 
@@ -38,7 +41,7 @@ namespace cv{
                     continue;
 
                 // found a close-by blob, time to check for trajectory
-                if (!trajectory_tracker_->isTrajectoryConsistent(query_blobs[i], j)){
+                if (!trajectory_tracker_->isTrajectoryConsistent(query_blobs[i], j, current_error)){
                     continue;
                 }
 
@@ -97,7 +100,7 @@ namespace cv{
         }
     }
 
-    /** \brief remove certain tracks from the tracker
+    /** \brief Remove certain tracks from the tracker
       */
     void BlobTrajectoryTracker::removeTracks(const std::vector<int> & ids_to_remove){
         std::map<int, Blob>::iterator it;
@@ -107,16 +110,86 @@ namespace cv{
         }
     }
 
-    /** \brief check if these new query blobs will fit into the trajectory
+    /** \brief Check if these new query blobs will fit into the trajectory
 
       A trajectory is consistent when the upcoming position conforms (within a certain range)
       with the velocity of the previous positions of this track.
 
+      We will estimate the parameters of moving x(t) = a*t + b . The technique to perform linear
+      fitting is Least Square Fitting: http://mathworld.wolfram.com/LeastSquaresFitting.html
+
+      For a previous implementation, please check enteringblobdetection.cpp 895-939
+
       \param target_track_id ID of the track against which these new blobs are to be tested
       \param query_blob a blob to be considered for trajectory consistency
+      \param[out] the error incurred when assigning this blob into this track
     */
-    bool BlobTrajectoryTracker::isTrajectoryConsistent(const Blob & query_blob, int target_track_id) const {
+    bool BlobTrajectoryTracker::isTrajectoryConsistent(const Blob & query_blob, int target_track_id, float & error) const {
+        int track_size = current_time_ - 1; // since we don't throw away old information, the size of a track
+                                            // is the same as the previous timestamp
+                                            // TODO: Check that this is still a valid assumption
+        float       sum[2] = {0,0};
+        float       jsum[2] = {0,0};
+        float       a[2],b[2]; /* estimated parameters of moving x(t) = a*t+b*/
 
+        std::vector<int> time_instances_where_track_exists;
+
+        std::map<int, Blob>::const_iterator it;
+        for(int j=0; j<track_size; ++j)
+        {
+            it = blobs_over_time_[j].find(target_track_id);
+            if (it == blobs_over_time_[j].end())
+                continue;
+
+            cv::Point2f blob_center = (*it).second.GetBoundingRectangle().center;
+            time_instances_where_track_exists.push_back(j);
+
+            sum[0] += blob_center.x;
+            jsum[0] += j * blob_center.x;
+            sum[1] += blob_center.y;
+            jsum[1] += j * blob_center.y;
+        }
+
+        if (time_instances_where_track_exists.size() <= 5){
+            // we don't have enough information about this track to reject it
+            error = 1e10;
+            return true;
+        }
+
+        a[0] = 6*((1-track_size)*sum[0]+2*jsum[0])/(track_size*(track_size*track_size-1));
+        b[0] = -2*((1-2*track_size)*sum[0]+3*jsum[0])/(track_size*(track_size+1));
+        a[1] = 6*((1-track_size)*sum[1]+2*jsum[1])/(track_size*(track_size*track_size-1));
+        b[1] = -2*((1-2*track_size)*sum[1]+3*jsum[1])/(track_size*(track_size+1));
+
+        // We will need to now calculate standard deviation of the errors
+        float E_x = 0; // E(x)
+        float E_x2 = 0; // E(x^2)
+        for (int i=0; i<time_instances_where_track_exists.size(); i++){
+            it = blobs_over_time_[i].find(target_track_id);
+            cv::Point2f blob_center = (*it).second.GetBoundingRectangle().center;
+            float this_point_error = pow(blob_center.x - (a[0] * i + b[0]), 2) +
+                    pow(blob_center.y - (a[1] * i + b[1]), 2);
+
+            E_x = E_x + this_point_error;
+            E_x2 = E_x2 = pow(this_point_error, 2);
+        }
+        E_x = E_x / time_instances_where_track_exists.size();
+        E_x2 = 1.0 / time_instances_where_track_exists.size() * E_x2;
+        float std_deviation = sqrt(E_x2 + pow(E_x,2)); // the typical way to calculate std deviation
+
+        // now that we have the estimates of a and b for both x(t) and y(t)
+        // let's test that our input blob fits into this estimation
+        cv::Point2f query_blob_center = query_blob.GetBoundingRectangle().center;
+        error = pow(query_blob_center.x - (a[0] * current_time_ + b[0]), 2) +
+                pow(query_blob_center.y - (a[1] * current_time_ + b[1]), 2);
+
+        // if the error is within two standard deviation of the previous errors, accept
+        float error_z = (error - E_x) / std_deviation;
+        if (error_z < -2 || error_z > 2)
+            return false;
+
+        // this blob fits into this track
+        return true;
     }
 
     /** \brief Advance to the next time instance

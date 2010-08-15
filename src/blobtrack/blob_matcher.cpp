@@ -31,7 +31,7 @@ namespace cv{
       \todo Remove blobs that are too close to the borders
     */
     void BlobMatcherWithTrajectory::match(const Mat & query_image, const std::vector<Blob> & query_blobs,
-                                                       std::vector<int> & matches){
+                                                       std::vector<int> & matches) const{
         // clear the output variable
         matches.resize(query_blobs.size());
 
@@ -62,18 +62,19 @@ namespace cv{
 
     /** \brief Tell whether a query blob is close to a target blob
 
-      The query blob is close to a target blob when they "kind-of" overlap. This condition happens
-      when the top left corner of the query is within a certain bounds of the top left corner of the
-      target. This bound is defined as twice the size of the target blob.
+      The query blob is close to a target blob when they overlap.
     */
     bool BlobMatcherWithTrajectory::isClose(const Blob & query, const Blob & target) const{
         cv::Rect query_bb = query.GetBoundingUprightRectangle();
         cv::Rect target_bb = target.GetBoundingUprightRectangle();
 
-        float dx = fabs(query_bb.x - target_bb.x);
-        float dy = fabs(query_bb.y - target_bb.y);
-
-        return dx > 2*target_bb.width || dy > 2*target_bb.height;
+        // We find the four conditions in which the two bounding boxes do not overlap
+        // and invert it
+        return !(query_bb.x > target_bb.x + target_bb.width ||
+                query_bb.x + query_bb.width < target_bb.x ||
+                query_bb.y > target_bb.y + target_bb.height ||
+                query_bb.y + query_bb.height < target_bb.y
+                );
     }
 
 
@@ -123,7 +124,8 @@ namespace cv{
         std::map<int, Blob>::iterator it;
         for (size_t i=0; i<ids_to_remove.size(); i++){
             it = blobs_over_time_[current_time_].find(ids_to_remove[i]);
-            blobs_over_time_[current_time_].erase(it);
+            if (it != blobs_over_time_[current_time_].end())
+                blobs_over_time_[current_time_].erase(it);
         }
     }
 

@@ -3,8 +3,10 @@
 
 #include "common.hpp"
 #include "Blob.h"
+
 #include <vector>
 #include <stdexcept>
+#include <gtest/gtest_prod.h>
 
 namespace cv{
     /** forward declarations to save on compile time*/
@@ -38,7 +40,7 @@ namespace cv{
           This way, our matcher interface applies even when the matcher doesn't keep track of the possible target blobs.
         */
         virtual void match(const Mat & query_image, const std::vector<Blob> & query_blobs,
-                           std::vector<int> & matches) = 0;
+                           std::vector<int> & matches) const = 0;
     };
 
 
@@ -68,9 +70,11 @@ namespace cv{
     public:
         BlobMatcherWithTrajectory(BlobTrajectoryTracker * trajectory_tracker);
         virtual void match(const Mat & query_image, const std::vector<Blob> & query_blobs,
-                           std::vector<int> & matches);
+                           std::vector<int> & matches) const;
     private:
         DISALLOW_COPY_AND_ASSIGN(BlobMatcherWithTrajectory);
+
+        FRIEND_TEST(BlobTrackTest, TrajectoryIsClose);
 
         bool isClose(const Blob & query, const Blob & target) const;
 

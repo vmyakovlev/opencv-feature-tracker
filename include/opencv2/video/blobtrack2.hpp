@@ -23,6 +23,40 @@ namespace cv{
     };
 
 
+    typedef struct TrackedObjectInformation_ {
+        int first_tracked_time_stamp;
+        int last_tracked_time_stamp;
+        bool active; // is this object still actively tracked?
+    } TrackedObjectInformation;
+
+
+    class BlobTracker {
+    public:
+        // type definitions
+        typedef long int id_type;
+    };
+
+
+    class BlobTrajectoryTracker : public BlobTracker {
+    public:
+        BlobTrajectoryTracker();
+        void addTracks(const std::vector<Blob> & new_blobs);
+        void updateTracks(const std::map<BlobTracker::id_type, Blob> & tracks_to_update, bool is_unmatched_will_get_created = false);
+        void removeTracks(const std::vector<BlobTracker::id_type> & ids_to_remove);
+        bool isTrajectoryConsistent(const Blob & query_blobs, BlobTracker::id_type target_track_id, float & error) const;
+        void nextTimeInstance();
+
+        int numTracks() const;
+        std::map<BlobTracker::id_type, Blob> getBlobs(int time_stamp = -1) const;
+        TrackedObjectInformation getTrackInformation(BlobTracker::id_type id) const;
+    private:
+        std::vector<std::map<BlobTracker::id_type, Blob> > blobs_over_time_;
+        std::map<BlobTracker::id_type, TrackedObjectInformation> tracks_information;
+        int current_time_;
+        BlobTracker::id_type next_blob_id_;
+    };
+
+
     class BlobMatcher {
     public:
         /** \brief interface for matching a set of query blobs (i.e. blobs detected in the current frames) against
@@ -40,25 +74,7 @@ namespace cv{
           This way, our matcher interface applies even when the matcher doesn't keep track of the possible target blobs.
         */
         virtual void match(const Mat & query_image, const std::vector<Blob> & query_blobs,
-                           std::vector<int> & matches) const = 0;
-    };
-
-
-    class BlobTrajectoryTracker {
-    public:
-        BlobTrajectoryTracker();
-        void addTracks(const std::vector<Blob> & new_blobs);
-        void updateTracks(const std::map<int, Blob> & tracks_to_update);
-        void removeTracks(const std::vector<int> & ids_to_remove);
-        bool isTrajectoryConsistent(const Blob & query_blobs, int target_track_id, float & error) const;
-        void nextTimeInstance();
-
-        int numTracks() const;
-        std::map<int, Blob> getBlobs(int time_stamp = -1) const;
-    private:
-        std::vector<std::map<int, Blob> > blobs_over_time_;
-        int current_time_;
-        int next_blob_id_;
+                           std::vector<BlobTracker::id_type> & matches) const = 0;
     };
 
 
@@ -70,7 +86,7 @@ namespace cv{
     public:
         BlobMatcherWithTrajectory(BlobTrajectoryTracker * trajectory_tracker);
         virtual void match(const Mat & query_image, const std::vector<Blob> & query_blobs,
-                           std::vector<int> & matches) const;
+                           std::vector<BlobTracker::id_type> & matches) const;
     private:
         DISALLOW_COPY_AND_ASSIGN(BlobMatcherWithTrajectory);
 

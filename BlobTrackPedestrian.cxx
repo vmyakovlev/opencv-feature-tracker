@@ -98,8 +98,8 @@ int main (int argc, char ** argv){
     blob_tracker.nextTimeInstance();
 
     int current_num_frame = 0;
-    std::vector<int> matches; // The id of the found match using the matcher
-    std::map<int, Blob> detected_blobs_with_matched_ids;
+    std::vector<BlobTracker::id_type> matches; // The id of the found match using the matcher
+    std::map<BlobTracker::id_type, Blob> detected_blobs_with_matched_ids;
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
         cvtColor(a_frame,next_frame, CV_RGB2GRAY);
@@ -123,7 +123,7 @@ int main (int argc, char ** argv){
         // Debug: Visualize detected blobs
         blob_image.setTo(Scalar(0));
         char custom_message[50];
-        std::map<int, Blob>::const_iterator matched_blobs_iterator = detected_blobs_with_matched_ids.begin();
+        std::map<BlobTracker::id_type, Blob>::const_iterator matched_blobs_iterator = detected_blobs_with_matched_ids.begin();
         for (; matched_blobs_iterator!=detected_blobs_with_matched_ids.end();
                matched_blobs_iterator++){
             sprintf(custom_message, "%d", (*matched_blobs_iterator).first );

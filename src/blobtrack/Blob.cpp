@@ -33,11 +33,11 @@ Blob::~Blob(){}
 
 /** \brief Draw this blob to the input image
 */
-void Blob::DrawTo(Mat im, const std::string custom_message) const{
+void Blob::DrawTo(Mat im, const std::string custom_message /* = "" */, const cv::Scalar & color/* = CV_RGB(0,255,0) */) const{
     draw_hull(im, points_, CV_RGB(255,0,0));
 
     // blob minAreaRect drawn as an Ellipse
-    rotated_rect(im, bounding_rotated_rect_, CV_RGB(0,255,0));
+    rotated_rect(im, bounding_rotated_rect_, color);
 
     // blob center
     circle(im, bounding_rotated_rect_.center, 1, CV_RGB(0,0,255));

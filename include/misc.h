@@ -94,6 +94,12 @@ template<typename T> void print_matrix(const cv::Mat & mat){
     }
 }
 
+template<typename T> void print(const std::vector<T> & vec){
+    for (int i=0; i<vec.size(); i++)
+        std::cout << vec[i] << " ";
+    std::cout << std::endl;
+}
+
 /** Indexing into the container given the indices
 
   e.g. a = [4,1,2,5,3]

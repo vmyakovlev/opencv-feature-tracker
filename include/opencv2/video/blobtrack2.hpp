@@ -40,6 +40,7 @@ namespace cv{
     class BlobTrajectoryTracker : public BlobTracker {
     public:
         BlobTrajectoryTracker();
+        void addTrack(const Blob & new_blob);
         void addTracks(const std::vector<Blob> & new_blobs);
         void updateTracks(const std::map<BlobTracker::id_type, Blob> & tracks_to_update, bool is_unmatched_will_get_created = false);
         void removeTracks(const std::vector<BlobTracker::id_type> & ids_to_remove);

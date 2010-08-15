@@ -38,6 +38,40 @@ namespace cv {
         std::map<BlobTracker::id_type, Blob> all_blobs = tracker.getBlobs();
 
         ASSERT_EQ(4, all_blobs.size());
+
+        Blob a_blob;
+        tracker.addTrack(a_blob);
+
+        ASSERT_EQ(5, tracker.numTracks());
+    }
+
+    TEST_F(BlobTrackTest, GetTrackInformation){
+        // Add a simple track and expect the information is correct
+        Blob a_blob;
+        tracker.addTrack(a_blob);
+        cv::TrackedObjectInformation track_info = tracker.getTrackInformation(0);
+        ASSERT_EQ(0, track_info.first_tracked_time_stamp);
+        ASSERT_TRUE(track_info.active);
+
+        // Advance to the next time stamp, things should still stay the same
+        tracker.nextTimeInstance();
+        ASSERT_EQ(0, track_info.first_tracked_time_stamp);
+
+        // Update the track, expect that the last_tracked timestamp is still correct
+        std::map<BlobTracker::id_type, Blob> updates;
+        updates[0] = a_blob;
+        tracker.updateTracks(updates);
+
+        track_info = tracker.getTrackInformation(0);
+        ASSERT_EQ(0, track_info.first_tracked_time_stamp);
+        ASSERT_EQ(1, track_info.last_tracked_time_stamp);
+        ASSERT_TRUE(track_info.active);
+
+        // Add yet another blob, this time expecting that the creation timestamp is correct
+        tracker.addTrack(a_blob);
+        track_info = tracker.getTrackInformation(1);
+        ASSERT_EQ(1, track_info.first_tracked_time_stamp);
+        ASSERT_TRUE(track_info.active);
     }
 
     TEST_F(BlobTrackTest, UpdateTracks){

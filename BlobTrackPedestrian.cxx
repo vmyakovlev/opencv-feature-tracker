@@ -1,5 +1,4 @@
-/** \file BlobTrackPedestrian
-
+/** \file BlobTrackPedestri
   A demo that performs blob tracking on pedestrians. Documentations including different outputs in different versions
   of this code can be found at https://code.google.com/p/opencv-feature-tracker/wiki/BlobTrackDemo
 */
@@ -12,6 +11,8 @@
 // Only work with OpenCV SVN
 #include <opencv2/opencv.hpp>
 #include <opencv2/video/blobtrack2.hpp>
+
+#include "misc.h"
 
 using cv::Mat;
 using namespace std;
@@ -39,6 +40,8 @@ int main (int argc, char ** argv){
     // PREPARE TOOLS FOR BACKGROUND SUBTRACTION
     cv::BackgroundSubtractorMOG background_subtractor;
     cv::BlobDetector blob_detector;
+    cv::BlobTrajectoryTracker blob_tracker;
+    cv::BlobMatcherWithTrajectory blob_matcher(&blob_tracker);
 
     //**************************************************************
     // GRAB SOME INFORMATION ABOUT THE VIDEO
@@ -58,7 +61,7 @@ int main (int argc, char ** argv){
         exit(-2);
     }
     int frame_width = a_frame.cols,
-        frame_height = a_frame.rows;
+    frame_height = a_frame.rows;
 
     //**************************************************************
     // SOME WINDOWS FOR VISUALIZATION
@@ -77,14 +80,26 @@ int main (int argc, char ** argv){
     Mat next_frame;
     Mat fg_mask; //foreground mask detected in each frame
     Mat blob_image = cv::Mat::zeros(a_frame.size(), CV_8UC3); // for visualizing the detected blobs
+    std::vector<Blob> detected_blobs;
 
-    // Initialize our previous frame
+    // Initialize with the first 2 frames
+    // Instead of using an if within the while loop, we will re-type some code here
     video_capture.grab();
     video_capture.retrieve(a_frame);
     cvtColor(a_frame,prev_frame, CV_RGB2GRAY);
+    background_subtractor(a_frame, fg_mask);
 
-    std::vector<Blob> detected_blobs;
+    // We need two frames because with only one frame, we cannot subtract the background
+    video_capture.grab();
+    video_capture.retrieve(a_frame);
+    background_subtractor(a_frame, fg_mask);
+    detected_blobs = blob_detector(fg_mask, 1);
+    blob_tracker.addTracks(detected_blobs);
+    blob_tracker.nextTimeInstance();
+
     int current_num_frame = 0;
+    std::vector<int> matches; // The id of the found match using the matcher
+    std::map<int, Blob> detected_blobs_with_matched_ids;
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
         cvtColor(a_frame,next_frame, CV_RGB2GRAY);
@@ -97,26 +112,41 @@ int main (int argc, char ** argv){
         imshow(fg_window, fg_mask);
 
         // Use Blob Detector to detect the blobs
-         detected_blobs = blob_detector(fg_mask, 1);
+        detected_blobs = blob_detector(fg_mask, 1);
 
-         // Debug: Visualize detected blobs
-         blob_image.setTo(Scalar(0));
-         char custom_message[50];
-         for (size_t i=0; i<detected_blobs.size(); i++){
-             sprintf(custom_message, "%d",i );
-             detected_blobs[i].DrawTo(blob_image, custom_message);
-         }
-         imshow(blob_window, blob_image);
+        // Use Blob Matcher to match these new blobs to existing blobs
+        blob_matcher.match(next_frame, detected_blobs, matches);
 
-         // Handle GUI events by waiting for a key
-         keypressed_code = cv::waitKey();
-         if (keypressed_code == 27){ // ESC key
-             break;
-         }
+        // Combine matches and detected_blobs into a map
+        detected_blobs_with_matched_ids = vec_vec_to_map(matches, detected_blobs);
+
+        // Debug: Visualize detected blobs
+        blob_image.setTo(Scalar(0));
+        char custom_message[50];
+        std::map<int, Blob>::const_iterator matched_blobs_iterator = detected_blobs_with_matched_ids.begin();
+        for (; matched_blobs_iterator!=detected_blobs_with_matched_ids.end();
+               matched_blobs_iterator++){
+            sprintf(custom_message, "%d", (*matched_blobs_iterator).first );
+            (*matched_blobs_iterator).second.DrawTo(blob_image, custom_message);
+        }
+        imshow(blob_window, blob_image);
+
+        // Update the tracker with new information
+        blob_tracker.updateTracks(detected_blobs_with_matched_ids);
+
+        // Handle GUI events by waiting for a key
+        keypressed_code = cv::waitKey();
+        if (keypressed_code == 27){ // ESC key
+            break;
+        }
 
         // some indication of stuff working
         cout << "\r" << current_num_frame << flush;
+
+        // advance to the next frame
         current_num_frame++;
+        blob_tracker.nextTimeInstance();
+
     }
     printf("\n");
 

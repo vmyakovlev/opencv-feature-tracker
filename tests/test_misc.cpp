@@ -310,3 +310,29 @@ TEST(TestMisc, ConstReferencePushBack){
     ASSERT_EQ(points[3].x, points[4].x);
     ASSERT_EQ(points[3].y, points[4].y);
 }
+
+TEST(TestMisc, TwoCorrespondingVectorsIntoOneMap){
+    std::vector<int> keys;
+    keys.push_back(1);
+    keys.push_back(3);
+    keys.push_back(4);
+    keys.push_back(5);
+
+    std::vector<double> values;
+    values.push_back(1.12);
+    values.push_back(12.12);
+    values.push_back(13.12);
+    values.push_back(14.12);
+
+    std::map<int, double> new_map = vec_vec_to_map(keys, values);
+    std::map<int, double>::const_iterator it = new_map.begin();
+
+    ASSERT_EQ(keys.size(), new_map.size());
+
+    int i = 0;
+    for (; it!=new_map.end(); it++){
+        ASSERT_EQ(keys[i], (*it).first);
+        ASSERT_EQ(values[i], (*it).second);
+        i++;
+    }
+}

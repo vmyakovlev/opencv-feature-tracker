@@ -2,7 +2,13 @@
 #include <opencv2/core/mat.hpp>
 
 namespace cv{
-    BlobWithTrajectoryMatcher::BlobWithTrajectoryMatcher(BlobTrajectoryTracker * trajectory_tracker){
+    /** Save a pointer to the trajectory tracker so that whenever you are asked to match, we can
+      use the trajectory tracker to determine whether a given blob will fit into the trajectory
+      model.
+
+      \todo Remove dependency to BlobTrajectoryTracker, instead use its superclass
+    */
+    BlobMatcherWithTrajectory::BlobMatcherWithTrajectory(BlobTrajectoryTracker * trajectory_tracker){
         trajectory_tracker_ = trajectory_tracker;
     }
 
@@ -24,29 +30,32 @@ namespace cv{
       \todo Handle the case where there are two close-by blobs
       \todo Remove blobs that are too close to the borders
     */
-    void BlobWithTrajectoryMatcher::match(const Mat &query_image, const std::vector<Blob> &query_blobs,
-                                     const Mat &target_image, const std::vector<Blob> &target_blobs, std::vector<int> &matches){
+    void BlobMatcherWithTrajectory::match(const Mat & query_image, const std::vector<Blob> & query_blobs,
+                                                       std::vector<int> & matches){
         // clear the output variable
         matches.resize(query_blobs.size());
 
         float best_error = 1e11;
         int best_track_id = -1;
         float current_error;
+        std::map<int, Blob> target_blobs = trajectory_tracker_->getBlobs();
+        std::map<int, Blob>::const_iterator it = target_blobs.begin();
+
         for (int i=0; i<query_blobs.size(); i++){
             matches[i] = -1;
 
             // go through each target blob and find one that works
-            for (int j=0; j<target_blobs.size(); j++){
-                if (!isClose(query_blobs[i], target_blobs[i]))
+            for (; it!=target_blobs.end(); it++){
+                if (!isClose(query_blobs[i], (*it).second))
                     continue;
 
                 // found a close-by blob, time to check for trajectory
-                if (!trajectory_tracker_->isTrajectoryConsistent(query_blobs[i], j, current_error)){
+                if (!trajectory_tracker_->isTrajectoryConsistent(query_blobs[i], (*it).first, current_error)){
                     continue;
                 }
 
                 // we have found a match
-                matches[i] = j;
+                matches[i] = (*it).first;
             }
         }
     }
@@ -57,7 +66,7 @@ namespace cv{
       when the top left corner of the query is within a certain bounds of the top left corner of the
       target. This bound is defined as twice the size of the target blob.
     */
-    bool BlobWithTrajectoryMatcher::isClose(const Blob & query, const Blob & target) const{
+    bool BlobMatcherWithTrajectory::isClose(const Blob & query, const Blob & target) const{
         cv::Rect query_bb = query.GetBoundingUprightRectangle();
         cv::Rect target_bb = target.GetBoundingUprightRectangle();
 
@@ -79,6 +88,11 @@ namespace cv{
       might be the same as those old blobs.
     */
     void BlobTrajectoryTracker::addTracks(const std::vector<Blob> & new_blobs){
+        // in case when we first initialize, blobs_over_time_ has nothing, so we need to create something
+        if (blobs_over_time_.size() == 0){
+            blobs_over_time_.push_back(std::map<int, Blob>());
+        }
+
         std::vector<Blob>::const_iterator it = new_blobs.begin();
         for (; it!=new_blobs.end(); it++){
             blobs_over_time_[current_time_][next_blob_id_] = *it;
@@ -88,7 +102,9 @@ namespace cv{
 
     /** \brief Update the blob information
 
-      If you specify a track id that does not current exist, it will be added.
+      If you specify a track id that does not current exist, it will be added unless the track id is less than 0.
+      As in the case when this information is given by a matcher. The matcher typically assigns ids of the found
+      matches but a value less than 0 (e.g. -1) for unmatched queries.
 
       \param tracks_to_update key is the id of the track, value is the new blob object to update
 
@@ -96,7 +112,8 @@ namespace cv{
     void BlobTrajectoryTracker::updateTracks(const std::map<int, Blob> & tracks_to_update){
         std::map<int, Blob>::const_iterator it = tracks_to_update.begin();
         for( ; it!=tracks_to_update.end(); it++){
-            blobs_over_time_[current_time_][(*it).first] = (*it).second;
+            if ((*it).first >= 0)
+                blobs_over_time_[current_time_][(*it).first] = (*it).second;
         }
     }
 
@@ -198,7 +215,28 @@ namespace cv{
         current_time_ ++;
 
         // we will need the new the blob information of this instance to start
-        // the same as the first one
-        blobs_over_time_.push_back(blobs_over_time_.at(blobs_over_time_.size()-1));
+        // the same as the last one
+        std::map<int, Blob> blobs_in_last_time_instance = blobs_over_time_.at(blobs_over_time_.size()-1);
+        blobs_over_time_.push_back(blobs_in_last_time_instance);
+    }
+
+    int BlobTrajectoryTracker::numTracks() const{
+        if (blobs_over_time_.size() == 0)
+            return 0;
+
+        return blobs_over_time_[current_time_].size();
+    }
+
+    /** \brief Get all blobs in the given time instance
+
+      \param time_stamp the time instance we are interested in. If -1, return the current one.
+    */
+    std::map<int, Blob> BlobTrajectoryTracker::getBlobs(int time_stamp /* = -1 */) const {
+        if (time_stamp == -1)
+            return blobs_over_time_[current_time_];
+        else if (time_stamp <= current_time_)
+            return blobs_over_time_[time_stamp];
+        else
+            throw std::range_error("Given time stamp is out of range");
     }
 }

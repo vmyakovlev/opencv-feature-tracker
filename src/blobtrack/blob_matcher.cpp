@@ -118,6 +118,9 @@ namespace cv {
     BlobTrajectoryTracker::BlobTrajectoryTracker(){
         current_time_ = 0;
         next_blob_id_ = 0;
+
+        // initialize internal storage so we can start assigning right away
+        blobs_over_time_.push_back(std::map<BlobTracker::id_type, Blob>());
     }
 
     /** \brief Add new blobs to the tracker
@@ -126,16 +129,25 @@ namespace cv {
       might be the same as those old blobs.
     */
     void BlobTrajectoryTracker::addTracks(const std::vector<Blob> & new_blobs){
-        // in case when we first initialize, blobs_over_time_ has nothing, so we need to create something
-        if (blobs_over_time_.size() == 0){
-            blobs_over_time_.push_back(std::map<BlobTracker::id_type, Blob>());
-        }
-
         std::vector<Blob>::const_iterator it = new_blobs.begin();
         for (; it!=new_blobs.end(); it++){
-            blobs_over_time_[current_time_][next_blob_id_] = *it;
-            next_blob_id_++;
+            addTrack(*it);
         }
+    }
+
+    /** \brief Add a track to the tracker
+    */
+    void BlobTrajectoryTracker::addTrack(const Blob & new_blob){
+        blobs_over_time_[current_time_][next_blob_id_] = new_blob;
+
+        TrackedObjectInformation track_info;
+        track_info.first_tracked_time_stamp = current_time_;
+        track_info.last_tracked_time_stamp = -1;
+        track_info.active = true;
+
+        tracks_information[next_blob_id_] = track_info;
+
+        next_blob_id_++;
     }
 
     /** \brief Update the blob information
@@ -156,8 +168,7 @@ namespace cv {
         for( ; it!=tracks_to_update.end(); it++){
             // is this a request for a new element
             if (is_unmatched_will_get_created && (*it).first == -1){
-                blobs_over_time_[current_time_][next_blob_id_] = (*it).second;
-                next_blob_id_++;
+                addTrack((*it).second);
                 continue;
             }
 
@@ -166,8 +177,10 @@ namespace cv {
 
             if (it2 == blobs_over_time_[current_time_].end()) // cannot find this id
                 continue;
-            else
+            else {
                 (*it2).second = (*it).second;
+                tracks_information[(*it).first].last_tracked_time_stamp = current_time_;
+            }
         }
     }
 

@@ -1,7 +1,10 @@
 #include <opencv2/video/blobtrack2.hpp>
 #include <opencv2/core/mat.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <iostream>
+#include "misc.h"
 
-namespace cv{
+namespace cv {
     /** Save a pointer to the trajectory tracker so that whenever you are asked to match, we can
       use the trajectory tracker to determine whether a given blob will fit into the trajectory
       model.
@@ -41,23 +44,57 @@ namespace cv{
         std::map<int, Blob> target_blobs = trajectory_tracker_->getBlobs();
         std::map<int, Blob>::const_iterator it = target_blobs.begin();
 
+        /* Debug: Drawing the query and target blobs
+           on the window
+        */
+        const std::string query_blob_window = "Query Blob Window";
+        const std::string target_blob_window = "Target Blob Window";
+
+        cv::namedWindow(query_blob_window);
+        cv::namedWindow(target_blob_window);
+
+        cv::Size size(720, 576);
+        cv::Mat query_blob_img = cv::Mat::zeros(size, CV_8UC3);
+        cv::Mat target_blob_img = cv::Mat::zeros(size, CV_8UC3);
+
+        for (int i=0; i<query_blobs.size(); i++){
+            query_blobs[i].DrawTo(query_blob_img, "", CV_RGB(255,255,0));
+            std::cout << ".";
+        }
+        for (; it!=target_blobs.end(); it++){
+            (*it).second.DrawTo(query_blob_img, "+", CV_RGB(255,0,255));
+            std::cout << "+";
+        }
+
+        cv::imshow(query_blob_window, query_blob_img);
+        cv::imshow(target_blob_window, target_blob_img);
+        cv::waitKey(0);
+
+        /* End debug drawing */
+
         for (int i=0; i<query_blobs.size(); i++){
             matches[i] = -1;
 
             // go through each target blob and find one that works
-            for (; it!=target_blobs.end(); it++){
+            for (it = target_blobs.begin(); it!=target_blobs.end(); it++){
                 if (!isClose(query_blobs[i], (*it).second))
                     continue;
+                std::cout << "*";
 
                 // found a close-by blob, time to check for trajectory
                 if (!trajectory_tracker_->isTrajectoryConsistent(query_blobs[i], (*it).first, current_error)){
                     continue;
                 }
+                std::cout << "^";
 
                 // we have found a match
                 matches[i] = (*it).first;
+                std::cout << "Found a match " << (*it).first << " for " << i << std::endl;
+                break;
             }
         }
+
+        print(matches);
     }
 
     /** \brief Tell whether a query blob is close to a target blob

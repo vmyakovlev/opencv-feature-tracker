@@ -23,7 +23,7 @@ public:
     operator KeyPoint() const;
 
     // Visualization helper methods
-    void DrawTo(Mat im, const std::string custom_msg) const;
+    void DrawTo(Mat im, const std::string custom_msg = "", const cv::Scalar & color = CV_RGB(0,255,0)) const;
 private:
     std::vector<Point2f> points_; //!< points that make up this contour
     RotatedRect bounding_rotated_rect_; //!< a minimum-area bounding rotated rectangle

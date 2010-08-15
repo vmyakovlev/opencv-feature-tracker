@@ -34,15 +34,15 @@ namespace cv {
       \todo Remove blobs that are too close to the borders
     */
     void BlobMatcherWithTrajectory::match(const Mat & query_image, const std::vector<Blob> & query_blobs,
-                                                       std::vector<int> & matches) const{
+                                                       std::vector<BlobTracker::id_type> & matches) const{
         // clear the output variable
         matches.resize(query_blobs.size());
 
         float best_error = 1e11;
-        int best_track_id = -1;
+        BlobTracker::id_type best_track_id = -1;
         float current_error;
-        std::map<int, Blob> target_blobs = trajectory_tracker_->getBlobs();
-        std::map<int, Blob>::const_iterator it = target_blobs.begin();
+        std::map<BlobTracker::id_type, Blob> target_blobs = trajectory_tracker_->getBlobs();
+        std::map<BlobTracker::id_type, Blob>::const_iterator it = target_blobs.begin();
 
         /* Debug: Drawing the query and target blobs
            on the window
@@ -128,7 +128,7 @@ namespace cv {
     void BlobTrajectoryTracker::addTracks(const std::vector<Blob> & new_blobs){
         // in case when we first initialize, blobs_over_time_ has nothing, so we need to create something
         if (blobs_over_time_.size() == 0){
-            blobs_over_time_.push_back(std::map<int, Blob>());
+            blobs_over_time_.push_back(std::map<BlobTracker::id_type, Blob>());
         }
 
         std::vector<Blob>::const_iterator it = new_blobs.begin();
@@ -141,24 +141,40 @@ namespace cv {
     /** \brief Update the blob information
 
       If you specify a track id that does not current exist, it will be added unless the track id is less than 0.
-      As in the case when this information is given by a matcher. The matcher typically assigns ids of the found
-      matches but a value less than 0 (e.g. -1) for unmatched queries.
+      This is a typical scenario when one uses a matcher. The matcher typically assigns ids of the found
+      matches. For unmatched queries, a value less than 0 (e.g. -1) is assigned by the matcher.
 
       \param tracks_to_update key is the id of the track, value is the new blob object to update
+      \param is_unmatched_will_get_created Default to false. If a match is <0, it will be created instead of ignored. For ids that
+                                           do not exists, they are still ignored.
 
     */
-    void BlobTrajectoryTracker::updateTracks(const std::map<int, Blob> & tracks_to_update){
-        std::map<int, Blob>::const_iterator it = tracks_to_update.begin();
+    void BlobTrajectoryTracker::updateTracks(const std::map<BlobTracker::id_type, Blob> & tracks_to_update, bool is_unmatched_will_get_created /* = false */){
+        std::map<BlobTracker::id_type, Blob>::const_iterator it = tracks_to_update.begin();
+        std::map<BlobTracker::id_type, Blob>::iterator it2;
+
         for( ; it!=tracks_to_update.end(); it++){
-            if ((*it).first >= 0)
-                blobs_over_time_[current_time_][(*it).first] = (*it).second;
+            // is this a request for a new element
+            if (is_unmatched_will_get_created && (*it).first == -1){
+                blobs_over_time_[current_time_][next_blob_id_] = (*it).second;
+                next_blob_id_++;
+                continue;
+            }
+
+            // can we find this id?
+            it2 = blobs_over_time_[current_time_].find((*it).first);
+
+            if (it2 == blobs_over_time_[current_time_].end()) // cannot find this id
+                continue;
+            else
+                (*it2).second = (*it).second;
         }
     }
 
     /** \brief Remove certain tracks from the tracker
       */
-    void BlobTrajectoryTracker::removeTracks(const std::vector<int> & ids_to_remove){
-        std::map<int, Blob>::iterator it;
+    void BlobTrajectoryTracker::removeTracks(const std::vector<BlobTracker::id_type> & ids_to_remove){
+        std::map<BlobTracker::id_type, Blob>::iterator it;
         for (size_t i=0; i<ids_to_remove.size(); i++){
             it = blobs_over_time_[current_time_].find(ids_to_remove[i]);
             if (it != blobs_over_time_[current_time_].end())
@@ -180,7 +196,7 @@ namespace cv {
       \param query_blob a blob to be considered for trajectory consistency
       \param[out] the error incurred when assigning this blob into this track
     */
-    bool BlobTrajectoryTracker::isTrajectoryConsistent(const Blob & query_blob, int target_track_id, float & error) const {
+    bool BlobTrajectoryTracker::isTrajectoryConsistent(const Blob & query_blob, BlobTracker::id_type target_track_id, float & error) const {
         int track_size = current_time_ - 1; // since we don't throw away old information, the size of a track
                                             // is the same as the previous timestamp
                                             // TODO: Check that this is still a valid assumption
@@ -190,7 +206,7 @@ namespace cv {
 
         std::vector<int> time_instances_where_track_exists;
 
-        std::map<int, Blob>::const_iterator it;
+        std::map<BlobTracker::id_type, Blob>::const_iterator it;
         for(int j=0; j<track_size; ++j)
         {
             it = blobs_over_time_[j].find(target_track_id);
@@ -255,7 +271,7 @@ namespace cv {
 
         // we will need the new the blob information of this instance to start
         // the same as the last one
-        std::map<int, Blob> blobs_in_last_time_instance = blobs_over_time_.at(blobs_over_time_.size()-1);
+        std::map<BlobTracker::id_type, Blob> blobs_in_last_time_instance = blobs_over_time_.at(blobs_over_time_.size()-1);
         blobs_over_time_.push_back(blobs_in_last_time_instance);
     }
 
@@ -270,12 +286,26 @@ namespace cv {
 
       \param time_stamp the time instance we are interested in. If -1, return the current one.
     */
-    std::map<int, Blob> BlobTrajectoryTracker::getBlobs(int time_stamp /* = -1 */) const {
+    std::map<BlobTracker::id_type, Blob> BlobTrajectoryTracker::getBlobs(int time_stamp /* = -1 */) const {
         if (time_stamp == -1)
             return blobs_over_time_[current_time_];
         else if (time_stamp <= current_time_)
             return blobs_over_time_[time_stamp];
         else
             throw std::range_error("Given time stamp is out of range");
+    }
+
+    TrackedObjectInformation BlobTrajectoryTracker::getTrackInformation(BlobTracker::id_type id) const {
+        std::map<BlobTracker::id_type, TrackedObjectInformation>::const_iterator it;
+        it = tracks_information.find(id);
+        if (it != tracks_information.end()){
+            return (*it).second;
+        } else {
+            TrackedObjectInformation bad_info;
+            bad_info.active = false;
+            bad_info.first_tracked_time_stamp = -1;
+            bad_info.last_tracked_time_stamp = -1;
+            return bad_info;
+        }
     }
 }

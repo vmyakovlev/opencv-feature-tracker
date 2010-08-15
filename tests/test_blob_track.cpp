@@ -35,7 +35,7 @@ namespace cv {
 
         ASSERT_EQ(num_tracks+4, tracker.numTracks());
 
-        std::map<int, Blob> all_blobs = tracker.getBlobs();
+        std::map<BlobTracker::id_type, Blob> all_blobs = tracker.getBlobs();
 
         ASSERT_EQ(4, all_blobs.size());
     }
@@ -46,18 +46,21 @@ namespace cv {
 
         tracker.addTracks(four_blank_blobs);
 
-        std::map<int, Blob> updates;
+        std::map<BlobTracker::id_type, Blob> updates;
         updates[0] = Blob();
         updates[1] = Blob();
         updates[2] = Blob();
         updates[3] = Blob();
-        updates[-1] = Blob();
-
-        ASSERT_EQ(5, updates.size());
+        updates[-1] = Blob(); // this one got assigned -1, will get created when 2nd parameter is true
+        updates[53] = Blob(); // this one doesn't exists, will always get ignored
 
         tracker.updateTracks(updates);
 
         ASSERT_EQ(4, tracker.numTracks());
+
+        // Test that if we uses -1 as id, that blob will get created
+        tracker.updateTracks(updates, true);
+        ASSERT_EQ(5, tracker.numTracks());
     }
 
     TEST_F(BlobTrackTest, RemoveTracks){
@@ -66,7 +69,7 @@ namespace cv {
 
         tracker.addTracks(four_blank_blobs);
 
-        std::vector<int> ids_to_remove;
+        std::vector<BlobTracker::id_type> ids_to_remove;
         ids_to_remove.push_back(0);
         ids_to_remove.push_back(-1);
         ids_to_remove.push_back(2);

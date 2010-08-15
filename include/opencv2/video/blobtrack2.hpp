@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Blob.h"
 #include <vector>
+#include <stdexcept>
 
 namespace cv{
     /** forward declarations to save on compile time*/
@@ -29,9 +30,14 @@ namespace cv{
           matcher implementation. If you are interested in implementing a more sophisticated blob matching technique (e.g.
           Kalman-filter technique, trajectory-modelling technique), you should implement their logic inside of a subclass
           of BlobTracker or perhaps as a general tracker.
+
+          You will need to implement the match method which matches some input query_image and query_blobs
+          If your matching method requires 2 inputs (query and target), you will implement another method that
+          takes in the target and implement match for matching.
+
+          This way, our matcher interface applies even when the matcher doesn't keep track of the possible target blobs.
         */
         virtual void match(const Mat & query_image, const std::vector<Blob> & query_blobs,
-                           const Mat & target_image, const std::vector<Blob> & target_blobs,
                            std::vector<int> & matches) = 0;
     };
 
@@ -44,6 +50,9 @@ namespace cv{
         void removeTracks(const std::vector<int> & ids_to_remove);
         bool isTrajectoryConsistent(const Blob & query_blobs, int target_track_id, float & error) const;
         void nextTimeInstance();
+
+        int numTracks() const;
+        std::map<int, Blob> getBlobs(int time_stamp = -1) const;
     private:
         std::vector<std::map<int, Blob> > blobs_over_time_;
         int current_time_;
@@ -51,14 +60,17 @@ namespace cv{
     };
 
 
-    class BlobWithTrajectoryMatcher : public BlobMatcher {
+    /** \class BlobMatcherWithTrajectory
+
+      \todo Constructor should only need const version of BlobTrajectoryTracker
+     */
+    class BlobMatcherWithTrajectory : public BlobMatcher {
     public:
-        BlobWithTrajectoryMatcher(BlobTrajectoryTracker * trajectory_tracker);
+        BlobMatcherWithTrajectory(BlobTrajectoryTracker * trajectory_tracker);
         virtual void match(const Mat & query_image, const std::vector<Blob> & query_blobs,
-                           const Mat & target_image, const std::vector<Blob> & target_blobs,
                            std::vector<int> & matches);
     private:
-        DISALLOW_COPY_AND_ASSIGN(BlobWithTrajectoryMatcher);
+        DISALLOW_COPY_AND_ASSIGN(BlobMatcherWithTrajectory);
 
         bool isClose(const Blob & query, const Blob & target) const;
 

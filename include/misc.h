@@ -58,6 +58,21 @@ void vector_one_to_another<cv::Point2f,cv::KeyPoint>(const vector<cv::Point2f> i
 template<>
 void vector_one_to_another<cv::KeyPoint,cv::Point2f>(const vector<cv::KeyPoint> in, vector<cv::Point2f> & out);
 
+/** \brief Convert two corresponding vectors into a map
+*/
+template<class T, class T2>
+std::map<T, T2> vec_vec_to_map(const vector<T> & keys, const vector<T2> & values){
+    std::map<T, T2> output;
+
+    int num_elements = keys.size();
+
+    for (int i=0; i<num_elements; i++){
+        output[keys[i]] = values[i];
+    }
+
+    return output;
+}
+
 cv::Mat loadtxt(std::string filename);
 bool WriteTXT(const std::string& filename, const cv::Mat& mat);
 void LoadGalleryPCAs(std::vector<cv::PCA> * gallery_PCAs, const char * pca_folder, int num_gallery_subjects);

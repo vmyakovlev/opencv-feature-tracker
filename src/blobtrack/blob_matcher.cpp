@@ -62,7 +62,8 @@ namespace cv {
             std::cout << ".";
         }
         for (; it!=target_blobs.end(); it++){
-            (*it).second.DrawTo(query_blob_img, "+", CV_RGB(255,0,255));
+            (*it).second.DrawTo(query_blob_img, "", CV_RGB(255,0,255));
+            (*it).second.DrawTo(target_blob_img, "+", CV_RGB(255,0,255));
             std::cout << "+";
         }
 

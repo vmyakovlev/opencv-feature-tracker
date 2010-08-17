@@ -155,6 +155,7 @@ int main (int argc, char ** argv){
 //    imshow(window3, a_frame);
 //    waitKey(0);
 
+    // Create a visualizer so results can be saved
     SaunierSayed::FeatureGrouperVisualizer visualizer(homography_matrix, &feature_grouper);
     if (!FLAGS_visualize_per_step.empty())
         visualizer.ActivateDrawToFile(a_frame.size(), FLAGS_visualize_per_step, CV_FOURCC('D','I','V','X'));
@@ -163,6 +164,7 @@ int main (int argc, char ** argv){
 
     visualizer.is_draw_inactive = false;
 
+    // Starting main loop
     int current_num_frame = 0;
     while (video_capture.grab()){
         video_capture.retrieve(a_frame);
@@ -184,6 +186,8 @@ int main (int argc, char ** argv){
         feature_grouper.UpdatePoints(frame_points_in_world, matched_track_ids);
         visualizer.Draw();
         visualizer.ShowAndWrite();
+
+        // Visualize newly detected points in a different color
 //        visualizer.CustomDraw(new_points, CV_RGB(255,255,0), false);
 //        visualizer.ShowAndWrite();
 
@@ -200,7 +204,7 @@ int main (int argc, char ** argv){
             // Handle GUI events by waiting for a key
             keypressed_code = window_pair.Show();
             if (keypressed_code == 27){ // ESC key
-                // take a screenshot
+                // take a screenshot before quitting
                 imwrite("screenshot.png", a_frame);
                 break;
             }
@@ -241,6 +245,14 @@ int main (int argc, char ** argv){
     printf("Collecting track information\n");
 
     //TODO: Collect track information and Report
+    /* This example leaves out the final step which is to report on different statistics of a track
+       This can be done by using the methods: GetConnectedComponents and GetConnectedComponentsMap
+       It is recommended that you find an incremental formula for computing the statistics of your choice.
+       You can also save the connected components and the tracks information as time progresses. However,
+       this requires you to perform post-processing computation which might not be appropriate for your application.
+
+       Future version of this demo executable will include a sample of such statistics being computed.
+       */
     SaunierSayed::ConnectedComponents components = feature_grouper.GetConnectedComponents();
 
     // Write components to disk

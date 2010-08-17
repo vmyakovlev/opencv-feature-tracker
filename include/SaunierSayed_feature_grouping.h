@@ -124,7 +124,7 @@ namespace SaunierSayed{
         /**
           \param[out] num_components Number of (connected) components
 
-          Note that only activated tracks are considered
+          Note that only activated tracks are considered.
 
           \return a vector that maps a vertex_id/vertex_descriptor to the component id
          */
@@ -133,7 +133,11 @@ namespace SaunierSayed{
         //! Return the number of tracks
         int num_tracks();
 
-        //! Return the number of connections amongst tracks
+        /** \brief Return the number of connections amongst tracks
+
+          Tracks might be connected to each other but the connection might not be activated.
+          */
+
         int num_connections();
 
         /** \brief Get current position of all tracks

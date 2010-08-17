@@ -13,8 +13,11 @@ class SSTrackManagerTest : public ::testing::Test {
  protected:
     // NOTE: this constructor with initialization list of track_manager_ is required
     //       because for some reason track_manager_ will not get the required parameters
+    //       if re-initialized inside of SetUp()
     SSTrackManagerTest():
-        track_manager_(2, 0.05, 4, 20, 0, 0.05)
+        track_manager_(2, 0.05, 10000, 20, 0, 0.05)
+        // NOTE: We use a high connection radius (10000) so that all points will be connected to all others
+        //       when they first start.
     {
 
     }
@@ -27,6 +30,7 @@ class SSTrackManagerTest : public ::testing::Test {
       points.push_back(Point2f(200,100));
 
       // how these detected points map the new points at t + 1
+      // NOTE: all points move slightly in the x direction
       new_points.push_back(Point2f(1.2,2.5));
       new_points.push_back(Point2f(2.2,23.5));
       new_points.push_back(Point2f(10.2,223.5));
@@ -40,7 +44,7 @@ class SSTrackManagerTest : public ::testing::Test {
 
       // points detected at time t + 1
       // NOTE: the 2nd and 3rd points is the same as new_points
-      //       this is because there is high-chance that
+      //       this is because there is a high-chance that
       //       points matched from previous time will get picked as the corner
       //       for this time frame as well
       points2.push_back(Point2f(4.0,2.5));
@@ -160,8 +164,8 @@ TEST_F(SSTrackManagerTest, AddPointsAndUpdate){
     // but displacements are not recorded for newly added point
     ASSERT_EQ(0, tracks[6].previous_displacements.size());
 
-    // these new points should not have been activated
-    for (int i=4; i<track_manager_.num_tracks(); i++){
+    // the new points should not have been activated
+    for (int i=5; i<track_manager_.num_tracks(); i++){
         ASSERT_FALSE(track_manager_.tracks()[i].activated);
     }
 }
@@ -219,14 +223,15 @@ TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
     vector<int> assigned_ids;
     track_manager_.AddPossiblyDuplicatePoints(points2, &assigned_ids);
 
-    // 0-3 points should have been activated
+    // 0-4 points should have been activated
     ASSERT_TRUE(track_manager_.tracks()[0].activated);
     ASSERT_TRUE(track_manager_.tracks()[1].activated);
     ASSERT_TRUE(track_manager_.tracks()[2].activated);
     ASSERT_TRUE(track_manager_.tracks()[3].activated);
+    ASSERT_TRUE(track_manager_.tracks()[4].activated);
 
     // the last point should not be activated since it is a stationary point
-    ASSERT_FALSE(track_manager_.tracks()[4].activated);
+    ASSERT_FALSE(track_manager_.tracks()[5].activated);
 
     // Since these points are activated, they should now be connected to all the nearby nodes
     // NOTE: only track 1 and track 3 are close enough to each other.
@@ -242,9 +247,10 @@ TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
     ASSERT_TRUE(current_track_information[1].activated);
     ASSERT_TRUE(current_track_information[2].activated);
     ASSERT_TRUE(current_track_information[3].activated);
-    ASSERT_FALSE(current_track_information[4].activated);
+    ASSERT_TRUE(current_track_information[4].activated);
     ASSERT_FALSE(current_track_information[5].activated);
     ASSERT_FALSE(current_track_information[6].activated);
+    ASSERT_FALSE(current_track_information[7].activated);
 }
 
 TEST_F(SSTrackManagerTest, MaxDistanceMinDistanceUpdate){
@@ -305,10 +311,11 @@ TEST_F(SSTrackManagerTest, GetConnectedComponents){
 
     ASSERT_EQ(1, connected_components.size());
 
-    ASSERT_EQ(4, connected_components[0].size());
+    ASSERT_EQ(5, connected_components[0].size());
 
     ASSERT_EQ(0, connected_components[0][0].id);
     ASSERT_EQ(1, connected_components[0][1].id);
     ASSERT_EQ(2, connected_components[0][2].id);
     ASSERT_EQ(3, connected_components[0][3].id);
+    ASSERT_EQ(4, connected_components[0][4].id);
 }

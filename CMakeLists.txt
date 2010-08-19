@@ -68,14 +68,3 @@ IF(COMPILE_TESTS)
 		daisy
 		)
 ENDIF(COMPILE_TESTS)
-	
-OPTION(USE_TBB "Use TBB speed up?")
-IF(USE_TBB)
-    FIND_PACKAGE(TBB)
-    include_directories(${TBB_INCLUDE_DIRS})
-    link_directories(${TBB_LIBRARY_DIRS})
-
-    add_executable(TBBParallelFor TBBParallelFor.cxx)
-    target_link_libraries(TBBParallelFor ${TBB_LIBRARIES})
-ENDIF(USE_TBB)
-

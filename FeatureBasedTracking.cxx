@@ -246,7 +246,7 @@ int main (int argc, char ** argv){
         feature_grouper.AdvanceToNextFrame();
 
         // some indication of stuff working
-        cout << current_num_frame << " ";
+        cout << current_num_frame << " " << std::flush;
         current_num_frame++;
     }
     printf("\n");

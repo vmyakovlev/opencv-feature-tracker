@@ -1,10 +1,15 @@
+cmake_minimum_required(VERSION 2.6)
+if(COMMAND cmake_policy)
+    cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
+
 Project(opencv-feature-tracker)
 
 add_subdirectory(thirdparty)
 
 # macro to setup the projects
 MACRO(QuickSetup)
-cmake_minimum_required(VERSION 2.6)
+
 SET(CMAKE_MODULE_PATH
     ${PROJECT_SOURCE_DIR}/cmake_modules
     ${CMAKE_MODULE_PATH}

@@ -13,19 +13,31 @@ using namespace cv;
 #include "SaunierSayed_feature_grouping.h"
 #include "feature_grouper_visualizer.h"
 
+/** \file SaunierSayed.cxx
+
+  This program implements the algorithm found in "A feature-based tracking algorithm for vehicles in intersections" by Nicolas Saunier and
+  Tarek Sayed.
+
+  http://www.computer.org/portal/web/csdl/doi/10.1109/CRV.2006.3
+*/
+
 DEFINE_bool(homography_point_correspondence, false, "The homography file contains correspondences instead of the homography matrix");
 DEFINE_bool(debug_gui, true, "Use GUI to debug");
 DEFINE_bool(visualize_with_coordinates, false, "Write track world coordinates next to each track in the video?");
 DEFINE_string(visualize_per_step, "", "Visualize the status of the feature grouper at each time step into this file");
 DEFINE_bool(log_tracks_info, false, "Log most information about tracks as time progress (LOTS OF disk space required)");
 DEFINE_uint64(min_frames_tracked, 15, "Minimum number of frames tracked before it is activated");
-DEFINE_double(min_distance_moved_required, 70, "Minimum number of frames tracked before it is activated");
+DEFINE_double(min_distance_moved_required, 70, "A point needs to be moving this much within its last N frames. N is set to minimum_num_frame_tracked - 2.");
 DEFINE_double(maximum_distance_activated, 700, "When activated, how far around the point do we search for points to add?");
 DEFINE_double(segmentation_threshold, 160, "How much do we allow max_distance - min_distance to vary before an edge is severe.");
 DEFINE_double(minimum_variance_required, 70, "How much does the variance of the previous points have to be in order for a track not to be removed.");
 DEFINE_double(min_distance_between_tracks, 30, "The minimum distance between two tracks. Two tracks closer than this minimum is considered duplicate and one will be removed.");
 
 int main (int argc, char ** argv){
+    std::string usage("This program performs the Feature-based tracking method of Saunier and Sayed described in the paper \"A feature-based tracking algorithm for vehicles in intersections\"CVR'2006. Sample usage:\n");
+    usage += argv[0];
+    usage += " <input_video_filename> <homography_points_or_homography_matrix_filename> <output_filename>";
+    google::SetUsageMessage(usage);
     google::ParseCommandLineFlags(&argc, &argv, true);
 
     if (argc < 4){

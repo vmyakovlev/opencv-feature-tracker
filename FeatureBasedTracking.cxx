@@ -267,23 +267,27 @@ int main (int argc, char ** argv){
        */
     SaunierSayed::ConnectedComponents components = feature_grouper.GetConnectedComponents();
 
-    // Write components to disk
-    ofstream output_file;
-    output_file.open(output_filename.c_str());
+    if (components.size() == 0){
+        std::cout << "When the video ends, we don't have any component." << std::endl;
+    } else {
+        // Write components to disk
+        ofstream output_file;
+        output_file.open(output_filename.c_str());
 
-    SaunierSayed::ConnectedComponent component;
-    for (int i=0; i<components.size(); ++i){
-        component = components[i];
+        SaunierSayed::ConnectedComponent component;
+        for (int i=0; i<components.size(); ++i){
+            component = components[i];
 
-        output_file << i << " ";
-        for (int j=0; j<component.size(); ++j){
-            output_file << component[j].id << " ";
+            output_file << i << " ";
+            for (int j=0; j<component.size(); ++j){
+                output_file << component[j].id << " ";
+            }
+
+            output_file << std::endl;
         }
 
-        output_file << std::endl;
+        output_file.close();
     }
-
-    output_file.close();
 
     cout << "Done\n";
 

@@ -33,3 +33,9 @@ or
 or
 
 ./FeatureBasedTracking --nodebug_gui --visualize_per_step test2.avi test2.avi.homography.mat output.test2.avi.txt
+
+I would suggest the following extra options
+
+--min_distance_moved_required 10 --min_frames_tracked 5
+
+These options are quite important and you will need to tune them a little bit for your input video.

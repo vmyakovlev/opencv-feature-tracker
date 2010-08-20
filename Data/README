@@ -24,12 +24,12 @@ Since test2.avi is a rather long video, I have created two smaller versions:
 
 To run them
 
-./FeatureBasedTracking --nodebug_gui test2_short.avi test2.avi.homography.mat output.test2.avi.txt
+./FeatureBasedTracking --nodebug_gui --visualize_per_step test2.visualize.avi test2_short.avi test2.avi.homography.mat output.txt
 
 or
 
-./FeatureBasedTracking --nodebug_gui test2_medium.avi test2.avi.homography.mat output.test2.avi.txt
+./FeatureBasedTracking --nodebug_gui --visualize_per_step test2_medium.avi test2.avi.homography.mat output.test2.avi.txt
 
 or
 
-./FeatureBasedTracking --nodebug_gui test2.avi test2.avi.homography.mat output.test2.avi.txt
+./FeatureBasedTracking --nodebug_gui --visualize_per_step test2.avi test2.avi.homography.mat output.test2.avi.txt

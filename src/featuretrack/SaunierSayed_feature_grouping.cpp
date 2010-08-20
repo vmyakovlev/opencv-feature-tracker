@@ -439,6 +439,12 @@ namespace SaunierSayed{
         // What we need now is
         // component_id => [vertex_id_1, vertex_id_2, vertex_id_3, ...]
 
+        // in some cases, we don't have any connected component. Think of us having a couple of nodes but they are not
+        // activated
+        if (num_components == 0){
+            return return_connected_components;
+        }
+
         //assert(all_tracks.size() == component.size())
         for (int i=0; i<component_ids.size(); ++i){
             return_connected_components[component_ids[i]].push_back(
@@ -450,6 +456,7 @@ namespace SaunierSayed{
     }
 
     std::vector<TracksConnectionGraph::vertices_size_type> TrackManager::GetConnectedComponentsMap(TracksConnectionGraph::vertices_size_type & num_components) const{
+        num_components = 0;
         typedef graph_traits < TracksConnectionGraph >::vertices_size_type size_type;
         std::vector < size_type > component_ids(num_vertices(tracks_connection_graph_));
         TrackManagerDFSVsitor< size_type * > vis(&component_ids[0], num_components);

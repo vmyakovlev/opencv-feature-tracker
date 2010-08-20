@@ -51,7 +51,7 @@ QuickExecutable(PCARecognizeInterestPoints ${SRCS} ${HDRS} PCARecognizeInterestP
 QuickExecutable(ExtractDaisyToLibSVMPackage ${SRCS} ${HDRS} ExtractDaisyToLibSVMPackage.cxx)
 QuickExecutable(ExtractDaisyToTXT ${SRCS} ${HDRS} ExtractDaisyToTXT.cxx)
 QuickExecutable(TrackMatchingDistance ${SRCS} ${HDRS} TrackMatchingDistance.cxx)
-QuickExecutable(SaunierSayed ${SRCS} ${HDRS} SaunierSayed.cxx)
+QuickExecutable(FeatureBasedTracking ${SRCS} ${HDRS} FeatureBasedTracking.cxx)
 QuickExecutable(BlobTrackPedestrian ${SRCS} ${HDRS} BlobTrackPedestrian.cxx)
 
 OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?")

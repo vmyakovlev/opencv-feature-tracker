@@ -15,7 +15,7 @@ class SSTrackManagerTest : public ::testing::Test {
     //       because for some reason track_manager_ will not get the required parameters
     //       if re-initialized inside of SetUp()
     SSTrackManagerTest():
-        track_manager_(2, 0.05, 10000, 20, 0, 0.05)
+        track_manager_(2, 0.05, 10000, 10, 0.05)
         // NOTE: We use a high connection radius (10000) so that all points will be connected to all others
         //       when they first start.
     {
@@ -65,6 +65,8 @@ class SSTrackManagerTest : public ::testing::Test {
        */
 
       // how these detected points map to new points at time t + 2
+      // Point 1 moves quite a bit while point 3 and 4 moves little
+      // Other points stay the same.
       new_points2.push_back(Point2f(2.0, 15.5));
       new_points2.push_back(Point2f(1.7, 24.6));
       new_points2.push_back(Point2f(200, 100));
@@ -268,6 +270,8 @@ TEST_F(SSTrackManagerTest, MaxDistanceMinDistanceUpdate){
     // SEE: Test SSTrackManagerTest.TracksWhichPersistsLongEnoughGetActivated
     ASSERT_TRUE(track_manager_.get_edge_information(1,3, &edge_info_old));
 
+    // We now have new locations for the points in this time instance
+    // Since point 1 and 3 do not move, their edge should still be there
     track_manager_.UpdatePoints(new_points2, old_indices_2_3);
     ASSERT_TRUE(track_manager_.get_edge_information(1,3, &edge_info_new));
 
@@ -307,7 +311,6 @@ TEST_F(SSTrackManagerTest, GetConnectedComponents){
     track_manager_.UpdatePoints(new_points2, old_indices_2_3);
 
     ss::ConnectedComponents connected_components = track_manager_.GetConnectedComponents();
-
 
     ASSERT_EQ(1, connected_components.size());
 

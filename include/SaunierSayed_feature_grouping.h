@@ -166,7 +166,7 @@ namespace SaunierSayed{
 
         //! Return edge information for a specfic vertex pairs
         /**
-          Make sure you check the return value prior to accessing the data in output_link_information
+          Make sure you check the return value prior to accessing the data in output_link_information.
           Since the graph structure is undirected. get_edge_information(1,2,&out) gives the same result as
           get_edge_information(2,1,&out)
 

@@ -27,10 +27,9 @@ DEFINE_bool(visualize_with_coordinates, false, "Write track world coordinates ne
 DEFINE_string(visualize_per_step, "", "Visualize the status of the feature grouper at each time step into this file");
 DEFINE_bool(log_tracks_info, false, "Log most information about tracks as time progress (LOTS OF disk space required)");
 DEFINE_uint64(min_frames_tracked, 15, "Minimum number of frames tracked before it is activated");
-DEFINE_double(min_distance_moved_required, 70, "A point needs to be moving this much within its last N frames. N is set to minimum_num_frame_tracked - 2.");
+DEFINE_double(min_distance_moved_required, 30, "A point needs to be moving this much within its last N frames. N is set to minimum_num_frame_tracked - 2.");
 DEFINE_double(maximum_distance_activated, 700, "When activated, how far around the point do we search for points to add?");
 DEFINE_double(segmentation_threshold, 160, "How much do we allow max_distance - min_distance to vary before an edge is severe.");
-DEFINE_double(minimum_variance_required, 70, "How much does the variance of the previous points have to be in order for a track not to be removed.");
 DEFINE_double(min_distance_between_tracks, 30, "The minimum distance between two tracks. Two tracks closer than this minimum is considered duplicate and one will be removed.");
 
 int main (int argc, char ** argv){
@@ -62,7 +61,6 @@ int main (int argc, char ** argv){
     cout << "Min distance moved required: " << FLAGS_min_distance_moved_required << endl;
     cout << "Max distance activated: " << FLAGS_maximum_distance_activated << endl;
     cout << "Segmentation threshold: " << FLAGS_segmentation_threshold << endl;
-    cout << "Minimum variance required: " << FLAGS_minimum_variance_required << endl;
     cout << "Minimum distance between two tracks before they are considered duplicates: " << FLAGS_min_distance_between_tracks << endl;
 
     //**************************************************************
@@ -140,7 +138,6 @@ int main (int argc, char ** argv){
             FLAGS_min_distance_moved_required,
             FLAGS_maximum_distance_activated,
             FLAGS_segmentation_threshold,
-            FLAGS_minimum_variance_required,
             FLAGS_min_distance_between_tracks,
             FLAGS_log_tracks_info);
 
@@ -249,7 +246,7 @@ int main (int argc, char ** argv){
         feature_grouper.AdvanceToNextFrame();
 
         // some indication of stuff working
-        cout << "\r" << current_num_frame << flush;
+        cout << current_num_frame << " ";
         current_num_frame++;
     }
     printf("\n");

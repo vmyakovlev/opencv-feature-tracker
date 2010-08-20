@@ -9,7 +9,7 @@
 namespace SaunierSayed{
     TrackManager::TrackManager(int min_num_frame_tracked, float min_distance_moved_required,
                                float maximum_distance_threshold, float feature_segmentation_threshold,
-                               float minimum_variance_required, float min_distance_between_tracks,
+                               float min_distance_between_tracks,
                                bool log_track_to_file){
         min_num_frame_tracked_ = min_num_frame_tracked;
         maximum_distance_threshold_ = maximum_distance_threshold;
@@ -17,7 +17,6 @@ namespace SaunierSayed{
         min_distance_moved_required_ = min_distance_moved_required;
 
         maximum_previous_points_remembered_ = min_num_frame_tracked;
-        minimum_variance_required_ = minimum_variance_required;
         max_num_frames_not_tracked_allowed_ = min_num_frame_tracked;
 
         // NOTE: Find this value from the homography matrix
@@ -52,7 +51,6 @@ namespace SaunierSayed{
         current_time_stamp_id_ = other.current_time_stamp_id_;
         min_distance_moved_required_ = other.min_distance_moved_required_;
         maximum_previous_points_remembered_ = other.maximum_previous_points_remembered_;
-        minimum_variance_required_ = other.minimum_variance_required_;
         max_num_frames_not_tracked_allowed_ = other.max_num_frames_not_tracked_allowed_;
 
         // Disable logging on copied object since the log file object is not copyable
@@ -72,7 +70,6 @@ namespace SaunierSayed{
         current_time_stamp_id_ = other.current_time_stamp_id_;
         min_distance_moved_required_ = other.min_distance_moved_required_;
         maximum_previous_points_remembered_ = other.maximum_previous_points_remembered_;
-        minimum_variance_required_ = other.minimum_variance_required_;
         max_num_frames_not_tracked_allowed_ = other.max_num_frames_not_tracked_allowed_;
 
         // Disable logging on copied object since the log file object is not copyable
@@ -173,7 +170,9 @@ namespace SaunierSayed{
         // Now that we no longer use old_points_ids/old_points_vertices content, we can go on and remove these tracks
         std::set<int>::iterator it = vertices_to_remove.begin();
         for (; it != vertices_to_remove.end(); ++it){
+#ifdef DEBUG_PRINTOUT
             printf("Removing track #%d\n", *it);
+#endif
             DeleteTrack(*it);
         }
 
@@ -447,6 +446,11 @@ namespace SaunierSayed{
 
         //assert(all_tracks.size() == component.size())
         for (int i=0; i<component_ids.size(); ++i){
+            if (component_ids[i] >= component_ids.size()){
+                // this component id is not valid, it is because its corresponding vertex is inactive
+                continue;
+            }
+
             return_connected_components[component_ids[i]].push_back(
                     get_track_information(i)
                     );

@@ -11,7 +11,12 @@ namespace SaunierSayed{
       It is to be used by the GetConnectedComponents() method in TrackManager.
 
       The algorithm works by visiting the graph vertices in a DFS search. This visitor will assign
-      each vertex with a number : the component id.
+      each vertex with a number : the component id. A vertex is given a valid component id ONLY if its
+      activated property is true. If not, this vertex will receive a component id >= num_components.
+
+      For example, we have 3 nodes, the first two nodes are activated: they might have component ids 0 and 1.
+      The third node is not activated, it will get the component id 3 (3 is outside of the range of possible component
+      ids)
 
       \todo Use concept checking to make sure that the graph has a property called activated for each vertex
     */

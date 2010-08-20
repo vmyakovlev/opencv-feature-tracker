@@ -71,7 +71,6 @@ namespace SaunierSayed{
                      float min_distance_moved_required = 3,
                      float maximum_distance_threshold = 20,
                      float feature_segmentation_threshold = 50,
-                     float minimum_variance_required = 5,
                      float min_distance_between_tracks = 20,
                      bool log_track_to_file = false
                      );
@@ -112,9 +111,19 @@ namespace SaunierSayed{
         //! Cut the link(edge) where max_distance - min_distance > D_segmentation
         void SegmentFarAwayTracks();
 
-        //! Find the connected components in our graph structure
-        /** The name is intentionally CamelCase despite methods that starts with get usually has lower cases.
+        /** \brief Find the connected components in our graph structure
+
+          The name is intentionally CamelCase despite methods that starts with get usually has lower cases.
           The reason is because this operation is not simple. The CamelCase signifies this.
+
+          The connected components of our graph is returned as:
+          0 => [vertex_id, vertex_id, vertex_id, vertex_id]
+          1 => [vertex_id, vertex_id]
+          2 => [vertex_id]
+          ...
+
+          Note that some vertices will not appear in the return component list because these vertices might not
+          be active.
 
           \return connected components (each connected component is a group of TrackInformation)
          */
@@ -210,8 +219,6 @@ namespace SaunierSayed{
         /** Tracks that are close to each other (L1 distance between them smaller than this value) is considered the same and will not be added
         This distance is in world coordinate (NOT in pixel coordinate) */
         float min_distance_between_tracks_;
-
-        float minimum_variance_required_; //!< Minimum variance of motion in the last N frames. Tracks having less than this variance in motion will be removed.
         int max_num_frames_not_tracked_allowed_;
 
         // Some flags

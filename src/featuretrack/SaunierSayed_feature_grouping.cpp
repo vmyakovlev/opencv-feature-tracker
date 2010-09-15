@@ -1,7 +1,7 @@
 #include "SaunierSayed_feature_grouping.h"
 #include "feature_grouper_dfs_visitor.h"
 #include <boost/graph/connected_components.hpp>
-#include <boost/property_map.hpp>
+
 #include <iostream>
 
 //#define DEBUG_PRINTOUT

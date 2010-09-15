@@ -15,7 +15,7 @@ SET(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
     )
 find_package(OpenCV REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS serialization graph)
 find_package(GFlags)
 include_directories(
     ${Boost_INCLUDE_DIR}
@@ -34,13 +34,43 @@ target_link_libraries(${proj_name}
     ${OpenCV_LIBS}
       daisy
     ${GFlags_LIBS}
+	${Boost_LIBRARIES}
 )
 ENDMACRO(QuickExecutable)
 
+# Setup
+QuickSetup()
+
+# Get the files
 file(GLOB SRCS src/*.cpp src/*.c src/featuretrack/*.cpp src/blobtrack/*.cpp)
 file(GLOB HDRS include/*.h include/*.hpp include/opencv2/video/*.hpp)
 
-QuickSetup()
+# Grab test packages
+OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?")
+IF(COMPILE_TESTS)
+	#### Test executable with GTest
+	FIND_PACKAGE(GTest)
+	FILE(GLOB TEST_SRCS tests/test_*.cpp)
+	include_directories(
+		${GTEST_INCLUDE_DIR}
+		${PROJECT_SOURCE_DIR}/tests
+		${PROJECT_SOURCE_DIR}
+		)
+	link_directories(
+		${Boost_LIBRARY_DIRS}
+	)
+	MESSAGE(STATUS "Compiling Test executables. Include dir is ${GTEST_INCLUDE_DIR}")
+	set(TEST_DATA_FOLDER ${PROJECT_SOURCE_DIR}/tests/data)
+	configure_file(${PROJECT_SOURCE_DIR}/tests/test_configuration.h.in ${PROJECT_SOURCE_DIR}/tests/test_configuration.h) 
+	add_executable(RunAllTests ${SRCS} ${HDRS} ${TEST_SRCS} tests/test_configuration.h RunAllTests.cxx)
+	target_link_libraries(RunAllTests
+		${OpenCV_LIBS}
+		${GTEST_LIBRARIES}
+		daisy
+		)
+ENDIF(COMPILE_TESTS)
+
+# Create other executables
 QuickExecutable(DaisyDescriptor ${SRCS} ${HDRS} DAISY.cxx)
 QuickExecutable(InteractiveMatching ${SRCS} ${HDRS} InteractiveMatching.cxx)
 QuickExecutable(NCH ${SRCS} ${HDRS} NCH.cxx)
@@ -54,22 +84,4 @@ QuickExecutable(TrackMatchingDistance ${SRCS} ${HDRS} TrackMatchingDistance.cxx)
 QuickExecutable(FeatureBasedTracking ${SRCS} ${HDRS} FeatureBasedTracking.cxx)
 QuickExecutable(BlobTrackPedestrian ${SRCS} ${HDRS} BlobTrackPedestrian.cxx)
 
-OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?")
-IF(COMPILE_TESTS)
-	#### Test executable with GTest
-	FIND_PACKAGE(GTest)
-	FILE(GLOB TEST_SRCS tests/test_*.cpp)
-	include_directories(
-		${GTEST_INCLUDE_DIR}
-		${PROJECT_SOURCE_DIR}/tests
-		${PROJECT_SOURCE_DIR}
-		)
-	set(TEST_DATA_FOLDER ${PROJECT_SOURCE_DIR}/tests/data)
-	configure_file(${PROJECT_SOURCE_DIR}/tests/test_configuration.h.in ${PROJECT_SOURCE_DIR}/tests/test_configuration.h) 
-	add_executable(RunAllTests ${SRCS} ${HDRS} ${TEST_SRCS} tests/test_configuration.h RunAllTests.cxx)
-	target_link_libraries(RunAllTests
-		${OpenCV_LIBS}
-		${GTEST_LIBRARIES}
-		daisy
-		)
-ENDIF(COMPILE_TESTS)
+

@@ -180,10 +180,11 @@ TEST_F(SSTrackManagerTest, RemoveDuplicatePoints){
 }
 
 TEST_F(SSTrackManagerTest, FindDuplicatePoints){
-    track_manager_.AddPoints(points);
+	ss::TrackManager tight_track_manager(2, 0.05, 10000, 10, 1.1);
+    tight_track_manager.AddPoints(points);
 
     std::vector<int> assigned_ids;
-    track_manager_.FindDuplicatePointIds(points, &assigned_ids);
+    tight_track_manager.FindDuplicatePointIds(points, &assigned_ids);
 
     ASSERT_EQ(0, assigned_ids[0]);
     ASSERT_EQ(1, assigned_ids[1]);
@@ -252,7 +253,6 @@ TEST_F(SSTrackManagerTest, TracksWhichPersistsLongEnoughGetActivated){
     ASSERT_TRUE(current_track_information[4].activated);
     ASSERT_FALSE(current_track_information[5].activated);
     ASSERT_FALSE(current_track_information[6].activated);
-    ASSERT_FALSE(current_track_information[7].activated);
 }
 
 TEST_F(SSTrackManagerTest, MaxDistanceMinDistanceUpdate){

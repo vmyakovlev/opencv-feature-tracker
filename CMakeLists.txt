@@ -45,42 +45,28 @@ QuickSetup()
 file(GLOB SRCS src/*.cpp src/*.c src/featuretrack/*.cpp src/blobtrack/*.cpp)
 file(GLOB HDRS include/*.h include/*.hpp include/opencv2/video/*.hpp)
 
-# Grab test packages
-OPTION(COMPILE_TESTS "Compile unit tests using GoogleTest?")
-IF(COMPILE_TESTS)
-	#### Test executable with GTest
-	FIND_PACKAGE(GTest)
-	FILE(GLOB TEST_SRCS tests/test_*.cpp)
-	include_directories(
-		${GTEST_INCLUDE_DIR}
-		${PROJECT_SOURCE_DIR}/tests
-		${PROJECT_SOURCE_DIR}
-		)
-	link_directories(
-		${Boost_LIBRARY_DIRS}
+#### Test executable with GTest
+FIND_PACKAGE(GTest)
+FILE(GLOB TEST_SRCS tests/test_*.cpp)
+include_directories(
+	${GTEST_INCLUDE_DIR}
+	${PROJECT_SOURCE_DIR}/tests
+	${PROJECT_SOURCE_DIR}
 	)
-	MESSAGE(STATUS "Compiling Test executables. Include dir is ${GTEST_INCLUDE_DIR}")
-	set(TEST_DATA_FOLDER ${PROJECT_SOURCE_DIR}/tests/data)
-	configure_file(${PROJECT_SOURCE_DIR}/tests/test_configuration.h.in ${PROJECT_SOURCE_DIR}/tests/test_configuration.h) 
-	add_executable(RunAllTests ${SRCS} ${HDRS} ${TEST_SRCS} tests/test_configuration.h RunAllTests.cxx)
-	target_link_libraries(RunAllTests
-		${OpenCV_LIBS}
-		${GTEST_LIBRARIES}
-		daisy
-		)
-ENDIF(COMPILE_TESTS)
+link_directories(
+	${Boost_LIBRARY_DIRS}
+)
+MESSAGE(STATUS "Compiling Test executables. Include dir is ${GTEST_INCLUDE_DIR}")
+set(TEST_DATA_FOLDER ${PROJECT_SOURCE_DIR}/tests/data)
+configure_file(${PROJECT_SOURCE_DIR}/tests/test_configuration.h.in ${PROJECT_SOURCE_DIR}/tests/test_configuration.h) 
+add_executable(RunAllTests ${SRCS} ${HDRS} ${TEST_SRCS} tests/test_configuration.h RunAllTests.cxx)
+target_link_libraries(RunAllTests
+	${OpenCV_LIBS}
+	${GTEST_LIBRARIES}
+	daisy
+	)
 
 # Create other executables
-QuickExecutable(DaisyDescriptor ${SRCS} ${HDRS} DAISY.cxx)
-QuickExecutable(InteractiveMatching ${SRCS} ${HDRS} InteractiveMatching.cxx)
-QuickExecutable(NCH ${SRCS} ${HDRS} NCH.cxx)
-QuickExecutable(test_nch_svm ${SRCS} ${HDRS} test_nch_svm.cpp)
-QuickExecutable(PCAConstruct ${SRCS} ${HDRS} PCAConstruct.cxx)
-QuickExecutable(PCARecognize ${SRCS} ${HDRS} PCARecognize.cxx)
-QuickExecutable(PCARecognizeInterestPoints ${SRCS} ${HDRS} PCARecognizeInterestPoints.cxx)
-QuickExecutable(ExtractDaisyToLibSVMPackage ${SRCS} ${HDRS} ExtractDaisyToLibSVMPackage.cxx)
-QuickExecutable(ExtractDaisyToTXT ${SRCS} ${HDRS} ExtractDaisyToTXT.cxx)
-QuickExecutable(TrackMatchingDistance ${SRCS} ${HDRS} TrackMatchingDistance.cxx)
 QuickExecutable(FeatureBasedTracking ${SRCS} ${HDRS} FeatureBasedTracking.cxx)
 QuickExecutable(BlobTrackPedestrian ${SRCS} ${HDRS} BlobTrackPedestrian.cxx)
 

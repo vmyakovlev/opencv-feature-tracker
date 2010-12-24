@@ -157,9 +157,9 @@ void DaisyDescriptorExtractor::compute(const cv::Mat& image,
                                      cv::Mat& query_points,
                                      cv::Mat& descriptors) const{
     // check that input image is only single channel
-    CV_Assert(image.channels() == 1)
+    CV_Assert(image.channels() == 1);
 
-    Mat dense_descriptors_im;
+    cv::Mat dense_descriptors_im;
     compute_dense(image, dense_descriptors_im);
 
     // We need to compute_dense first so the DAISY descriptor object knows how long is its descriptor
@@ -171,7 +171,7 @@ void DaisyDescriptorExtractor::compute(const cv::Mat& image,
     CV_Assert(descriptors.cols == desc_->descriptor_size());
     CV_Assert(descriptors.rows == query_points.rows);
     CV_Assert(descriptors.type() == CV_32F);
-    CV_Assert(query_points.type() == CV_32F || query_points.type() == CV_32S)
+    CV_Assert(query_points.type() == CV_32F || query_points.type() == CV_32S);
 
     // get indexing
     Mat row_indexes = query_points.col(0) + query_points.col(1) * image.cols;

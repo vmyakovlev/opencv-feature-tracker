@@ -67,7 +67,7 @@ void BlobDescriptorExtractor::compute(const cv::Mat& image,
                  std::vector<cv::KeyPoint>& keypoints,
                  cv::Mat& descriptors) const
 {
-    CV_Assert(image.channels() == 3)
+    CV_Assert(image.channels() == 3);
 
     int num_keypoints = keypoints.size();
 

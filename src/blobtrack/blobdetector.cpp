@@ -61,7 +61,7 @@ namespace cv{
     */
     std::vector<Blob> BlobDetector::operator()(const cv::Mat & input_foreground_mask_image, int close_holes/* = 1*/) const {
         // input check
-        CV_Assert(input_foreground_mask_image.channels() == 1)
+        CV_Assert(input_foreground_mask_image.channels() == 1);
 
         std::vector<Blob> found_blobs;
 

@@ -80,24 +80,11 @@
 class Distance
 {
     virtual float operator()(const cv::Mat& descriptor1, const cv::Mat& descriptor2) = 0;
-
-    /** \brief Compute distance for high dimensional matrix (aka tensor)
-
-      \note Not supported by default
-    */
-    virtual float operator()(const cv::MatND& descriptor1, const cv::MatND& descriptor2){
-        CV_Error(CV_StsNotImplemented, "This distance do not support MatND");
-        return 0;
-    }
 };
 
 class L1Distance : public Distance
 {
     float operator()(const cv::Mat& descriptor1, const cv::Mat & descriptor2){
-        return cv::norm(descriptor1 - descriptor2, cv::NORM_L1);
-    }
-
-    float operator()(const cv::MatND& descriptor1, const cv::MatND & descriptor2){
         return cv::norm(descriptor1 - descriptor2, cv::NORM_L1);
     }
 };
@@ -108,24 +95,18 @@ public:
     float operator()(const cv::Mat& descriptor1, const cv::Mat & descriptor2){
         return cv::norm(descriptor1 - descriptor2, cv::NORM_L2);
     }
-
-    float operator()(const cv::MatND& descriptor1, const cv::MatND& descriptor2){
-        return cv::norm(descriptor1 - descriptor2, cv::NORM_L2);
-    }
 };
 
 class BhattacharyyaDistance : public Distance
 {
 public:
     float operator()(const cv::Mat& descriptor1, const cv::Mat & descriptor2);
-    float operator()(const cv::MatND& descriptor1, const cv::MatND& descriptor2);
 };
 
 class PearsonCoefficientDistance: public Distance
 {
 public:
     float operator()(const cv::Mat& descriptor1, const cv::Mat & descriptor2);
-    float operator()(const cv::MatND& descriptor1, const cv::MatND& descriptor2);
 };
 
 #endif
